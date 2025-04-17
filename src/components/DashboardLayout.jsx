@@ -20,7 +20,7 @@ const DashboardLayout = () => {
         <Sidebar isOpen={isMenuOpen} setIsOpen={setIsMenuOpen} />
 
         {/* Main content */}
-        <main className="flex-1 bg-white overflow-auto">
+        <main className="flex-1 p-1 bg-white overflow-auto">
           <Outlet /> 
         </main>
       </div>

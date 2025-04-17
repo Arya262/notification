@@ -1,92 +1,132 @@
-import { useState } from "react";
-import { ChevronDown } from "lucide-react";
-
 const UserDetails = ({ isExpanded, setIsExpanded }) => {
-  const [status, setStatus] = useState("Open");
-  const [incomingStatus, setIncomingStatus] = useState("Allowed");
-
   return (
-    <div className="flex-shrink-0 w-full md:max-w-sm lg:max-w-xs xl:max-w-sm bg-white border-l border-gray-300 p-4 overflow-y-auto">
-      {/* Profile Section */}
-      <div className="flex flex-col items-center space-y-2">
-        <img
-          src="https://via.placeholder.com/60"
-          alt="Profile"
-          className="w-16 h-16 rounded-full object-cover"
-        />
-        <h3 className="text-sm sm:text-base font-semibold text-center">
-          Demo Guest
-        </h3>
-        <p className="text-xs sm:text-sm text-gray-600 text-center">
-          +91 85968 95689
-        </p>
-        <p className="text-green-600 text-sm font-semibold">Opted-in</p>
-      </div>
-
-      {/* Basic Info */}
-      <div className="mt-4 border-t pt-2">
-        <div className="flex justify-between text-sm font-semibold">
-          <p>Last Message</p>
-          <p className="text-gray-500 font-normal">3:59 PM</p>
+    <div className="w-full md:w-auto md:min-w-[300px] bg-white border-l border-gray-300 p-0">
+      <div className="user-details h-full">
+        <div className="profile mt-3">
+          <div className="avatar">
+            <img
+              src="https://via.placeholder.com/60"
+              alt="Profile"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <h3>Demo Guest</h3>
+          <p>+91 85968 95689</p>
+          <p className="opted-in">Opted-in</p>
         </div>
-
-        <div className="flex justify-between mt-2 text-sm font-semibold items-center">
-          <p>24 Hours Status</p>
-          <span className="px-3 py-1 bg-red-500 text-white text-xs rounded-full">
+        <hr className="hr" />
+        <div className="flex justify-between items-center p-2 mt-0 mb-0 space-x-0">
+          <p className="text-sm font-bold text-black">Last Message</p>
+          <p className="text-sm text-black">3:59 PM</p>
+        </div>
+        <div className="flex justify-between">
+          <p className="text-sm pl-2 text-black font-bold mr-9 text-nowrap">
+            24 Hours Status
+          </p>
+          <span className="px-4 py-1 bg-red-600 mb-3 text-white text-sm rounded-full">
             Inactive
           </span>
         </div>
-
-        {/* Toggle Section */}
         <div
-          className="flex justify-between items-center mt-4 cursor-pointer"
+          className="details-toggle"
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          <span className="text-gray-700 font-semibold text-sm">
-            GENERAL DETAILS
-          </span>
-          <ChevronDown size={16} className="text-gray-500" />
+          <span className="text-gray-400">GENERAL DETAILS</span>
+          <svg
+            className={`w-4 h-4 text-gray-500 ${isExpanded ? "rotated" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M19 9l-7 7-7-7"
+            ></path>
+          </svg>
         </div>
-
-        {/* Expandable Details */}
         {isExpanded && (
-          <div className="mt-4 space-y-4">
-            {/* Status Dropdown */}
-            <div>
-              <label className="text-sm font-semibold block mb-1">Status</label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="w-full border rounded px-3 py-2 text-sm"
-              >
-                <option value="Open">Open</option>
-                <option value="Closed">Closed</option>
-                <option value="Pending">Pending</option>
-              </select>
+          <div className="space-y-3 p-2">
+            <div className="w-full">
+              <span className="block text-md font-medium text-black text-left mb-2">
+                Status
+              </span>
+              <div className="relative w-full">
+                <select className="w-full p-2 border border-gray-300 rounded-md font-semibold bg-white text-sm appearance-none focus:outline-none pr-8">
+                  <option>Open</option>
+                  <option>Close</option>
+                </select>
+                <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
+                  <svg
+                    className="w-4 h-4 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    ></path>
+                  </svg>
+                </div>
+              </div>
             </div>
-
-            {/* Tags Dropdown */}
-            <div>
-              <label className="text-sm font-semibold block mb-1">Tags</label>
-              <select className="w-full border rounded px-3 py-2 text-sm">
-                <option value="">+ Add Tags</option>
-                <option value="VIP">VIP</option>
-                <option value="New">New</option>
-                <option value="Support">Support</option>
-              </select>
+            <div className="w-full">
+              <span className="block text-md text-black font-semibold text-left mb-2">
+                Tags
+              </span>
+              <div className="relative w-full">
+                <select className="w-full p-2 border border-gray-300 rounded-md text-gray-400 bg-white text-sm appearance-none focus:outline-none pr-8">
+                  <option>+ Add Tags</option>
+                </select>
+                <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
+                  <svg
+                    className="w-4 h-4 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    ></path>
+                  </svg>
+                </div>
+              </div>
             </div>
-
-            {/* Incoming Status Dropdown */}
-            <div>
-              <label className="text-sm font-semibold block mb-1">Incoming Status</label>
-              <select
-                value={incomingStatus}
-                onChange={(e) => setIncomingStatus(e.target.value)}
-                className="w-full border rounded px-3 py-2 text-sm"
-              >
-                <option value="Allowed">Allowed</option>
-                <option value="Blocked">Blocked</option>
-              </select>
+            <div className="w-full">
+              <span className="block text-md font-medium text-black text-left mb-2">
+                Incoming Status
+              </span>
+              <div className="relative w-full">
+                <select className="w-full p-2 border font-semibold border-gray-300 rounded-md bg-white text-sm appearance-none focus:outline-none pr-8">
+                  <option>Allowed</option>
+                </select>
+                <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
+                  <svg
+                    className="w-4 h-4 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    ></path>
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
         )}
