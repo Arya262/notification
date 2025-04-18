@@ -1,27 +1,32 @@
 import React from 'react';
 
-export default function ContactRow({ contact }) {
+export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
   return (
-    <div className="flex items-center px-3 py-4 border-b border-[#C3C3C3] overflow-x-auto">
+    <div className="flex items-center px-3 py-4 border-b border-[#C3C3C3]">
       {/* Checkbox */}
-      <div className="w-1/12 flex justify-center items-center">
-        <input type="checkbox" className="w-4 h-4" />
+      <div className="w-[8%] flex justify-center items-center">
+        <input
+          type="checkbox"
+          className="w-4 h-4"
+          checked={isChecked}
+          onChange={onCheckboxChange}
+        />
       </div>
 
       {/* Created Date */}
-      <div className="w-2/12 truncate">{contact.date}</div>
+      <div className="w-[15%] truncate">{contact.date}</div>
 
       {/* Status */}
-      <div className="w-2/12 font-medium text-green-600 truncate">{contact.status}</div>
+      <div className="w-[12%] font-medium text-green-600 truncate">{contact.status}</div>
 
-      {/* Name */}
-      <div className="w-3/12 truncate">{contact.fullName}</div>
+      {/* Customer Name */}
+      <div className="w-[20%] truncate">{contact.fullName}</div>
 
-      {/* Number */}
-      <div className="w-2/12 truncate">{contact.number}</div>
+      {/* WhatsApp Number */}
+      <div className="w-[18%] truncate">{contact.number}</div>
 
       {/* 24 Hour Status */}
-      <div className="w-2/12">
+      <div className="w-[14%]">
         <span
           className={`inline-block px-3 py-1 rounded-full text-white text-sm font-medium min-w-[80px] text-center
             ${contact.is_active === 1 ? 'bg-green-500' : 'bg-red-400'}`}
@@ -31,7 +36,7 @@ export default function ContactRow({ contact }) {
       </div>
 
       {/* Actions */}
-      <div className="w-3/12 flex items-center gap-2 justify-end flex-nowrap">
+      <div className="w-[13%] min-w-[200px] flex justify-end gap-2 flex-nowrap">
         {/* Edit */}
         <button className="bg-gray-100 hover:bg-gray-200 p-2 rounded-md">
           <svg
@@ -70,7 +75,7 @@ export default function ContactRow({ contact }) {
         </button>
 
         {/* Delete */}
-        <button className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-md focus:outline outline-2 outline-blue-400">
+        <button className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-md">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="w-4 h-4"
