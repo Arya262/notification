@@ -7,7 +7,7 @@ export default function ContactList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://192.168.29.6:3000/contacts')
+    fetch('http://localhost:3000/contacts')
       .then((res) => res.json())
       .then((data) => {
         // Debugging: log the raw data to check if last_name exists
