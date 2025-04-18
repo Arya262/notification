@@ -1,5 +1,6 @@
 import React from 'react'
 import Table from './Table';
+import ErrorBoundary from './ErrorBoundary';
 
 const Templates = () => {
   return (
@@ -59,7 +60,9 @@ const Templates = () => {
       </div>
 
       {/* Table Section */}
-      <Table />
+      <ErrorBoundary>
+        <Table />
+      </ErrorBoundary>
     </div>
   )
 }
