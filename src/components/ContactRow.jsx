@@ -1,8 +1,23 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
+  const [isDropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const toggleDropdown = () => setDropdownOpen((prev) => !prev);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
-    <div className="flex items-center px-3 py-4 border-b border-[#C3C3C3]">
+    <div className="flex items-center px-3 py-4 border-b border-[#C3C3C3] relative">
       {/* Checkbox */}
       <div className="w-[8%] flex justify-center items-center">
         <input
@@ -35,27 +50,9 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
         </span>
       </div>
 
-      {/* Actions */}
-      <div className="w-[13%] min-w-[200px] flex justify-end gap-2 flex-nowrap">
-        {/* Edit */}
-        <button className="bg-gray-100 hover:bg-gray-200 p-2 rounded-md">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-4 h-4 text-gray-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M11 5H6a2 2 0 00-2 2v11.5A1.5 1.5 0 005.5 20H17a2 2 0 002-2v-5m-1.293-6.707a1 1 0 011.414 1.414L12.414 15H11v-1.414l6.707-6.707z"
-            />
-          </svg>
-        </button>
-
-        {/* Send Message */}
+      {/* Send Button + Three Dot Menu */}
+      <div className="w-[13%] flex justify-end items-center gap-2 relative" ref={dropdownRef}>
+        {/* Send Message Button */}
         <button className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-3 py-2 rounded-full whitespace-nowrap">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -65,26 +62,45 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
             stroke="currentColor"
             strokeWidth="2"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M5 12h14M12 5l7 7-7 7"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
           </svg>
           <span className="text-sm font-medium">Send Message</span>
         </button>
 
-        {/* Delete */}
-        <button className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-md">
+        {/* Three Dots */}
+        <button
+          onClick={toggleDropdown}
+          className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
+        >
           <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-4 h-4"
-            fill="currentColor"
+            className="w-5 h-5 text-gray-600"
+            fill="none"
+            stroke="currentColor"
             viewBox="0 0 24 24"
+            strokeWidth={2}
           >
-            <path d="M6 7h12v12a2 2 0 01-2 2H8a2 2 0 01-2-2V7zm3 3v6m6-6v6M9 4h6a1 1 0 011 1v1H8V5a1 1 0 011-1z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v.01M12 12v.01M12 19v.01" />
           </svg>
         </button>
+
+        {/* Dropdown Menu */}
+        {isDropdownOpen && (
+          <div className="absolute right-0 top-12 w-44 bg-white border border-gray-200 rounded-md shadow-lg z-20">
+            <button
+              onClick={() => console.log('Edit', contact.id)}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            >
+              ✏️ Edit
+            </button>
+
+            <button
+              onClick={() => console.log('Delete', contact.id)}
+              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+            >
+              🗑️ Delete
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

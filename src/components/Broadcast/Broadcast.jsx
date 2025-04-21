@@ -1,6 +1,6 @@
-import StatCard from './StatCard';
+import StatCard from '../StatCard';
 import BroadcastTabs from './BroadcastTabs';
-import SearchBar from './SearchBar';
+import SearchBar from '../SearchBar';
 import BroadcastTable from './BroadcastTable';
 import AddBroadcastButton from './AddBroadcastButton';
 

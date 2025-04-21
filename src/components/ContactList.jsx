@@ -72,7 +72,7 @@ export default function ContactList() {
               <button
                 key={btn}
                 onClick={() => setFilter(btn)}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition 
+                className={`px-4 py-2 min-h-[40px] rounded-md text-sm font-medium transition 
                   ${filter === btn
                     ? 'bg-[#05a3a3] text-white'
                     : 'text-gray-700 hover:text-[#05a3a3]'}`}
@@ -83,7 +83,7 @@ export default function ContactList() {
           </div>
         </div>
 
-        <button className="flex items-center gap-2 bg-[#05a3a3] text-white px-4 py-2 rounded text-sm font-medium">
+        <button className="flex items-center gap-2 bg-[#05a3a3] text-white px-4 py-2 min-h-[40px] rounded-md text-sm font-medium">
           <span className="text-lg font-bold">+</span> Add Contact
         </button>
       </div>
@@ -109,7 +109,7 @@ export default function ContactList() {
             <div className="w-[20%]">Customer Name</div>
             <div className="w-[18%]">WhatsApp Number</div>
             <div className="w-[14%]">24 Hour Status</div>
-            <div className="w-[13%] min-w-[200px] text-left">Action</div>
+            <div className="w-[13%] min-w-[200px] text-center">Action</div>
           </div>
 
           {/* Table Body */}

@@ -15,7 +15,7 @@ const DashboardLayout = () => {
       />
 
       {/* Sidebar and Main Content */}
-      <div className="flex flex-1 pt-5">
+      <div className="flex flex-1 pt-[5px]">
         {/* Sidebar */}
         <Sidebar isOpen={isMenuOpen} setIsOpen={setIsMenuOpen} />
 
