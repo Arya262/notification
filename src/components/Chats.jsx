@@ -24,7 +24,7 @@ const Chat = () => {
             name: `${c.name} ${c.last_name || ""}`.trim(),
             mobile_no: c.mobile_no,
             updated_at: c.updated_at,
-            image: c.image,
+            image: c.profile_image,
             active: false,
           }))
           .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
