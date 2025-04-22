@@ -11,6 +11,7 @@ const Chat = () => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [selectedContact, setSelectedContact] = useState(null);
   const [contacts, setContacts] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -21,6 +22,7 @@ const Chat = () => {
         const response = await axios.get("http://192.168.1.41:3000/conversations?shop_id=1");
         const enriched = response.data.map((c) => ({
             id: c.guest_id,
+            conversation_id: c.conversation_id,
             name: `${c.name} ${c.last_name || ""}`.trim(),
             mobile_no: c.mobile_no,
             updated_at: c.updated_at,
@@ -45,8 +47,27 @@ const Chat = () => {
     setContacts((prev) =>
       prev.map((c) => ({ ...c, active: c.id === contact.id }))
     );
+
+        // Only fetch messages if conversation_id is 6
+        if (contact.conversation_id === 6) {
+          fetchMessagesForContact(contact.conversation_id);
+        } else {
+          setMessages([]); // Clear messages for other conversation_ids
+        }
+
   };
 
+
+  const fetchMessagesForContact = async (conversationId) => {
+    try {
+      const response = await axios.get(
+        `http://192.168.1.41:3000/messages?conversation_id=${conversationId}`
+      );
+      setMessages(response.data);
+    } catch (error) {
+      console.error("Failed to fetch messages", error);
+    }
+  };
   const handleSearchChange = (e) => setSearchQuery(e.target.value);
 
   return (
@@ -72,7 +93,8 @@ const Chat = () => {
           <div className="w-full md:flex-1">
             {selectedContact ? (
               <>
-                <ChatMessageArea selectedContact={selectedContact} />
+                <ChatMessageArea selectedContact={selectedContact}
+                messages={messages} />
                 <MessageInput selectedContact={selectedContact} />
               </>
             ) : (
