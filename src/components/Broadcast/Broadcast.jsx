@@ -1,40 +1,24 @@
-import StatCard from '../StatCard';
-import BroadcastTabs from './BroadcastTabs';
-import SearchBar from '../SearchBar';
-import BroadcastTable from './BroadcastTable';
-import AddBroadcastButton from './AddBroadcastButton';
-
-import { FaBroadcastTower, FaPaperPlane, FaCalendarAlt, FaSignal } from 'react-icons/fa';
+import BroadcastStats from "./BroadcastStats";
+import vendor from "../../assets/Vector.png"
+import BroadcastDashboard from "./BroadcastDashboard";
 
 const Broadcast = () => {
-  const stats = [
-    { icon: <FaBroadcastTower />, title: 'Total Broadcast', count: 42 },
-    { icon: <FaSignal />, title: 'Live Broadcast', count: 4 },
-    { icon: <FaPaperPlane />, title: 'Sent Broadcast', count: 2 },
-    { icon: <FaCalendarAlt />, title: 'Scheduled Broadcast', count: 2 },
-  ];
-
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <h1 className="text-xl font-semibold">Broadcast WhatsApp Campaigns</h1>
-        <AddBroadcastButton />
+    <div className="p-6 bg-white min-h-screen">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl  font-semibold">Broadcast WhatsApp Campaigns</h2>
+          {/* <p className="text-black text-sm mt-2">Launch a campaign today to start engaging new users on WhatsApp for your restaurant</p> */}
+        </div>
+        <button className="bg-teal-500 hover:bg-teal-600 text-white whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded">
+  <img src={vendor} alt="plus sign" className="w-5 h-5" />
+  Add Broadcast
+</button>
+
       </div>
 
-      <p className="text-gray-500">Launch a campaign today to start engaging new users on WhatsApp for your restaurant</p>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, idx) => (
-          <StatCard key={idx} {...stat} />
-        ))}
-      </div>
-
-      <div className="flex justify-between items-center flex-wrap gap-4">
-        <BroadcastTabs />
-        <SearchBar />
-      </div>
-
-      <BroadcastTable />
+      <BroadcastStats />
+      <BroadcastDashboard/>
     </div>
   );
 };

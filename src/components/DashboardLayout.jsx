@@ -1,10 +1,14 @@
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 
 const DashboardLayout = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
+
+  // Check if current route is chat
+  const isChatRoute = location.pathname.startsWith("/chat");
 
   return (
     <div className="flex flex-col h-screen">
@@ -19,8 +23,12 @@ const DashboardLayout = () => {
         {/* Sidebar */}
         <Sidebar isOpen={isMenuOpen} setIsOpen={setIsMenuOpen} />
 
-        {/* Main content area — only this scrolls */}
-        <main className="flex-1 p-[10px] bg-white overflow-y-auto">
+        {/* Main content area */}
+        <main
+          className={`flex-1 p-[10px] bg-white ${
+            isChatRoute ? "overflow-hidden" : "overflow-y-auto"
+          }`}
+        >
           <Outlet />
         </main>
       </div>

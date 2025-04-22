@@ -32,7 +32,7 @@ const ChatSidebar = ({
       </div>
 
       {/* Contacts List */}
-      <div className="space-y-2 overflow-y-auto max-h-[70vh] scrollbar-hide">
+      <div className="space-y-2 overflow-y-auto max-h-[60vh] scrollbar-hide">
         {filteredContacts.map((contact) => (
           <div
             key={contact.id}
