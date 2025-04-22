@@ -8,7 +8,7 @@ export default function ContactList() {
   const [selectedIds, setSelectedIds] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:3000/contacts')
+    fetch('http://192.168.1.41:3000/contacts?shop_id=1')
       .then((res) => res.json())
       .then((data) => {
         const transformed = data.map((item) => ({

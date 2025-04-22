@@ -18,9 +18,8 @@ const Chat = () => {
     const fetchContacts = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:3000/conversion");
-        const enriched = response.data.conversions
-          .map((c) => ({
+        const response = await axios.get("http://192.168.1.41:3000/conversations?shop_id=1");
+        const enriched = response.data.map((c) => ({
             id: c.guest_id,
             name: `${c.name} ${c.last_name || ""}`.trim(),
             mobile_no: c.mobile_no,

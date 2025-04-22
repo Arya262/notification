@@ -164,66 +164,75 @@ const BroadcastDashboard = () => {
   return (
     <div
       className={`w-full ${
-        data.length > 0 ? "bg-white shadow-sm" : ""
+        data.length > 0 ? "bg-white shadow" : ""
       } rounded-xl mt-4 min-h-fit`}
     >
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 mb-4">
-        {/* Filters - hidden on small screens */}
-        <div className="hidden md:flex gap-4 flex-wrap items-center">
-          {filters.map((f, i) => (
-            <button
-              key={i}
-              className={`flex items-center justify-center h-10 text-md font-medium pl-2 pr-2 rounded-md ${
-                f.width
-              } transition-all duration-200 
-    ${
-      activeFilter === f.label
-        ? "bg-teal-500 text-white text-[14px]"
-        : "bg-transparent text-gray-700 text-[14px] hover:text-teal-500"
-    }`}
-              onClick={() =>
-                setActiveFilter(f.label === activeFilter ? null : f.label)
-              }
-            >
-              <div className="flex items-center gap-0">
-                <span className="whitespace-nowrap">{f.label}</span>
-                <span
-                  className={`text-md font-bold flex items-center justify-center rounded ${
-                    activeFilter === f.label ? "text-white" : ""
-                  }`}
-                  style={{
-                    backgroundColor: "transparent",
-                    padding: "0 4px",
-                    marginLeft: "0",
-                  }}
-                >
-                  ({f.count})
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
-
-        {/* Search Input - hidden on small screens */}
-        <div className="hidden md:block relative w-[300px]">
-          <img
-            src={searchIcon}
-            alt="Search"
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 opacity-60"
-          />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search template by Name or Category..."
-            className="pl-2 pr-8 py-2 border border-gray-300 text-sm rounded-md w-full focus:outline-none focus:ring focus:border-blue-300"
-          />
+      <div className="flex items-center p-4 mb-4">
+        {/* Filters and Search in a single flex row */}
+        <div className="flex items-center gap-4 overflow-x-auto">
+          <div className="hidden md:flex items-center gap-4">
+            {filters.map((f, i) => (
+              <button
+                key={i}
+                className={`flex items-center justify-center h-10 text-md font-medium pl-2 pr-2 rounded-md ${
+                  f.width
+                } transition-all duration-200 
+                ${
+                  activeFilter === f.label
+                    ? "bg-teal-500 text-white text-[14px]"
+                    : "bg-transparent text-gray-700 text-[14px] hover:text-teal-500"
+                }`}
+                onClick={() =>
+                  setActiveFilter(f.label === activeFilter ? null : f.label)
+                }
+              >
+                <div className="flex items-center gap-0">
+                  <span className="whitespace-nowrap">{f.label}</span>
+                  <span
+                    className={`text-md font-bold flex items-center justify-center rounded ${
+                      activeFilter === f.label ? "text-white" : ""
+                    }`}
+                    style={{
+                      backgroundColor: "transparent",
+                      padding: "0 4px",
+                      marginLeft: "0",
+                    }}
+                  >
+                    ({f.count})
+                  </span>
+                </div>
+              </button>
+            ))}
+            {/* Search Icon for Medium Devices (768px - 1000px) */}
+            <div className="hidden md:block lg:hidden">
+              <button className="flex items-center justify-center h-10 w-10">
+                <img src={searchIcon} alt="Search" className="w-5 h-5 opacity-60" />
+              </button>
+            </div>
+          </div>
+          {/* Search Input for Large Devices (>1000px) */}
+          <div className="hidden lg:block flex-shrink-0">
+            <div className="relative w-[300px]">
+              <img
+                src={searchIcon}
+                alt="Search"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 opacity-60"
+              />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search template by Name or Category..."
+                className="pl-2 pr-8 py-2 border border-gray-300 text-sm rounded-md w-full focus:outline-none focus:ring focus:border-blue-300"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="overflow-x-auto max-w-full">
-        <table className="w-full text-sm text-center border overflow-hidden">
-          <thead className="bg-gray-100  border-b-2 border-gray-300">
+        <table className="w-full text-sm text-center  overflow-hidden">
+          <thead className="bg-gray-100 border-b-2 border-gray-300">
             <tr>
               <th className="px-6 py-3">
                 <div className="flex items-center justify-center h-full">
@@ -278,25 +287,24 @@ const BroadcastDashboard = () => {
                       />
                     </div>
                   </td>
-                  <td className="px-4 py-5 whitespace-nowrap text-[16px]  text-gray-700">
+                  <td className="px-4 py-5 whitespace-nowrap text-[16px] text-gray-700">
                     {row.date}
                   </td>
-                  <td className="px-4 py-5 text-[16px]  text-gray-700">
+                  <td className="px-4 py-5 text-[16px] text-gray-700">
                     {row.name}
                   </td>
-                  <td className="px-4 py-5 text-[16px]  text-gray-700">
+                  <td className="px-4 py-5 text-[16px] text-gray-700">
                     {row.type}
                   </td>
-                  <td className="px-4 py-5 text-[16px]  text-gray-700">
+                  <td className="px-4 py-5 text-[16px] text-gray-700">
                     {row.msgType}
                   </td>
-                  <td className="px-4 py-5 text-[16px]  text-gray-700">
+                  <td className="px-4 py-5 text-[16px] text-gray-700">
                     {row.schedule}
                   </td>
                   <td className="px-4 py-5 text-[16px] font-semibold text-green-600">
                     {row.status}
-                  </td>{" "}
-                  {/* You can keep status in green if preferred */}
+                  </td>
                   <td className="px-4 py-2">
                     <button className="flex items-center justify-center hover:bg-red-600 w-8 h-8 rounded ml-11">
                       <img src={deleteIcon} alt="Delete" className="w-7 h-7" />
