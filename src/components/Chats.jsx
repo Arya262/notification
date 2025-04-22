@@ -12,22 +12,29 @@ const Chat = () => {
   const [selectedContact, setSelectedContact] = useState(null);
   const [contacts, setContacts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchContacts = async () => {
       try {
+        setLoading(true);
         const response = await axios.get("http://localhost:3000/conversion");
-        const enriched = response.data.conversions.map((c) => ({
-          id: c.guest_id,
-          name: `${c.name} ${c.last_name || ""}`.trim(),
-          mobile_no: c.mobile_no,
-          updated_at: c.updated_at,
-          image: c.image,
-          active: false,
-        }));
+        const enriched = response.data.conversions
+          .map((c) => ({
+            id: c.guest_id,
+            name: `${c.name} ${c.last_name || ""}`.trim(),
+            mobile_no: c.mobile_no,
+            updated_at: c.updated_at,
+            image: c.image,
+            active: false,
+          }))
+          .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+
         setContacts(enriched);
       } catch (error) {
         console.error("Failed to fetch contacts", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -45,13 +52,19 @@ const Chat = () => {
 
   return (
     <div className="flex flex-col md:flex-row mt-4 w-full border border-gray-300 rounded-2xl bg-white mx-auto max-w-screen-2xl overflow-hidden">
-      <ChatSidebar
-        contacts={contacts}
-        selectedContact={selectedContact}
-        searchQuery={searchQuery}
-        onSearchChange={handleSearchChange}
-        onSelectContact={handleSelectContact}
-      />
+      {loading ? (
+        <div className="p-6 text-center text-gray-500 w-full md:w-1/3">
+          Loading contacts...
+        </div>
+      ) : (
+        <ChatSidebar
+          contacts={contacts}
+          selectedContact={selectedContact}
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchChange}
+          onSelectContact={handleSelectContact}
+        />
+      )}
 
       <div className="w-full">
         <ChatHeader selectedContact={selectedContact} />

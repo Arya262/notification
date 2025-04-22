@@ -1,29 +1,51 @@
+import MessageCard from './MessageCard';
+
 const ChatMessages = () => {
+  const messages = [
+    {
+      id: 1,
+      image: 'https://img.freepik.com/free-photo/restaurant-hall-with-lots-table_140725-6309.jpg',
+      title: 'Table Booking Cancellation Request Received',
+      body: 'We have received your cancellation request for your table booking at FOODCHOW on:',
+      date: '2025-03-10',
+      time: '7:30',
+      phone: '+91 525636396',
+    },
+    {
+      id: 2,
+      image: 'https://img.freepik.com/free-photo/empty-modern-restaurant-with-wooden-decor_140725-8471.jpg',
+      title: 'Your Table Booking is Confirmed!',
+      body: 'Thanks for booking with FOODCHOW. Your table reservation is confirmed for:',
+      date: '2025-03-15',
+      time: '8:00',
+      phone: '+91 525636396',
+    },
+    {
+      id: 3,
+      image: 'https://img.freepik.com/free-photo/restaurant-interior_1127-3394.jpg',
+      title: 'Reminder: Your Table Booking',
+      body: 'Just a friendly reminder about your upcoming booking at FOODCHOW:',
+      date: '2025-03-15',
+      time: '8:00',
+      phone: '+91 525636396',
+    },
+    {
+      id: 4,
+      video: 'https://www.w3schools.com/html/mov_bbb.mp4',
+      title: 'Special Announcement!',
+      body: 'Watch this quick video update from FOODCHOW:',
+      date: '2025-03-20',
+      time: '12:00',
+      note: 'We appreciate your continued support.',
+      footer: 'Stay tuned for more!',
+    },
+  ];
+
   return (
-    <div className="p-4 h-[calc(100vh-200px)] overflow-y-auto">
-      <div className="bg-white border border-gray-200 shadow-md rounded-xl max-w-sm">
-        <img
-          src="https://img.freepik.com/free-photo/restaurant-hall-with-lots-table_140725-6309.jpg"
-          alt="Restaurant"
-          className="w-full h-36 object-cover rounded-t-xl"
-        />
-        <div className="p-4 text-sm text-gray-800">
-          <h4 className="font-semibold text-black mb-2">
-            Table Booking Cancellation Request Received
-          </h4>
-          <p>Hello</p>
-          <p className="mt-1">
-            We have received your cancellation request for your table booking at FOODCHOW on:
-          </p>
-          <p className="mt-2">Date: <span className="font-medium">2025-03-10</span></p>
-          <p>Time: <span className="font-medium">7:30</span></p>
-          <p className="mt-2">
-            Your cancellation is being processed. If you have any questions, please contact us at <span className="font-medium">+91 525636396</span>
-          </p>
-          <p className="mt-3 text-gray-500">We hope to serve you another time!</p>
-          <p className="text-gray-500">Foodchow no.1 Online Ordering System</p>
-        </div>
-      </div>
+    <div className="p-4 h-[calc(100vh-200px)] overflow-y-auto space-y-4 scrollbar-hide">
+      {messages.map((msg) => (
+        <MessageCard key={msg.id} {...msg} />
+      ))}
     </div>
   );
 };
