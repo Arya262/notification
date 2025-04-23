@@ -1,28 +1,38 @@
 import { formatTime } from "../../utils/time";
 
+
 const ChatMessages = ({ selectedContact, messages }) => {
   return (
+    
     <div className="p-4 h-[calc(100vh-200px)] overflow-y-auto space-y-4 scrollbar-hide">
       {messages.length > 0 ? (
         messages.map((msg, index) => (
-          <div key={index} className="flex items-start space-x-3">
-            <img
-              src={selectedContact.image}
-              alt={selectedContact.name}
-              className="w-10 h-10 rounded-full object-cover"
-            />
-            <div className="flex-1">
-              <p className="text-black font-semibold">{selectedContact.name}</p>
-
-              {/* ===== Text Message ===== */}
-              {msg.message_type === "text" && (
-                <p className="text-gray-600">{msg.content}</p>
-              )}
-              
-              {/* ===== Text Message ===== */}
-              {msg.message_type === "button" && (
-                <p className="text-gray-600">{msg.content}</p>
-              )}
+          <div
+            key={index}
+            className={`flex items-start space-x-3 ${
+              msg.status === "received" ? "" : "flex-row-reverse text-right"
+            }`}
+          >
+            <div
+              className={`flex-1 ${
+                msg.status === "received" ? "" : "items-end"
+              }`}
+            >
+             {/* ===== Text & Button Messages ===== */}
+    {(msg.message_type === "text" || msg.message_type === "button") && (
+      <div
+        className={`inline-flex flex-col relative max-w-xs rounded-xl px-4 pt-2 pb-5 text-sm ${
+          msg.status === "received"
+            ? "bg-gray-200 text-black"
+            : "bg-blue-500 text-white"
+        }`}
+      >
+        <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+        <span className="absolute text-[10px] bottom-1 right-2 text-gray-300">
+          {formatTime(msg.sent_at).toLowerCase()}
+        </span>
+      </div>
+    )}
 
               {/* ===== Image Message ===== */}
               {msg.message_type === "image" && (
@@ -52,9 +62,11 @@ const ChatMessages = ({ selectedContact, messages }) => {
 
               {/* ===== Template Message ===== */}
               {msg.message_type === "template" && msg.container_meta && (
-                <div className="bg-white border rounded-xl overflow-hidden shadow-md mt-2 max-w-[360px]">
-                  {/* Promo Banner Image - You can extend container_meta with a banner_url field if you have one */}
-                  {/* Promo Banner */}
+                <div
+                  className={`bg-white border rounded-xl overflow-hidden shadow-md mt-2 max-w-[360px] ${
+                    msg.status !== "received" ? "ml-auto" : ""
+                  }`}
+                >
                   <img
                     src={
                       msg.container_meta.banner_url ||
@@ -63,24 +75,16 @@ const ChatMessages = ({ selectedContact, messages }) => {
                     alt="Promo"
                     className="w-full h-40 object-cover"
                   />
-
-                  {/* Message Content */}
                   <div className="p-3">
-                    {/* Header */}
                     {msg.container_meta.header && (
                       <p className="text-lg font-semibold text-red-600">
                         {msg.container_meta.header}
                       </p>
                     )}
-
-                    {/* Body */}
                     <p className="text-sm text-gray-800 whitespace-pre-line mt-1">
                       {msg.container_meta.data}
                     </p>
-
-                    {/* Buttons */}
-                    {/* Action Buttons */}
-                    <div className="space-y-2">
+                    <div className="space-y-2 mt-2">
                       {msg.container_meta.buttons?.map((btn, idx) => (
                         <button
                           key={idx}
@@ -90,8 +94,6 @@ const ChatMessages = ({ selectedContact, messages }) => {
                         </button>
                       ))}
                     </div>
-
-                    {/* Footer */}
                     {msg.container_meta.footer && (
                       <p className="text-xs text-gray-400 mt-3">
                         {msg.container_meta.footer}
@@ -101,11 +103,7 @@ const ChatMessages = ({ selectedContact, messages }) => {
                 </div>
               )}
 
-              {/* ===== Timestamp ===== */}
-              <p className="text-sm text-gray-500 mt-1">
-                
-                {formatTime(msg.sent_at).toLowerCase()}
-              </p>
+            
             </div>
           </div>
         ))

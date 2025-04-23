@@ -16,30 +16,30 @@ const Chat = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const fetchContacts = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_BASE}/conversations?shop_id=1`);
+      const enriched = response.data
+        .map((c) => ({
+          id: c.guest_id,
+          conversation_id: c.conversation_id,
+          name: `${c.name} ${c.last_name || ""}`.trim(),
+          mobile_no: c.mobile_no,
+          updated_at: c.updated_at,
+          image: c.profile_image,
+          active: false,
+        }))
+        .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+
+      setContacts(enriched);
+    } catch (error) {
+      console.error("Failed to fetch contacts", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchContacts = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${API_BASE}/conversations?shop_id=1`);
-        const enriched = response.data.map((c) => ({
-            id: c.guest_id,
-            conversation_id: c.conversation_id,
-            name: `${c.name} ${c.last_name || ""}`.trim(),
-            mobile_no: c.mobile_no,
-            updated_at: c.updated_at,
-            image: c.profile_image,
-            active: false,
-          }))
-          .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
-
-        setContacts(enriched);
-      } catch (error) {
-        console.error("Failed to fetch contacts", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchContacts();
   }, []);
 
@@ -49,15 +49,13 @@ const Chat = () => {
       prev.map((c) => ({ ...c, active: c.id === contact.id }))
     );
 
-        // Only fetch messages if conversation_id is 6
-        if (contact.conversation_id) {
-          fetchMessagesForContact(contact.conversation_id);
-        } else {
-          setMessages([]); // Clear messages for other conversation_ids
-        }
-
+    // Only fetch messages if conversation_id is 6
+    if (contact.conversation_id) {
+      fetchMessagesForContact(contact.conversation_id);
+    } else {
+      setMessages([]); // Clear messages for other conversation_ids
+    }
   };
-
 
   const fetchMessagesForContact = async (conversationId) => {
     try {
@@ -71,31 +69,32 @@ const Chat = () => {
   };
   const handleSearchChange = (e) => setSearchQuery(e.target.value);
 
-    // Function to handle sending messages
-    const handleSendMessage = async (newMessageText) => {
-      if (!selectedContact) {
-        console.error("No contact selected");
-        return;
-      }
-  
-      const newMessage = {
-        conversation_id: selectedContact.conversation_id,
-        message: newMessageText,
-      };
-  
-      try {
-        const response = await axios.post(
-          "http://192.168.1.41:3000/sendmessage",
-          newMessage
-        );
-  
-        console.log("Response from API:", response.data);
-        // ✅ Pass the correct conversation ID to refresh messages
-    fetchMessagesForContact(selectedContact.conversation_id);
-      } catch (error) {
-        console.error("Error sending message:", error);
-      }
+  // Function to handle sending messages
+  const handleSendMessage = async (newMessageText) => {
+    if (!selectedContact) {
+      console.error("No contact selected");
+      return;
+    }
+
+    const newMessage = {
+      conversation_id: selectedContact.conversation_id,
+      message: newMessageText,
     };
+
+    try {
+      const response = await axios.post(
+        "http://192.168.1.41:3000/sendmessage",
+        newMessage
+      );
+
+      console.log("Response from API:", response.data);
+      // ✅ Pass the correct conversation ID to refresh messages
+      fetchContacts();
+      fetchMessagesForContact(selectedContact.conversation_id);
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  };
 
   return (
     <div className="flex flex-col md:flex-row mt-4 w-full border border-gray-300 rounded-2xl bg-white mx-auto max-w-screen-2xl overflow-hidden">
@@ -120,8 +119,10 @@ const Chat = () => {
           <div className="w-full md:flex-1">
             {selectedContact ? (
               <>
-                <ChatMessageArea selectedContact={selectedContact}
-                messages={messages} />
+                <ChatMessageArea
+                  selectedContact={selectedContact}
+                  messages={messages}
+                />
                 <MessageInput onSendMessage={handleSendMessage} />
               </>
             ) : (
