@@ -1,9 +1,17 @@
+import React, { useEffect, useRef } from "react";
 import { formatTime } from "../../utils/time";
 
-
 const ChatMessages = ({ selectedContact, messages }) => {
+  const messagesEndRef = useRef(null);
+
+  // Scroll to the last message whenever the messages array changes
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]); // Dependency on messages array, so it runs when messages change
+
   return (
-    
     <div className="p-4 h-[calc(100vh-200px)] overflow-y-auto space-y-4 scrollbar-hide">
       {messages.length > 0 ? (
         messages.map((msg, index) => (
@@ -18,21 +26,21 @@ const ChatMessages = ({ selectedContact, messages }) => {
                 msg.status === "received" ? "" : "items-end"
               }`}
             >
-             {/* ===== Text & Button Messages ===== */}
-    {(msg.message_type === "text" || msg.message_type === "button") && (
-      <div
-        className={`inline-flex flex-col relative max-w-xs rounded-xl px-4 pt-2 pb-5 text-sm ${
-          msg.status === "received"
-            ? "bg-gray-200 text-black"
-            : "bg-blue-500 text-white"
-        }`}
-      >
-        <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-        <span className="absolute text-[10px] bottom-1 right-2 text-gray-300">
-          {formatTime(msg.sent_at).toLowerCase()}
-        </span>
-      </div>
-    )}
+              {/* ===== Text & Button Messages ===== */}
+              {(msg.message_type === "text" || msg.message_type === "button") && (
+                <div
+                  className={`inline-flex flex-col relative max-w-xs rounded-xl px-4 pt-2 pb-5 text-sm ${
+                    msg.status === "received"
+                      ? "bg-gray-200 text-black"
+                      : "bg-blue-500 text-white"
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                  <span className="absolute text-[10px] bottom-1 right-2 text-gray-300">
+                    {formatTime(msg.sent_at).toLowerCase()}
+                  </span>
+                </div>
+              )}
 
               {/* ===== Image Message ===== */}
               {msg.message_type === "image" && (
@@ -102,8 +110,6 @@ const ChatMessages = ({ selectedContact, messages }) => {
                   </div>
                 </div>
               )}
-
-            
             </div>
           </div>
         ))
@@ -114,6 +120,9 @@ const ChatMessages = ({ selectedContact, messages }) => {
             : "This contact has no visible conversation."}
         </p>
       )}
+
+      {/* The reference for scrolling to the bottom */}
+      <div ref={messagesEndRef} />
     </div>
   );
 };

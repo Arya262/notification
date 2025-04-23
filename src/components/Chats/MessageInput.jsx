@@ -13,7 +13,7 @@ const MessageInput = ({ onSendMessage }) => {
   };
 
   return (
-    <div className="border-t border-gray-200 p-3 bg-white">
+    <div className=" border-gray-200 p-3 bg-white">
       <form onSubmit={handleSubmit} className="flex items-center w-full max-w-3xl mx-auto">
         <input
           type="text"
