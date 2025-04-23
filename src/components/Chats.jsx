@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { API_BASE } from "./config/api";
 
 import ChatSidebar from "./Chats/chatSiderbar";
 import ChatHeader from "./Chats/ChatHeader";
@@ -19,7 +20,7 @@ const Chat = () => {
     const fetchContacts = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://192.168.1.41:3000/conversations?shop_id=1");
+        const response = await axios.get(`${API_BASE}/conversations?shop_id=1`);
         const enriched = response.data.map((c) => ({
             id: c.guest_id,
             conversation_id: c.conversation_id,
@@ -49,7 +50,7 @@ const Chat = () => {
     );
 
         // Only fetch messages if conversation_id is 6
-        if (contact.conversation_id === 6) {
+        if (contact.conversation_id) {
           fetchMessagesForContact(contact.conversation_id);
         } else {
           setMessages([]); // Clear messages for other conversation_ids
@@ -61,7 +62,7 @@ const Chat = () => {
   const fetchMessagesForContact = async (conversationId) => {
     try {
       const response = await axios.get(
-        `http://192.168.1.41:3000/messages?conversation_id=${conversationId}`
+        `${API_BASE}/messages?conversation_id=${conversationId}`
       );
       setMessages(response.data);
     } catch (error) {
@@ -69,6 +70,31 @@ const Chat = () => {
     }
   };
   const handleSearchChange = (e) => setSearchQuery(e.target.value);
+
+    // Function to handle sending messages
+    const handleSendMessage = async (newMessageText) => {
+      if (!selectedContact) {
+        console.error("No contact selected");
+        return;
+      }
+  
+      const newMessage = {
+        conversation_id: selectedContact.conversation_id,
+        message: newMessageText,
+      };
+  
+      try {
+        const response = await axios.post(
+          "http://192.168.1.41:3000/sendmessage",
+          newMessage
+        );
+  
+        console.log("Response from API:", response.data);
+        fetchMessagesForContact();
+      } catch (error) {
+        console.error("Error sending message:", error);
+      }
+    };
 
   return (
     <div className="flex flex-col md:flex-row mt-4 w-full border border-gray-300 rounded-2xl bg-white mx-auto max-w-screen-2xl overflow-hidden">
@@ -95,7 +121,7 @@ const Chat = () => {
               <>
                 <ChatMessageArea selectedContact={selectedContact}
                 messages={messages} />
-                <MessageInput selectedContact={selectedContact} />
+                <MessageInput onSendMessage={handleSendMessage} />
               </>
             ) : (
               <div className="h-full flex items-center justify-center text-gray-400 text-lg">

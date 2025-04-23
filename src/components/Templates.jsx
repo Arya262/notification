@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { API_BASE } from "./config/api";
 import Table from './Table';
 import ErrorBoundary from './ErrorBoundary';
 import approvedIcon from '../assets/Approve.png';
@@ -12,7 +13,8 @@ const Templates = () => {
  useEffect(() => {
   const fetchTemplates = async () => {
    try {
-    const response = await fetch("http://192.168.1.41:3000/templates?shop_id=1");
+    const response = await fetch(`${API_BASE}/templates?shop_id=1`);
+    // const response = await axios.get(`${API_BASE}/templates?shop_id=1`);
     const data = await response.json();
     if (Array.isArray(data.templates)) {
      setTemplates(data.templates);
