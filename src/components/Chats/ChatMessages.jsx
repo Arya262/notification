@@ -1,3 +1,5 @@
+import { formatTime } from "../../utils/time";
+
 const ChatMessages = ({ selectedContact, messages }) => {
   return (
     <div className="p-4 h-[calc(100vh-200px)] overflow-y-auto space-y-4 scrollbar-hide">
@@ -14,6 +16,11 @@ const ChatMessages = ({ selectedContact, messages }) => {
 
               {/* ===== Text Message ===== */}
               {msg.message_type === "text" && (
+                <p className="text-gray-600">{msg.content}</p>
+              )}
+              
+              {/* ===== Text Message ===== */}
+              {msg.message_type === "button" && (
                 <p className="text-gray-600">{msg.content}</p>
               )}
 
@@ -96,7 +103,8 @@ const ChatMessages = ({ selectedContact, messages }) => {
 
               {/* ===== Timestamp ===== */}
               <p className="text-sm text-gray-500 mt-1">
-                {new Date(msg.sent_at).toLocaleTimeString()}
+                
+                {formatTime(msg.sent_at).toLowerCase()}
               </p>
             </div>
           </div>

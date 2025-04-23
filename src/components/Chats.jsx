@@ -90,7 +90,8 @@ const Chat = () => {
         );
   
         console.log("Response from API:", response.data);
-        fetchMessagesForContact();
+        // ✅ Pass the correct conversation ID to refresh messages
+    fetchMessagesForContact(selectedContact.conversation_id);
       } catch (error) {
         console.error("Error sending message:", error);
       }
