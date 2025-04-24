@@ -1,14 +1,16 @@
+import { forwardRef } from "react";
 import deleteIcon from "../../assets/delete.png";
 
-const ChatHeader = ({ selectedContact, onProfileClick }) => {
+const ChatHeader = forwardRef(({ selectedContact, onProfileClick }, ref) => {
   if (!selectedContact) return null;
 
   return (
     <div className="chat-header flex justify-between items-center px-4 py-2 border-b border-gray-200 bg-white">
-      {/* Profile section - make it clickable */}
+      {/* Profile section - clickable and ref attached */}
       <div
         className="flex items-center space-x-3 cursor-pointer"
-        onClick={onProfileClick} // 👈 trigger the detail panel
+        onClick={onProfileClick}
+        ref={ref} // 👈 attach the forwarded ref here
       >
         {selectedContact.image ? (
           <img
@@ -19,7 +21,6 @@ const ChatHeader = ({ selectedContact, onProfileClick }) => {
         ) : (
           <div className="w-10 h-10 bg-gray-300 rounded-full" />
         )}
-
         <h3 className="font-semibold text-lg text-black">
           {selectedContact.name}
         </h3>
@@ -27,11 +28,7 @@ const ChatHeader = ({ selectedContact, onProfileClick }) => {
 
       {/* Right-side actions */}
       <div className="chat-header-actions flex items-center space-x-4">
-        <button
-          className="notification-btn flex items-center text-sm font-medium text-gray-600 hover:text-blue-600"
-          aria-label="Hide notifications"
-          title="Hide notifications"
-        >
+        <button className="notification-btn flex items-center text-sm font-medium text-gray-600 hover:text-blue-600">
           <img
             src="https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTEvmZLi1igqILpsyIyKDww7BRlyra3ej3863aEABOq-Rr0iscV"
             alt="Bell Icon"
@@ -42,8 +39,6 @@ const ChatHeader = ({ selectedContact, onProfileClick }) => {
 
         <button
           className="delete-btn flex items-center hover:bg-red-100 p-1 rounded"
-          aria-label="Delete chat"
-          title="Delete chat"
           onClick={() => {
             if (
               confirm(`Are you sure you want to delete the chat with ${selectedContact.name}?`)
@@ -57,6 +52,6 @@ const ChatHeader = ({ selectedContact, onProfileClick }) => {
       </div>
     </div>
   );
-};
+});
 
 export default ChatHeader;

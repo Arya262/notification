@@ -231,7 +231,7 @@ const BroadcastDashboard = () => {
       </div>
 
       <div className="overflow-x-auto max-w-full">
-        <table className="w-full text-sm text-center  overflow-hidden">
+        <table className="w-full text-sm text-center  overflow-hidden ">
           <thead className="bg-gray-100 border-b-2 border-gray-300">
             <tr>
               <th className="px-6 py-3">

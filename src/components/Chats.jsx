@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useRef } from "react";
 import { useLocation } from "react-router-dom";
 
 import axios from "axios";
@@ -11,13 +11,17 @@ import MessageInput from "./Chats/MessageInput";
 import UserDetails from "./Chats/UserDetails";
 
 const Chat = () => {
-  const [showUserDetails, setShowUserDetails] = useState(false); // 👈 new state
+  const [showUserDetails, setShowUserDetails] = useState(false); 
   const [selectedContact, setSelectedContact] = useState(null);
   const [contacts, setContacts] = useState([]);
   const [messages, setMessages] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const location = useLocation();
+
+    // Refs to track clicks outside user details and profile button
+    const userDetailsRef = useRef(null);
+    const profileButtonRef = useRef(null);
 
   const fetchContacts = async () => {
     try {
@@ -43,6 +47,27 @@ const Chat = () => {
     }
   };
 
+    // Close user details if click is outside of the user details area or profile button
+    useEffect(() => {
+      const handleClickOutside = (e) => {
+        // Check if the click is outside the user details or profile button
+        if (
+          userDetailsRef.current && !userDetailsRef.current.contains(e.target) &&
+          !profileButtonRef.current.contains(e.target)
+        ) {
+          setShowUserDetails(false);  // Close user details
+        }
+      };
+  
+      // Add the event listener
+      document.addEventListener("click", handleClickOutside);
+  
+      // Clean up the event listener
+      return () => {
+        document.removeEventListener("click", handleClickOutside);
+      };
+    }, []);
+
   useEffect(() => {
     fetchContacts();
     if (location.state?.contact) {
@@ -52,7 +77,7 @@ const Chat = () => {
 
   const handleSelectContact = (contact) => {
     setSelectedContact(contact);
-    setShowUserDetails(false); // 👈 hide details on new selection
+    setShowUserDetails(false); 
     setContacts((prev) =>
       prev.map((c) => ({ ...c, active: c.id === contact.id }))
     );
@@ -102,6 +127,10 @@ const Chat = () => {
     }
   };
 
+  const toggleUserDetails = () => {
+    setShowUserDetails((prev) => !prev); // Toggle the user details visibility
+  };
+
   return (
     <div className="flex flex-col md:flex-row w-full border border-gray-300 rounded-2xl bg-white mx-auto max-w-screen-2xl overflow-hidden">
       {loading ? (
@@ -121,7 +150,8 @@ const Chat = () => {
       <div className="w-full">
         <ChatHeader
           selectedContact={selectedContact}
-          onProfileClick={() => setShowUserDetails(true)} // 👈 pass this to ChatHeader
+          onProfileClick={() => setShowUserDetails(true)} 
+          ref={profileButtonRef}
         />
 
         <div className="w-full md:flex md:flex-row">
@@ -142,11 +172,13 @@ const Chat = () => {
           </div>
 
           {showUserDetails && (
-            <UserDetails
-              selectedContact={selectedContact}
-              isExpanded={true}
-              setIsExpanded={() => setShowUserDetails(false)} // 👈 close button handler
-            />
+            <div ref={userDetailsRef}> {/* Attach ref here */}
+              <UserDetails
+                selectedContact={selectedContact}
+                isExpanded={true}
+                setIsExpanded={() => setShowUserDetails(false)}
+              />
+            </div>
           )}
         </div>
       </div>

@@ -46,7 +46,7 @@ const ChatSidebar = ({
           >
             {/* Avatar */}
             <img
-              src={contact.image}
+              src={contact.image || "/default-avatar.png"}
               alt={contact.name}
               className="w-10 h-10 rounded-full object-cover mr-4"
             />

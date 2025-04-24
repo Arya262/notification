@@ -1,125 +1,95 @@
 import React, { useEffect, useRef } from "react";
+import TextMessage from "./TextMessage";
+import ImageMessage from "./ImageMessage";
+import VideoMessage from "./VideoMessage";
+import TemplateMessage from "./TemplateMessage";
+import TypingIndicator from "./TypingIndicator";
+import AudioMessage from "./AudioMessage";
+import LocationMessage from "./LocationMessage";
+import ContactMessage from "./ContactMessage";
+import DocumentMessage from "./DocumentMessage";
 import { formatTime } from "../../utils/time";
 
-const ChatMessages = ({ selectedContact, messages }) => {
+const ChatMessages = ({ selectedContact, messages, isTyping }) => {
   const messagesEndRef = useRef(null);
 
-  // Scroll to the last message whenever the messages array changes
+  // Enhanced scroll-to-bottom after messages or typing state changes
   useEffect(() => {
+    const scrollWithDelay = () => {
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          scrollToBottom();
+        }, 200); // Give media some time to render
+      });
+    };
+
+    scrollWithDelay();
+  }, [messages, isTyping]);
+
+  const scrollToBottom = () => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
     }
-  }, [messages]); // Dependency on messages array, so it runs when messages change
+  };
+
+  const renderMessage = (msg, index) => {
+    const sent = msg.status !== "received";
+    const key = msg.message_id || index;
+    const message = { ...msg, sent_at: formatTime(msg.sent_at) };
+
+    switch (msg.message_type) {
+      case "text":
+      case "button":
+        return <TextMessage key={key} msg={message} sent={sent} />;
+      case "image":
+        return <ImageMessage key={key} msg={message} sent={sent} />;
+      case "video":
+        return <VideoMessage key={key} msg={message} sent={sent} />;
+      case "template":
+        return <TemplateMessage key={key} msg={message} sent={sent} />;
+      case "audio":
+        return <AudioMessage key={key} msg={message} sent={sent} />;
+      case "location":
+        return <LocationMessage key={key} msg={message} sent={sent} />;
+      case "contact":
+        return <ContactMessage key={key} msg={message} sent={sent} />;
+      case "document":
+        if (!msg.document) {
+          console.warn("Missing document in message:", msg);
+        }
+        return <DocumentMessage key={key} msg={message} sent={sent} />;
+      default:
+        console.warn("Unhandled message type:", msg.message_type);
+        return (
+          <div key={key} className="text-red-400 text-sm italic">
+            Unsupported message type: {msg.message_type}
+          </div>
+        );
+    }
+  };
 
   return (
-    <div className="p-4 h-[calc(100vh-200px)] overflow-y-auto space-y-4 scrollbar-hide">
+    <div
+      className="p-4 h-[calc(100vh-200px)] overflow-y-auto space-y-4 scrollbar-hide"
+      aria-live="polite"
+    >
       {messages.length > 0 ? (
-        messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`flex items-start space-x-3 ${
-              msg.status === "received" ? "" : "flex-row-reverse text-right"
-            }`}
-          >
-            <div
-              className={`flex-1 ${
-                msg.status === "received" ? "" : "items-end"
-              }`}
-            >
-              {/* ===== Text & Button Messages ===== */}
-              {(msg.message_type === "text" || msg.message_type === "button") && (
-                <div
-                  className={`inline-flex flex-col relative max-w-xs rounded-xl px-4 pt-2 pb-5 text-sm ${
-                    msg.status === "received"
-                      ? "bg-gray-200 text-black"
-                      : "bg-blue-500 text-white"
-                  }`}
-                >
-                  <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-                  <span className="absolute text-[10px] bottom-1 right-2 text-gray-300">
-                    {formatTime(msg.sent_at).toLowerCase()}
-                  </span>
-                </div>
-              )}
-
-              {/* ===== Image Message ===== */}
-              {msg.message_type === "image" && (
-                <div>
-                  <img
-                    src={msg.media_url}
-                    alt="Received"
-                    className="w-60 h-auto object-cover rounded mb-1"
-                  />
-                  
-                </div>
-              )}
-
-              {/* ===== Video Message ===== */}
-              {msg.message_type === "video" && (
-                <div>
-                  <video
-                    controls
-                    src={msg.media_url}
-                    className="w-60 h-auto rounded mb-1"
-                  />
-                  
-                </div>
-              )}
-
-              {/* ===== Template Message ===== */}
-              {msg.message_type === "template" && msg.container_meta && (
-                <div
-                  className={`bg-white border rounded-xl overflow-hidden shadow-md mt-2 max-w-[360px] ${
-                    msg.status !== "received" ? "ml-auto" : ""
-                  }`}
-                >
-                  <img
-                    src={
-                      msg.container_meta.banner_url ||
-                      "https://via.placeholder.com/600x300"
-                    }
-                    alt="Promo"
-                    className="w-full h-40 object-cover"
-                  />
-                  <div className="p-3">
-                    {msg.container_meta.header && (
-                      <p className="text-lg font-semibold text-red-600">
-                        {msg.container_meta.header}
-                      </p>
-                    )}
-                    <p className="text-sm text-gray-800 whitespace-pre-line mt-1">
-                      {msg.container_meta.data}
-                    </p>
-                    <div className="space-y-2 mt-2">
-                      {msg.container_meta.buttons?.map((btn, idx) => (
-                        <button
-                          key={idx}
-                          className="w-full bg-[#0080ff] hover:bg-[#0066cc] text-white py-2 rounded text-sm font-medium transition"
-                        >
-                          {btn.text}
-                        </button>
-                      ))}
-                    </div>
-                    {msg.container_meta.footer && (
-                      <p className="text-xs text-gray-400 mt-3">
-                        {msg.container_meta.footer}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        ))
+        messages.map((msg, index) => renderMessage(msg, index))
       ) : (
         <p className="text-center text-gray-400">
-          {selectedContact?.conversation_id === 6
+          {selectedContact?.conversation_id
             ? "No messages to display."
             : "This contact has no visible conversation."}
         </p>
       )}
 
-      {/* The reference for scrolling to the bottom */}
+      {isTyping && (
+        <div className="flex justify-start">
+          <TypingIndicator />
+        </div>
+      )}
+
+      {/* Scroll target */}
       <div ref={messagesEndRef} />
     </div>
   );
