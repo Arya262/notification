@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+
 import axios from "axios";
 import { API_BASE } from "./config/api";
 
@@ -15,6 +17,7 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
   const fetchContacts = async () => {
     try {
@@ -42,7 +45,10 @@ const Chat = () => {
 
   useEffect(() => {
     fetchContacts();
-  }, []);
+    if (location.state?.contact) {
+      handleSelectContact(location.state.contact);
+    }
+  }, [location.state]);
 
   const handleSelectContact = (contact) => {
     setSelectedContact(contact);

@@ -14,6 +14,7 @@ export default function ContactList() {
         const transformed = data.map((item) => ({
           ...item,
           status: item.is_active ? 'Opted-in' : 'Opted-Out',
+          customer_id: item.customer_id,
           date: new Date(item.created_at).toLocaleDateString('en-US', {
             month: 'short',
             day: '2-digit',
