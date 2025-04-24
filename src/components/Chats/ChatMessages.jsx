@@ -50,7 +50,7 @@ const ChatMessages = ({ selectedContact, messages }) => {
                     alt="Received"
                     className="w-60 h-auto object-cover rounded mb-1"
                   />
-                  <p className="text-sm text-gray-600">Image received</p>
+                  
                 </div>
               )}
 
@@ -62,9 +62,7 @@ const ChatMessages = ({ selectedContact, messages }) => {
                     src={msg.media_url}
                     className="w-60 h-auto rounded mb-1"
                   />
-                  <p className="text-sm text-gray-600">
-                    {msg.content || "Video received"}
-                  </p>
+                  
                 </div>
               )}
 

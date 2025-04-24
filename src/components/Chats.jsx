@@ -16,12 +16,12 @@ const Chat = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchContacts = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${API_BASE}/conversations?shop_id=1`);
-        const enriched = response.data.map((c) => ({
+  const fetchContacts = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_BASE}/conversations?shop_id=1`);
+      const enriched = response.data
+        .map((c) => ({
           id: c.guest_id,
           conversation_id: c.conversation_id,
           name: `${c.name} ${c.last_name || ""}`.trim(),
@@ -29,16 +29,18 @@ const Chat = () => {
           updated_at: c.updated_at,
           image: c.profile_image,
           active: false,
-        })).sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+        }))
+        .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
 
-        setContacts(enriched);
-      } catch (error) {
-        console.error("Failed to fetch contacts", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      setContacts(enriched);
+    } catch (error) {
+      console.error("Failed to fetch contacts", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchContacts();
   }, []);
 
@@ -88,6 +90,7 @@ const Chat = () => {
 
       console.log("Response from API:", response.data);
       fetchMessagesForContact(selectedContact.conversation_id);
+      fetchContacts();
     } catch (error) {
       console.error("Error sending message:", error);
     }
