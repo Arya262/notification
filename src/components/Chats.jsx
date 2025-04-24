@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 
 import axios from "axios";
@@ -11,7 +11,7 @@ import MessageInput from "./Chats/MessageInput";
 import UserDetails from "./Chats/UserDetails";
 
 const Chat = () => {
-  const [showUserDetails, setShowUserDetails] = useState(false); 
+  const [showUserDetails, setShowUserDetails] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
   const [contacts, setContacts] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -19,9 +19,9 @@ const Chat = () => {
   const [loading, setLoading] = useState(true);
   const location = useLocation();
 
-    // Refs to track clicks outside user details and profile button
-    const userDetailsRef = useRef(null);
-    const profileButtonRef = useRef(null);
+  // Refs to track clicks outside user details and profile button
+  const userDetailsRef = useRef(null);
+  const profileButtonRef = useRef(null);
 
   const fetchContacts = async () => {
     try {
@@ -47,27 +47,6 @@ const Chat = () => {
     }
   };
 
-    // Close user details if click is outside of the user details area or profile button
-    useEffect(() => {
-      const handleClickOutside = (e) => {
-        // Check if the click is outside the user details or profile button
-        if (
-          userDetailsRef.current && !userDetailsRef.current.contains(e.target) &&
-          !profileButtonRef.current.contains(e.target)
-        ) {
-          setShowUserDetails(false);  // Close user details
-        }
-      };
-  
-      // Add the event listener
-      document.addEventListener("click", handleClickOutside);
-  
-      // Clean up the event listener
-      return () => {
-        document.removeEventListener("click", handleClickOutside);
-      };
-    }, []);
-
   useEffect(() => {
     fetchContacts();
     if (location.state?.contact) {
@@ -75,9 +54,31 @@ const Chat = () => {
     }
   }, [location.state]);
 
+  // Close user details if click is outside of the user details area or profile button
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      // Check if the click is outside the user details or profile button
+      if (
+        userDetailsRef.current &&
+        !userDetailsRef.current.contains(e.target) &&
+        !profileButtonRef.current.contains(e.target)
+      ) {
+        setShowUserDetails(false); // Close user details
+      }
+    };
+
+    // Add the event listener
+    document.addEventListener("click", handleClickOutside);
+
+    // Clean up the event listener
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
+
   const handleSelectContact = (contact) => {
     setSelectedContact(contact);
-    setShowUserDetails(false); 
+    setShowUserDetails(false);
     setContacts((prev) =>
       prev.map((c) => ({ ...c, active: c.id === contact.id }))
     );
@@ -114,11 +115,7 @@ const Chat = () => {
     };
 
     try {
-      const response = await axios.post(
-        "http://192.168.1.41:3000/sendmessage",
-        newMessage
-      );
-
+      const response = await axios.post(`${API_BASE}/sendmessage`, newMessage);
       console.log("Response from API:", response.data);
       fetchMessagesForContact(selectedContact.conversation_id);
       fetchContacts();
@@ -128,7 +125,7 @@ const Chat = () => {
   };
 
   const toggleUserDetails = () => {
-    setShowUserDetails((prev) => !prev); // Toggle the user details visibility
+    setShowUserDetails((prev) => !prev); 
   };
 
   return (
@@ -150,7 +147,7 @@ const Chat = () => {
       <div className="w-full">
         <ChatHeader
           selectedContact={selectedContact}
-          onProfileClick={() => setShowUserDetails(true)} 
+          onProfileClick={toggleUserDetails}
           ref={profileButtonRef}
         />
 
@@ -172,7 +169,9 @@ const Chat = () => {
           </div>
 
           {showUserDetails && (
-            <div ref={userDetailsRef}> {/* Attach ref here */}
+            <div ref={userDetailsRef}>
+              {" "}
+              {/* Attach ref here */}
               <UserDetails
                 selectedContact={selectedContact}
                 isExpanded={true}
