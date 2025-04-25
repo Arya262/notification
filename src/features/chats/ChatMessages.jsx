@@ -1,19 +1,20 @@
 import React, { useEffect, useRef } from "react";
-import TextMessage from "./TextMessage";
-import ImageMessage from "./ImageMessage";
-import VideoMessage from "./VideoMessage";
-import TemplateMessage from "./TemplateMessage";
-import TypingIndicator from "./TypingIndicator";
-import AudioMessage from "./AudioMessage";
-import LocationMessage from "./LocationMessage";
-import ContactMessage from "./ContactMessage";
-import DocumentMessage from "./DocumentMessage";
+import TextMessage from "./chatfeautures/TextMessage";
+import ImageMessage from "./chatfeautures/ImageMessage";
+import VideoMessage from "./chatfeautures/VideoMessage";
+import TemplateMessage from "./chatfeautures/TemplateMessage";
+import TypingIndicator from "./chatfeautures/TypingIndicator";
+import AudioMessage from "./chatfeautures/AudioMessage";
+import LocationMessage from "./chatfeautures/LocationMessage";
+import ContactMessage from "./chatfeautures/ContactMessage";
+import DocumentMessage from "./chatfeautures/DocumentMessage";
 import { formatTime } from "../../utils/time";
+import { format, isToday, isYesterday } from "date-fns";
 
 const ChatMessages = ({ selectedContact, messages, isTyping }) => {
   const messagesEndRef = useRef(null);
 
-  // Enhanced scroll-to-bottom after messages or typing state changes
+  // Scroll to bottom when messages or typing changes
   useEffect(() => {
     const scrollWithDelay = () => {
       requestAnimationFrame(() => {
@@ -22,7 +23,6 @@ const ChatMessages = ({ selectedContact, messages, isTyping }) => {
         }, 200); // Give media some time to render
       });
     };
-
     scrollWithDelay();
   }, [messages, isTyping]);
 
@@ -30,6 +30,22 @@ const ChatMessages = ({ selectedContact, messages, isTyping }) => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
     }
+  };
+
+  const getDateLabel = (date) => {
+    if (isToday(date)) return "Today";
+    if (isYesterday(date)) return "Yesterday";
+    return format(date, "MMMM d, yyyy"); // e.g., April 25, 2025
+  };
+
+  const groupMessagesByDate = (messages) => {
+    return messages.reduce((acc, msg) => {
+      const date = new Date(msg.sent_at);
+      const label = getDateLabel(date);
+      if (!acc[label]) acc[label] = [];
+      acc[label].push(msg);
+      return acc;
+    }, {});
   };
 
   const renderMessage = (msg, index) => {
@@ -68,13 +84,24 @@ const ChatMessages = ({ selectedContact, messages, isTyping }) => {
     }
   };
 
+  const groupedMessages = groupMessagesByDate(messages);
+
   return (
     <div
       className="p-4 h-[calc(100vh-200px)] overflow-y-auto space-y-4 scrollbar-hide"
       aria-live="polite"
     >
       {messages.length > 0 ? (
-        messages.map((msg, index) => renderMessage(msg, index))
+        Object.entries(groupedMessages).map(([dateLabel, dayMessages]) => (
+          <div key={dateLabel}>
+            <div className="flex justify-center my-2">
+              <span className="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full shadow-sm">
+                {dateLabel}
+              </span>
+            </div>
+            {dayMessages.map((msg, index) => renderMessage(msg, index))}
+          </div>
+        ))
       ) : (
         <p className="text-center text-gray-400">
           {selectedContact?.conversation_id
@@ -83,13 +110,12 @@ const ChatMessages = ({ selectedContact, messages, isTyping }) => {
         </p>
       )}
 
-      {isTyping && (
+      {isTyping && selectedContact?.conversation_id && (
         <div className="flex justify-start">
           <TypingIndicator />
         </div>
       )}
 
-      {/* Scroll target */}
       <div ref={messagesEndRef} />
     </div>
   );

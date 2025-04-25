@@ -1,86 +1,34 @@
 import { useState, useEffect } from "react";
 import searchIcon from "../../assets/search.png";
-import deleteIcon from "../../assets/delet.png";
+import deleteIcon from "../../assets/delete.png";
 
-const data = [
-  {
-    date: "Apr 07, 2025",
-    name: "Offer",
-    type: "Manual Broadcast",
-    msgType: "Template Massage",
-    schedule: "Instant",
-    status: "Live",
-  },
-  {
-    date: "Apr 07, 2025",
-    name: "Festival",
-    type: "Manual Broadcast",
-    msgType: "Template Massage",
-    schedule: "Instant",
-    status: "Live",
-  },
-  {
-    date: "Apr 10, 2025",
-    name: "Summer Sale",
-    type: "Manual Broadcast",
-    msgType: "Template Massage",
-    schedule: "Later",
-    status: "Paused",
-  },
-  {
-    date: "Apr 11, 2025",
-    name: "Flash Deal",
-    type: "Manual Broadcast",
-    msgType: "Text Massage",
-    schedule: "Scheduled",
-    status: "Paused",
-  },
-  {
-    date: "Apr 12, 2025",
-    name: "Survey",
-    type: "Manual Broadcast",
-    msgType: "Text Massage",
-    schedule: "Scheduled",
-    status: "Opted-Out",
-  },
-  {
-    date: "Apr 13, 2025",
-    name: "Welcome",
-    type: "Manual Broadcast",
-    msgType: "Template Massage",
-    schedule: "Instant",
-    status: "Opted-in",
-  },
-  {
-    date: "Apr 14, 2025",
-    name: "Reminder",
-    type: "Manual Broadcast",
-    msgType: "Text Massage",
-    schedule: "Scheduled",
-    status: "Stopped",
-  },
-];
-
-const BroadcastDashboard = () => {
+const BroadcastDashboard = ({ data, onDelete }) => {
   const [search, setSearch] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
-  const [activeFilter, setActiveFilter] = useState(null);
+  const [activeFilter, setActiveFilter] = useState("All");
   const [selectAll, setSelectAll] = useState(false);
   const [selectedRows, setSelectedRows] = useState({});
 
-  // Filter the data based on the active filter
+  // Filter the data based on the active filter and search input
   const filteredData = data.filter((row) => {
-    if (activeFilter === "All" || activeFilter === null) return true;
-    if (activeFilter === "Opted-in" && row.status === "Opted-in") return true;
-    if (activeFilter === "Opted-Out" && row.status === "Opted-Out") return true;
-    if (activeFilter === "Scheduled" && row.schedule === "Scheduled")
-      return true;
-    if (activeFilter === "Stopped" && row.status === "Stopped") return true;
-    if (activeFilter === "Paused" && row.status === "Paused") return true;
-    return false;
+    const matchesFilter =
+      activeFilter === "All" ||
+      (activeFilter === "Opted-in" && row.status === "Opted-in") ||
+      (activeFilter === "Opted-Out" && row.status === "Opted-Out") ||
+      (activeFilter === "Scheduled" && row.schedule === "Scheduled") ||
+      (activeFilter === "Stopped" && row.status === "Stopped") ||
+      (activeFilter === "Paused" && row.status === "Paused");
+
+    const matchesSearch =
+      row.name?.toLowerCase().includes(search.toLowerCase()) ||
+      row.broadcastName?.toLowerCase().includes(search.toLowerCase()) ||
+      row.type?.toLowerCase().includes(search.toLowerCase()) ||
+      row.msgType?.toLowerCase().includes(search.toLowerCase()) ||
+      row.schedule?.toLowerCase().includes(search.toLowerCase());
+
+    return matchesFilter && matchesSearch;
   });
 
-  // Handle Select All checkbox change
   const handleSelectAllChange = (event) => {
     setSelectAll(event.target.checked);
     const newSelectedRows = {};
@@ -94,7 +42,6 @@ const BroadcastDashboard = () => {
     setSelectedRows(newSelectedRows);
   };
 
-  // Handle individual checkbox change
   const handleCheckboxChange = (idx, event) => {
     setSelectedRows({
       ...selectedRows,
@@ -102,7 +49,6 @@ const BroadcastDashboard = () => {
     });
   };
 
-  // Calculate filter counts dynamically based on data
   const statuses = {
     All: data.length,
     "Opted-in": data.filter((d) => d.status === "Opted-in").length,
@@ -122,31 +68,31 @@ const BroadcastDashboard = () => {
     {
       label: "Opted-in",
       count: statuses["Opted-in"],
-      color: "bg-blue-500",
+      color: "bg-teal-500",
       width: "w-[120px]",
     },
     {
       label: "Opted-Out",
       count: statuses["Opted-Out"],
-      color: "bg-red-500",
+      color: "bg-teal-500",
       width: "w-[120px]",
     },
     {
       label: "Scheduled",
       count: statuses["Scheduled"],
-      color: "bg-purple-500",
+      color: "bg-teal-500",
       width: "w-[130px]",
     },
     {
       label: "Stopped",
       count: statuses["Stopped"],
-      color: "bg-red-500",
+      color: "bg-teal-500",
       width: "w-[110px]",
     },
     {
       label: "Paused",
       count: statuses["Paused"],
-      color: "bg-yellow-500",
+      color: "bg-teal-500",
       width: "w-[110px]",
     },
   ];
@@ -156,7 +102,7 @@ const BroadcastDashboard = () => {
       setIsMobileView(window.innerWidth < 1000);
     };
 
-    handleResize(); // Initial check
+    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -164,12 +110,11 @@ const BroadcastDashboard = () => {
   return (
     <div
       className={`w-full ${
-        data.length > 0 ? "bg-white shadow" : ""
-      } rounded-xl mt-4 min-h-fit`}
+        data.length > 0 ? "bg-white shadow-sm" : ""
+      } rounded-xl mt-4 shadow-2xl min-h-fit`}
     >
-      <div className="flex items-center p-4 mb-4">
-        {/* Filters and Search in a single flex row */}
-        <div className="flex items-center gap-4 overflow-x-auto">
+      <div className="flex items-center shadow-2xl p-4">
+      <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide">
           <div className="hidden md:flex items-center gap-4">
             {filters.map((f, i) => (
               <button
@@ -179,7 +124,7 @@ const BroadcastDashboard = () => {
                 } transition-all duration-200 
                 ${
                   activeFilter === f.label
-                    ? "bg-teal-500 text-white text-[14px]"
+                    ? `${f.color} text-white text-[14px]`
                     : "bg-transparent text-gray-700 text-[14px] hover:text-teal-500"
                 }`}
                 onClick={() =>
@@ -203,15 +148,13 @@ const BroadcastDashboard = () => {
                 </div>
               </button>
             ))}
-            {/* Search Icon for Medium Devices (768px - 1000px) */}
             <div className="hidden md:block lg:hidden">
               <button className="flex items-center justify-center h-10 w-10">
                 <img src={searchIcon} alt="Search" className="w-5 h-5 opacity-60" />
               </button>
             </div>
           </div>
-          {/* Search Input for Large Devices (>1000px) */}
-          <div className="hidden lg:block flex-shrink-0">
+          <div className="hidden ml-28 lg:block flex-shrink-0">
             <div className="relative w-[300px]">
               <img
                 src={searchIcon}
@@ -223,16 +166,16 @@ const BroadcastDashboard = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search template by Name or Category..."
-                className="pl-2 pr-8 py-2 border border-gray-300 text-sm rounded-md w-full focus:outline-none focus:ring focus:border-blue-300"
+                className="pl-2 pr-8 py-2 border border-gray-300 text-sm rounded-md w-full focus:outline-none "
               />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="overflow-x-auto max-w-full">
-        <table className="w-full text-sm text-center  overflow-hidden ">
-          <thead className="bg-gray-100 border-b-2 border-gray-300">
+      <div className="overflow-x-auto  max-w-full">
+        <table className="w-full text-sm text-center   overflow-hidden">
+          <thead className="bg-gray-100 border-b-2 shadow-sm border-gray-300">
             <tr>
               <th className="px-6 py-3">
                 <div className="flex items-center justify-center h-full">
@@ -291,7 +234,7 @@ const BroadcastDashboard = () => {
                     {row.date}
                   </td>
                   <td className="px-4 py-5 text-[16px] text-gray-700">
-                    {row.name}
+                    {row.name || row.broadcastName}
                   </td>
                   <td className="px-4 py-5 text-[16px] text-gray-700">
                     {row.type}
@@ -306,7 +249,10 @@ const BroadcastDashboard = () => {
                     {row.status}
                   </td>
                   <td className="px-4 py-2">
-                    <button className="flex items-center justify-center hover:bg-red-600 w-8 h-8 rounded ml-11">
+                    <button
+                      className="flex items-center justify-center hover:bg-red-600 w-8 h-8 rounded ml-11"
+                      onClick={() => onDelete && onDelete(idx)}
+                    >
                       <img src={deleteIcon} alt="Delete" className="w-7 h-7" />
                     </button>
                   </td>

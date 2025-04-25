@@ -1,5 +1,5 @@
-import Header from "./Header";
-import Sidebar from "./Sidebar";
+import Header from "../components/Header";
+import Sidebar from "../components/Sidebar";
 import React, { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 
@@ -19,7 +19,7 @@ const DashboardLayout = () => {
       />
 
       {/* Sidebar and Main Content */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden pt-[5px]">
         {/* Sidebar */}
         <Sidebar isOpen={isMenuOpen} setIsOpen={setIsMenuOpen} />
 

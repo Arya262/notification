@@ -2,7 +2,7 @@ import { Check, CheckCheck } from "lucide-react";
 
 const ImageMessage = ({ msg, sent }) => (
   <div className={`relative flex ${sent ? "justify-end" : "justify-start"}`}>
-    <div className="bg-white rounded-2xl overflow-hidden shadow max-w-[40%]">
+    <div className="bg-white rounded-2xl overflow-hidden shadow max-w-[90%] sm:w-[70%] md:w-[60%] lg:w-[40%]">
       <img
         src={msg.media_url}
         alt={msg.content || "Image"}

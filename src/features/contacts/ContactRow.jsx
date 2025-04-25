@@ -1,13 +1,25 @@
 import React, { useState, useRef, useEffect } from "react";
-
 import { useNavigate } from "react-router-dom";
 
 export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
+  const [shouldFlipUp, setShouldFlipUp] = useState(false);
   const dropdownRef = useRef(null);
+  const rowRef = useRef(null);
   const navigate = useNavigate();
 
-  const toggleDropdown = () => setDropdownOpen((prev) => !prev);
+  const toggleDropdown = () => {
+    setDropdownOpen((prev) => {
+      const next = !prev;
+
+      if (next && rowRef.current) {
+        const rect = rowRef.current.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        setShouldFlipUp(spaceBelow < 160); 
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -21,18 +33,19 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
 
   const handleSendMessageClick = async () => {
     try {
-      // Fetch conversation ID for the contact
       const res = await fetch(
         `http://192.168.1.41:3000/conversationid?customer_id=${contact.customer_id}`
       );
       const data = await res.json();
 
       if (!data || !data.conversation_id) {
-        console.error("No conversation_id found for contact", contact.customer_id);
+        console.error(
+          "No conversation_id found for contact",
+          contact.customer_id
+        );
         return;
       }
 
-      // Navigate to /chats and pass the contact + conversation_id via state
       navigate("/chats", {
         state: {
           contact: {
@@ -47,7 +60,10 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
   };
 
   return (
-    <div className="flex items-center px-3 py-4 border-b border-[#C3C3C3] relative">
+    <div
+      ref={rowRef}
+      className="flex items-center px-3 py-4 border-b border-[#C3C3C3] relative"
+    >
       {/* Checkbox */}
       <div className="w-[8%] flex justify-center items-center">
         <input
@@ -91,6 +107,7 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
         <button
           onClick={handleSendMessageClick}
           className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-3 py-2 rounded-full whitespace-nowrap"
+          aria-label={`Send message to ${contact.fullName}`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -113,6 +130,7 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
         <button
           onClick={toggleDropdown}
           className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
+          aria-label="Contact options"
         >
           <svg
             className="w-5 h-5 text-gray-600"
@@ -131,19 +149,21 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
 
         {/* Dropdown Menu */}
         {isDropdownOpen && (
-          <div className="absolute right-0 top-12 w-44 bg-white border border-gray-200 rounded-md shadow-lg z-20">
+          <div
+            className={`absolute right-0 ${shouldFlipUp ? "bottom-12" : "top-12"} w-44 bg-white border border-gray-200 rounded-md shadow-lg z-20`}
+          >
             <button
               onClick={() => console.log("Edit", contact.id)}
               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
             >
-              ✏️ Edit
+              Edit
             </button>
 
             <button
               onClick={() => console.log("Delete", contact.id)}
-              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
             >
-              🗑️ Delete
+              Delete
             </button>
           </div>
         )}

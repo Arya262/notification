@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 
 import axios from "axios";
-import { API_BASE } from "./config/api";
+import { API_BASE } from "../../config/api";
 
-import ChatSidebar from "./Chats/chatSiderbar";
-import ChatHeader from "./Chats/ChatHeader";
-import ChatMessageArea from "./Chats/ChatMessages";
-import MessageInput from "./Chats/MessageInput";
-import UserDetails from "./Chats/UserDetails";
+import ChatSidebar from "./chatSiderbar";
+import ChatHeader from "./ChatHeader";
+import ChatMessageArea from "./ChatMessages";
+import MessageInput from "./MessageInput";
+import UserDetails from "./UserDetails";
 
 const Chat = () => {
   const [showUserDetails, setShowUserDetails] = useState(false);

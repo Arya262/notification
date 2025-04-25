@@ -1,5 +1,14 @@
-import { Check, CheckCheck, FileText, FileAudio, FileImage, FileVideo, FileArchive, File } from "lucide-react";
-import { formatFileSize } from "../../utils/format"
+import {
+  Check,
+  CheckCheck,
+  FileText,
+  FileAudio,
+  FileImage,
+  FileVideo,
+  FileArchive,
+  File
+} from "lucide-react";
+import { formatFileSize } from "../../../utils/format";
 
 const getFileIcon = (fileName = "") => {
   const ext = fileName.split(".").pop().toLowerCase();
@@ -19,7 +28,7 @@ const DocumentMessage = ({ msg, sent }) => {
 
   return (
     <div className={`relative flex ${sent ? "justify-end" : "justify-start"}`}>
-      <div className="bg-white rounded-2xl overflow-hidden shadow max-w-[40%]">
+      <div className="bg-white rounded-2xl overflow-hidden shadow max-w-[90%] sm:w-[70%] md:w-[60%] lg:w-[40%]">
         <div className="p-3 flex items-start gap-3">
           <div className="pt-1">{getFileIcon(name)}</div>
           <div>
@@ -27,8 +36,7 @@ const DocumentMessage = ({ msg, sent }) => {
             <p className="text-xs text-gray-600">{size}</p>
             <a
               href={url}
-              target="_blank"
-              rel="noopener noreferrer"
+              download={name}
               className="text-blue-500 text-xs mt-1 block"
             >
               Download

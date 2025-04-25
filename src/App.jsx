@@ -1,28 +1,102 @@
-import React from "react";
-import { Routes, Route } from "react-router-dom";
-import DashboardLayout from "./components/DashboardLayout";
-import ContactList from "./components/ContactList";
-import Templates from "./components/Templates";
-import Chats from "./components/Chats";
-import Help from "./components/Help";
-import Setting from "./components/Setting";
-import Broadcast from "./components/Broadcast/Broadcast";
+import React, { lazy, Suspense } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import DashboardLayout from "./layouts/DashboardLayout";
+import ErrorBoundary from "./components/ErrorBoundary";
+import Loader from "./components/Loader"; 
+
+// Lazy load components
+const ContactList = lazy(() => import("./features/contacts/ContactList"));
+const Templates = lazy(() => import("./features/templates/Templates"));
+const Chats = lazy(() => import("./features/chats/Chats"));
+const Help = lazy(() => import("./features/help/Help"));
+const Setting = lazy(() => import("./features/settings/Setting"));
+const Broadcast = lazy(() => import("./features/broadcast/Broadcast"));
+const NotFound = lazy(() => import("./components/NotFound"));
+const DashboardHome = lazy(() => import("./features/dashboard/DashboardHome"));
+
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<DashboardLayout />}>
-        {/* Dashboard default */}
-        <Route index element={<div>Welcome to Dashboard</div>} />
-        
-        {/* Child Routes */}
-        <Route path="contact" element={<ContactList />} />
-        <Route path="templates" element={<Templates />} />
-        <Route path="chats" element={<Chats />} />
-        <Route path="broadcast" element={<Broadcast />} />
-        <Route path="settings" element={<Setting />} />
-        <Route path="help" element={<Help />} />
-      </Route>
-    </Routes>
+    <Suspense fallback={<Loader />}>
+      <Routes>
+        <Route path="/" element={<DashboardLayout />}>
+          {/* Dashboard default */}
+          <Route
+            index
+            element={
+              <ErrorBoundary>
+                <DashboardHome />
+              </ErrorBoundary>
+            }
+          />
+
+          {/* Child Routes */}
+          <Route
+            path="contact"
+            element={
+              <ErrorBoundary>
+                <ContactList />
+              </ErrorBoundary>
+            }
+          />
+          <Route
+            path="templates"
+            element={
+              <ErrorBoundary>
+                <Templates />
+              </ErrorBoundary>
+            }
+          />
+          <Route
+            path="chats"
+            element={
+              <ErrorBoundary>
+                <Chats />
+              </ErrorBoundary>
+            }
+          />
+          <Route
+            path="broadcast"
+            element={
+              <ErrorBoundary>
+                <Broadcast />
+              </ErrorBoundary>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <ErrorBoundary>
+                <Setting />
+              </ErrorBoundary>
+            }
+          />
+          <Route
+            path="help"
+            element={
+              <ErrorBoundary>
+                <Help />
+              </ErrorBoundary>
+            }
+          />
+
+          {/* Redirect legacy path */}
+          <Route path="contacts" element={<Navigate to="/contact" replace />} />
+
+          {/* 404 Fallback */}
+          <Route
+            path="*"
+            element={
+              <ErrorBoundary>
+                <NotFound />
+              </ErrorBoundary>
+            }
+          />
+        </Route>
+
+        {/* Optional: Root-level fallback for unmatched routes outside of layout */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </Suspense>
   );
 }
 

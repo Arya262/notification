@@ -56,8 +56,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       aria-label="Main sidebar"
       className={`fixed top-16 left-0 h-screen w-64 bg-white p-4 z-40 transition-transform duration-300 ease-in-out
         ${isOpen ? "translate-x-0" : "-translate-x-full"} 
-        mt-8 lg:mt-0
-        lg:relative lg:translate-x-0 lg:top-auto lg:left-auto lg:h-auto shadow-[0px_4px_4px_0px_#00000040]`}
+        mt-14 md:mt-2 lg:mt-0
+        lg:relative lg:translate-x-0 lg:top-auto lg:left-auto lg:h-auto shadow-[0px_4px_4px_0px_#00000040] lg:sticky`}
     >
       <div className="flex flex-col gap-4 mt-6">
         {menuItems.map((item) => (
@@ -68,19 +68,14 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               if (window.innerWidth < 1024) setIsOpen(false);
             }}
             className={({ isActive }) =>
-              `group flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-base shadow-sm transition-all duration-200 ${
-                isActive
-                  ? "bg-teal-500 text-white"
-                  : "bg-white text-black hover:bg-gray-100"
-              }`
+              `group flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-base shadow-sm transition-all duration-200 
+              ${isActive ? "bg-teal-500 text-white" : "bg-white text-black hover:bg-gray-100"}`
             }
           >
             <span
-              className={`w-5 h-5 flex items-center justify-center ${
-                location.pathname === item.path
-                  ? "text-white"
-                  : "text-gray-600 group-hover:text-teal-500"
-              }`}
+              className={`w-5 h-5 flex items-center justify-center ${location.pathname === item.path
+                ? "text-white"
+                : "text-gray-600 group-hover:text-teal-500"}`}
             >
               {item.icon}
             </span>

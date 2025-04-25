@@ -12,7 +12,7 @@ const VideoMessage = ({ msg, sent }) => {
   return (
     <div className={`relative flex px-2 ${sent ? "justify-end" : "justify-start"}`}>
       <div
-        className={`relative bg-white rounded-2xl shadow-md overflow-hidden max-w-[40%] ${
+        className={`relative bg-white rounded-2xl shadow-md overflow-hidden w-[90%] sm:w-[70%] md:w-[60%] lg:w-[40%] ${
           sent ? "rounded-br-none" : "rounded-bl-none"
         }`}
       >
