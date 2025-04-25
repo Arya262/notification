@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; 
 import Select, { components } from 'react-select'; // Import react-select and components
 import { FiSearch } from 'react-icons/fi'; // Import search icon from react-icons
 
@@ -11,7 +11,7 @@ export default function AddContact() {
   const [csvUrl, setCsvUrl] = useState('');
   const [file, setFile] = useState(null);
   const [countryCodes, setCountryCodes] = useState([]); // Store country codes
-  const [selectedCountry, setSelectedCountry] = useState(''); // Default selected country
+  const [selectedCountry, setSelectedCountry] = useState(null); // Default selected country
   const [phoneError, setPhoneError] = useState('');
   const [isTouched, setIsTouched] = useState(false);
 
@@ -47,12 +47,40 @@ export default function AddContact() {
     fetchCountryCodes();
   }, []);
 
+  // Set default country code after fetching
+  useEffect(() => {
+    if (countryCodes.length > 0 && !selectedCountry) {
+      setSelectedCountry(countryCodes[0]);
+      setPhone(`${countryCodes[0].value} `);
+    }
+  }, [countryCodes]);
+
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
 
   const handleSubmit = () => {
     if (tab === 'single') {
+      if (!validatePhoneNumber()) return;
+
+      // Make the API request to add the customer
+      fetch('http://localhost:3000/addcustomer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_country_code: selectedCountry.value,
+          name: name,
+          mobile_no: phone.split(' ')[1], // Remove country code and get only the mobile number
+          shop_id: '1', // Replace with actual shop ID if dynamic
+        }),
+      })
+        .then(response => response.json())
+        .then(data => console.log(data))
+        .catch(error => console.error('Error:', error));
+      
+      // Log the form data for now
       console.log({ phone, optStatus, name, tags });
     } else {
       console.log({ csvUrl, file });
@@ -90,7 +118,6 @@ export default function AddContact() {
     setPhoneError('');
     return true;
   };
-
 
   return (
     <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl text-gray-500 p-6">
@@ -168,23 +195,22 @@ export default function AddContact() {
                 value={phone.split(' ')[1] || ''}
                 onFocus={() => setIsTouched(true)}
                 onChange={(e) => {
-                  setPhone(`${selectedCountry.value} ${e.target.value}`);
+                  setPhone(`${selectedCountry?.value || ''} ${e.target.value}`);
                   if (isTouched) validatePhoneNumber();
                 }}
                 onBlur={() => validatePhoneNumber()}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') validatePhoneNumber();
                 }}
-                className={`border p-2 flex-1 rounded-r-md text-gray-700 ${phoneError ? 'border-[#05A3A3]' : 'border-gray-300'
-                  }`}
+                className={`border p-2 flex-1 rounded-r-md text-gray-700 ${phoneError ? 'border-[#05A3A3]' : 'border-gray-300'}`}
               />
-
             </div>
             {phoneError && <p className="text-xs text-red-500 mt-1">{phoneError}</p>}
             <p className="text-xs text-gray-500 mt-1">
               Provide the contact's mobile number, making sure to include the correct country code (e.g., +1, +91).
             </p>
           </div>
+
           <div className="mb-6">
             <label className="block text-sm font-medium mb-2 text-gray-700">Opt Status</label>
             <div className="flex space-x-6">
@@ -211,15 +237,11 @@ export default function AddContact() {
                 />
                 <span className="ml-2 text-gray-700">Opted Out</span>
               </label>
-
-
-
             </div>
             <p className="text-xs text-gray-700 mt-1">
               Choose whether this contact has agreed to receive messages or not.
             </p>
           </div>
-
 
           <div className="mb-6">
             <input
@@ -233,51 +255,61 @@ export default function AddContact() {
               Enter a name to help identify this contact
             </p>
           </div>
+
+          <div className="mb-6">
+            <input
+              type="text"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              placeholder="Tags (comma separated)"
+              className="w-full border border-gray-300 p-2 rounded-md text-gray-700"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Add tags to help categorize this contact.
+            </p>
+          </div>
         </>
-      )
-      }
+      )}
 
       {/* Bulk Contact Form */}
-      {
-        tab === 'bulk' && (
-          <>
-            <div className="mb-6">
-              <label className="block text-sm font-medium mb-2 text-gray-700">CSV URL</label>
-              <input
-                type="text"
-                placeholder="Enter CSV file URL"
-                value={csvUrl}
-                onChange={(e) => setCsvUrl(e.target.value)}
-                className="w-full border border-gray-300 p-2 rounded-md text-gray-700"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Upload your contacts in .csv format. Up to 50MB file size (~200,000 contacts) allowed.{' '}
-                <a href="#" className="text-blue-600 underline">Download Sample CSV</a>
-              </p>
-            </div>
-            <div className="mb-6 border-2 border-dashed border-gray-300 rounded-md p-6 text-center">
-              <input
-                type="file"
-                accept=".csv"
-                onChange={handleFileChange}
-                className="hidden"
-                id="fileUpload"
+      {tab === 'bulk' && (
+        <>
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2 text-gray-700">CSV URL</label>
+            <input
+              type="text"
+              placeholder="Enter CSV file URL"
+              value={csvUrl}
+              onChange={(e) => setCsvUrl(e.target.value)}
+              className="w-full border border-gray-300 p-2 rounded-md text-gray-700"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Upload your contacts in .csv format. Up to 50MB file size (~200,000 contacts) allowed.{' '}
+              <a href="#" className="text-blue-600 underline">Download Sample CSV</a>
+            </p>
+          </div>
 
-              />
-              <label htmlFor="fileUpload" className="cursor-pointer text-gray-500">
-                <div className="flex justify-center mb-2">
-                  <img src="cloud-computing.png" className="w-6 h-6" alt="Upload Icon" />
-                </div>
-                <p>Choose a file or drag it here.</p>
-                <p className="text-xs mt-1">
-                  Upload a CSV file — max 50MB and 200K contacts allowed.
-                </p>
-                {file && <p className="mt-2 text-sm text-green-600">{file.name}</p>}
-              </label>
-            </div>
-          </>
-        )
-      }
+          <div className="mb-6 border-2 border-dashed border-gray-300 rounded-md p-6 text-center">
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleFileChange}
+              className="hidden"
+              id="fileUpload"
+            />
+            <label htmlFor="fileUpload" className="cursor-pointer text-gray-500">
+              <div className="flex justify-center mb-2">
+                <img src="cloud-computing.png" className="w-6 h-6" alt="Upload Icon" />
+              </div>
+              <p>Choose a file or drag it here.</p>
+              <p className="text-xs mt-1">
+                Upload a CSV file — max 50MB and 200K contacts allowed.
+              </p>
+              {file && <p className="mt-2 text-sm text-green-600">{file.name}</p>}
+            </label>
+          </div>
+        </>
+      )}
 
       {/* Add Contact Button */}
       <div className="flex justify-center mt-6">
@@ -288,7 +320,6 @@ export default function AddContact() {
           Add Contact
         </button>
       </div>
-
-    </div >
+    </div>
   );
 }
