@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
-
 import axios from "axios";
 import { API_BASE } from "../../config/api";
 
@@ -129,7 +128,7 @@ const Chat = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row w-full border border-gray-300 rounded-2xl bg-white mx-auto max-w-screen-2xl overflow-hidden">
+    <div className="flex flex-col md:flex-row w-full h-screen border border-gray-300 rounded-2xl bg-white mx-auto max-w-screen-2xl overflow-hidden">
       {loading ? (
         <div className="p-6 text-center text-gray-500 w-full md:w-1/3">
           Loading contacts...
@@ -144,15 +143,15 @@ const Chat = () => {
         />
       )}
 
-      <div className="w-full">
+      <div className="w-full h-full flex flex-col">
         <ChatHeader
           selectedContact={selectedContact}
           onProfileClick={toggleUserDetails}
           ref={profileButtonRef}
         />
 
-        <div className="w-full md:flex md:flex-row">
-          <div className="w-full md:flex-1">
+        <div className="w-full md:flex md:flex-row h-full">
+          <div className="w-full md:flex-1 h-full">
             {selectedContact ? (
               <>
                 <ChatMessageArea
@@ -163,15 +162,13 @@ const Chat = () => {
               </>
             ) : (
               <div className="h-full flex items-center justify-center text-gray-400 text-lg">
-                Select a contact to start chatting
+                Select a contact to start conversation
               </div>
             )}
           </div>
 
           {showUserDetails && (
             <div ref={userDetailsRef}>
-              {" "}
-              {/* Attach ref here */}
               <UserDetails
                 selectedContact={selectedContact}
                 isExpanded={true}

@@ -35,7 +35,7 @@ const ChatMessages = ({ selectedContact, messages, isTyping }) => {
   const getDateLabel = (date) => {
     if (isToday(date)) return "Today";
     if (isYesterday(date)) return "Yesterday";
-    return format(date, "MMMM d, yyyy"); // e.g., April 25, 2025
+    return format(date, "MMMM d, yyyy");
   };
 
   const groupMessagesByDate = (messages) => {
@@ -53,35 +53,41 @@ const ChatMessages = ({ selectedContact, messages, isTyping }) => {
     const key = msg.message_id || index;
     const message = { ...msg, sent_at: formatTime(msg.sent_at) };
 
-    switch (msg.message_type) {
-      case "text":
-      case "button":
-        return <TextMessage key={key} msg={message} sent={sent} />;
-      case "image":
-        return <ImageMessage key={key} msg={message} sent={sent} />;
-      case "video":
-        return <VideoMessage key={key} msg={message} sent={sent} />;
-      case "template":
-        return <TemplateMessage key={key} msg={message} sent={sent} />;
-      case "audio":
-        return <AudioMessage key={key} msg={message} sent={sent} />;
-      case "location":
-        return <LocationMessage key={key} msg={message} sent={sent} />;
-      case "contact":
-        return <ContactMessage key={key} msg={message} sent={sent} />;
-      case "document":
-        if (!msg.document) {
-          console.warn("Missing document in message:", msg);
-        }
-        return <DocumentMessage key={key} msg={message} sent={sent} />;
-      default:
-        console.warn("Unhandled message type:", msg.message_type);
-        return (
-          <div key={key} className="text-red-400 text-sm italic">
-            Unsupported message type: {msg.message_type}
-          </div>
-        );
-    }
+    return (
+      <div key={key} className="mb-4"> {/* Add margin-bottom here */}
+        {(() => {
+          switch (msg.message_type) {
+            case "text":
+            case "button":
+              return <TextMessage key={key} msg={message} sent={sent} />;
+            case "image":
+              return <ImageMessage key={key} msg={message} sent={sent} />;
+            case "video":
+              return <VideoMessage key={key} msg={message} sent={sent} />;
+            case "template":
+              return <TemplateMessage key={key} msg={message} sent={sent} />;
+            case "audio":
+              return <AudioMessage key={key} msg={message} sent={sent} />;
+            case "location":
+              return <LocationMessage key={key} msg={message} sent={sent} />;
+            case "contact":
+              return <ContactMessage key={key} msg={message} sent={sent} />;
+            case "document":
+              if (!msg.document) {
+                console.warn("Missing document in message:", msg);
+              }
+              return <DocumentMessage key={key} msg={message} sent={sent} />;
+            default:
+              console.warn("Unhandled message type:", msg.message_type);
+              return (
+                <div key={key} className="text-red-400 text-sm italic">
+                  Unsupported message type: {msg.message_type}
+                </div>
+              );
+          }
+        })()}
+      </div>
+    );
   };
 
   const groupedMessages = groupMessagesByDate(messages);

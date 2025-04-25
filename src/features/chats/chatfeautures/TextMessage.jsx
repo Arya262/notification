@@ -29,7 +29,7 @@ const TextMessage = ({ msg, sent }) => {
   return (
     <div className={`relative flex ${sent ? "justify-end" : "justify-start"}`}>
       <div
-        className={`relative inline-block max-w-[40%] px-4 pt-2 pb-[6px] rounded-2xl text-sm leading-snug shadow-sm ${bubbleColor} ${textColor} ${tailClass}`}
+        className={`relative inline-block max-w-[60%] px-4 pt-2 pb-[6px] rounded-2xl text-sm leading-snug shadow-sm ${bubbleColor} ${textColor} ${tailClass}`}
       >
         <p className="whitespace-pre-wrap break-words">{msg.content}</p>
         <div className="flex justify-end items-center space-x-1 mt-1">
