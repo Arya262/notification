@@ -10,8 +10,8 @@ const UserDetails = ({ isExpanded, setIsExpanded, selectedContact }) => {
         <div className="profile mt-3 text-center">
           <div className="avatar mx-auto mb-2 w-16 h-16 rounded-full overflow-hidden">
             <img
-              src={selectedContact.image}
-              alt="Profile"
+              src={selectedContact.image || "/default-avatar.jpeg"}
+              alt="User Avatar"
               className="w-full h-full object-cover"
             />
           </div>
