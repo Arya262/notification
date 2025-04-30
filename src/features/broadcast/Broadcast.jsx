@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import BroadcastStats from "./BroadcastStats";
-import vendor from "../../assets/Vector.png";
+import vendor from "../../assets/vector.png";
 import BroadcastDashboard from "./BroadcastDashboard";
 import BroadcastPages from "./BroadcastPages";
 
@@ -18,6 +18,13 @@ const Broadcast = () => {
         ? JSON.parse(savedData)
         : [
             {
+              date: "Apr 07, 2025",
+              name: "Offer",
+              type: "Manual Broadcast",
+              msgType: "Template Massage",
+              schedule: "Instant",
+              status: "Live",
+            },{
               date: "Apr 07, 2025",
               name: "Offer",
               type: "Manual Broadcast",

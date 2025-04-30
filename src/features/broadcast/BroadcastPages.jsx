@@ -1,5 +1,5 @@
-import React, { useState, forwardRef, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import React, { useState, useRef, useEffect, forwardRef } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -12,22 +12,29 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
     scheduleDate: "",
     regularMessageType: "Text Message",
     message: "",
-    image: "", // Stores the image for "Image Message"
-    video: "", // Added to store the video separately for "Video Message"
+    image: "",
+    video: "",
   });
 
   const [selectedDate, setSelectedDate] = useState(null);
-  const [showAlert, setShowAlert] = useState(false); // State for custom alert
-  const [highlightClose, setHighlightClose] = useState(false); // New state for highlighting close button
+  const [showAlert, setShowAlert] = useState(false);
+  const [highlightClose, setHighlightClose] = useState(false);
+  const [highlightBorder, setHighlightBorder] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
   const navigate = useNavigate();
-  const modalRef = useRef(null); // Ref for the modal container
+  const modalRef = useRef(null);
+  const dialogRef = useRef(null);
 
-  // Effect to handle click outside the modal
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
         setHighlightClose(true);
-        const timer = setTimeout(() => setHighlightClose(false), 3000);
+        setHighlightBorder(true);
+        // setShowExitDialog(true);
+        const timer = setTimeout(() => {
+          setHighlightClose(false);
+          setHighlightBorder(false);
+        }, 3000);
         return () => clearTimeout(timer);
       }
     };
@@ -61,7 +68,7 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
       reader.onloadend = () => {
         setFormData((prevData) => ({
           ...prevData,
-          [mediaType]: reader.result, // Store the media (image or video) in the appropriate field
+          [mediaType]: reader.result,
         }));
       };
       reader.readAsDataURL(file);
@@ -73,17 +80,8 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
     const updatedFormData = {
       ...formData,
       scheduleDate: selectedDate ? selectedDate.toString() : "",
-      date: selectedDate
-        ? selectedDate.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "2-digit",
-          })
-        : new Date().toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "2-digit",
-          }),
+      date:
+        formData.schedule === "Yes" && selectedDate ? selectedDate : new Date(),
       status: formData.schedule === "No" ? "Live" : "Scheduled",
       type: "Manual Broadcast",
       msgType:
@@ -110,23 +108,41 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
         placeholder="Select date & time"
       />
       <img
-        src="calendar.png"
+        src="/calendar.png"
         alt="calendar"
         onClick={onClick}
-        className="w-7 h-6 sm:w-7 sm:h-7 ml-2 flex-shrink-0"
+        className="w-7 h-6 sm:w-7 sm:h-7 ml-2 text-teal-500 flex-shrink-0"
       />
     </div>
   ));
 
   const handleCloseAndNavigate = () => {
-    const confirmExit = window.confirm("Are you sure you want to exit the page?");
-    if (confirmExit) {
-      onClose();
-      navigate("/broadcast");
-    }
+    setShowExitDialog(true);
   };
 
-  // Custom File Input Component for Drag and Drop (used for both image and video)
+  const hasUnsavedChanges = Object.values(formData).some(
+    (value) =>
+      value &&
+      value !== "Select Customer List" &&
+      value !== "Text Message" &&
+      value !== "Pre-approved template message" &&
+      value !== "No"
+  );
+
+  const confirmExit = () => {
+    onClose();
+    navigate("/broadcast");
+    setShowExitDialog(false);
+    setHighlightClose(false);
+    setHighlightBorder(false);
+  };
+
+  const cancelExit = () => {
+    setShowExitDialog(false);
+    setHighlightClose(false);
+    setHighlightBorder(false);
+  };
+
   const CustomFileInput = ({ mediaType, accept }) => {
     const handleDragOver = (e) => {
       e.preventDefault();
@@ -195,259 +211,358 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
     );
   };
 
+  const ConfirmationDialogInline = () => {
+    if (!showExitDialog) return null;
+
+    useEffect(() => {
+      const handleKeyDown = (e) => {
+        if (e.key === "Escape") {
+          cancelExit();
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
+    }, []);
+
+    useEffect(() => {
+      dialogRef.current?.focus();
+    }, []);
+
+    return (
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <div
+          ref={dialogRef}
+          className="bg-white rounded-xl p-6 w-full max-w-sm shadow-lg transform transition-all duration-300 scale-100"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dialog-title"
+          aria-describedby="dialog-message"
+          tabIndex="-1"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <svg
+              className="w-6 h-6 text-teal-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            <h3
+              id="dialog-title"
+              className="text-lg font-semibold text-gray-800"
+            >
+              Exit Confirmation
+            </h3>
+          </div>
+          <p id="dialog-message" className="text-gray-600 mb-6">
+            {hasUnsavedChanges
+              ? "You have unsaved changes. Are you sure you want to exit?"
+              : "Are you sure you want to exit?"}
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={cancelExit}
+              className="px-3 py-2 w-[70px] bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              aria-label="Cancel"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmExit}
+              className="px-3 py-2 w-[70px] bg-teal-500 text-white rounded-md hover:bg-teal-500 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              aria-label="Confirm"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
-      {true && (
-        <div className="flex items-center justify-center   font-poppins">
-          <div ref={modalRef} className="w-full max-w-[900px] p-4 bg-white rounded-lg shadow-lg">
-            <div className="flex justify-between items-center mb-4 border-b pb-3 border-[#DFDFDF]">
-              <h2 className="text-2xl text-black font-medium">Add Broadcast</h2>
-              <button
-                onClick={handleCloseAndNavigate}
-                className={`text-gray-500 hover:text-black text-2xl leading-none ${
-                  highlightClose ? 'bg-red-500 rounded-full p-1 animate-pulse' : ''
-                }`}
+      <div className="flex items-center justify-center font-poppins">
+      <div
+  ref={modalRef}
+  className={`w-full max-w-[900px] p-4 bg-white rounded-lg shadow-lg border ${
+    highlightBorder ? "border-teal-500" : "border-transparent"
+  } transition-all duration-300`}
+>
+
+          <div className="flex justify-between items-center mb-4 border-b pb-3 border-[#DFDFDF]">
+            <h2 className="text-2xl text-black font-medium">Add Broadcast</h2>
+            <button
+              onClick={handleCloseAndNavigate}
+              className={`absolute top-2 right-4 pb-2 text-3xl font-bold w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                highlightClose
+                  ? "bg-red-500 text-white hover:bg-red-600 animate-pulse"
+                  : "bg-teal-500 text-white hover:bg-[#048080]"
+              }`}
+            >
+              ×
+            </button>
+          </div>
+
+          {showAlert && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white p-4 rounded-lg shadow-lg flex items-center justify-between w-1/3">
+                <p className="text-gray-700">
+                  You applied, you canceled, but applied
+                </p>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="text"
+                name="broadcastName"
+                placeholder="BroadcastName"
+                value={formData.broadcastName}
+                onChange={handleInputChange}
+                className="w-full sm:w-1/2 p-2 border border-[#606060] rounded text-gray-500 focus:outline-none"
+                required
+              />
+              <select
+                name="customerList"
+                value={formData.customerList}
+                onChange={handleInputChange}
+                className="w-full sm:w-1/2 p-2 border border-[#606060] rounded text-gray-500 focus:outline-none"
+                required
               >
-                <img src="cross.png" alt="Close" />
-              </button>
+                <option value="Select Customer List">
+                  Select Customer List
+                </option>
+                <option value="Customer List 1">Customer List 1</option>
+                <option value="Customer List 2">Customer List 2</option>
+              </select>
             </div>
 
-            {/* Custom Alert */}
-            {showAlert && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white p-4 rounded-lg shadow-lg flex items-center justify-between w-1/3">
-                  <p className="text-gray-700">You applied, you canceled, but applied</p>
+            <div>
+              <label className="block text-sm font-semibold mb-1 text-black">
+                Select Message Type
+              </label>
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="messageType"
+                    value="Pre-approved template message"
+                    checked={
+                      formData.messageType === "Pre-approved template message"
+                    }
+                    onChange={handleRadioChange}
+                    className="text-[#0AA89E]"
+                    style={{ accentColor: "#0AA89E" }}
+                    required
+                  />
+                  <span className="ml-2 text-[#717171]">
+                    Pre-approved template message
+                  </span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="messageType"
+                    value="Regular Message"
+                    checked={formData.messageType === "Regular Message"}
+                    onChange={handleRadioChange}
+                    className="text-[#0AA89E]"
+                    style={{ accentColor: "#0AA89E" }}
+                    required
+                  />
+                  <span className="ml-2 text-[#717171]">Regular Message</span>
+                </label>
+              </div>
+            </div>
+
+            {formData.messageType === "Pre-approved template message" && (
+              <button
+                type="button"
+                className="w-full sm:w-auto px-4 py-2 border border-[#0AA89E] text-[#0AA89E] text-[15px] font-medium rounded"
+              >
+                Select Template
+              </button>
+            )}
+
+            {formData.messageType === "Regular Message" && (
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between w-full">
+                <div className="w-full lg:w-2/3 pt-4">
+                  <select
+                    name="regularMessageType"
+                    value={formData.regularMessageType}
+                    onChange={handleInputChange}
+                    className="w-full lg:w-[120%] p-2 border border-[#606060] rounded mb-2"
+                    required
+                  >
+                    <option value="Select Regular Message Type">
+                      Select Regular Message Type
+                    </option>
+                    <option value="Text Message">Text Message</option>
+                    <option value="Image Message">Image Message</option>
+                    <option value="Video Message">Video Message</option>
+                  </select>
+                  {(formData.regularMessageType === "Image Message" ||
+                    formData.regularMessageType === "Video Message") && (
+                    <div className="w-full lg:w-[100%] mt-2">
+                      <CustomFileInput
+                        mediaType={
+                          formData.regularMessageType === "Image Message"
+                            ? "image"
+                            : "video"
+                        }
+                        accept={
+                          formData.regularMessageType === "Image Message"
+                            ? "image/*"
+                            : "video/*"
+                        }
+                      />
+                    </div>
+                  )}
+                  <textarea
+                    name="message"
+                    placeholder="Message"
+                    value={formData.message}
+                    onChange={handleInputChange}
+                    className="w-full lg:w-[120%] h-36 p-2 border border-[#606060] rounded resize-none mt-2"
+                    required
+                  />
                 </div>
+
+                {(formData.regularMessageType === "Image Message" &&
+                  formData.image) ||
+                (formData.regularMessageType === "Video Message" &&
+                  formData.video) ? (
+                  <div className="w-full lg:w-[40%] lg:mt-2 lg:ml-28 p-2 border border-[#606060] rounded">
+                    {formData.regularMessageType === "Image Message" &&
+                    formData.image ? (
+                      <div className="flex flex-col">
+                        <img
+                          src={formData.image}
+                          alt="Preview"
+                          className="w-full max-h-[300px] object-contain"
+                        />
+                        {formData.message && (
+                          <div className="w-full p-2 bg-white">
+                            {formData.message}
+                          </div>
+                        )}
+                      </div>
+                    ) : formData.regularMessageType === "Video Message" &&
+                      formData.video ? (
+                      <div className="flex flex-col">
+                        <video
+                          src={formData.video}
+                          controls
+                          className="w-full max-h-[300px] object-contain"
+                        />
+                        {formData.message && (
+                          <div className="w-full p-2 bg-white">
+                            {formData.message}
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Broadcast Name & Customer List */}
-              <div className="flex flex-col sm:flex-row gap-2">
-                <input
-                  type="text"
-                  name="broadcastName"
-                  placeholder="BroadcastName"
-                  value={formData.broadcastName}
-                  onChange={handleInputChange}
-                  className="w-full sm:w-1/2 p-2 border border-[#606060] rounded text-gray-500 focus:outline-none"
-                  required
-                />
-                <select
-                  name="customerList"
-                  value={formData.customerList}
-                  onChange={handleInputChange}
-                  className="w-full sm:w-1/2 p-2 border border-[#606060] rounded text-gray-500 focus:outline-none"
-                  required
-                >
-                  <option value="Select Customer List">
-                    Select Customer List
-                  </option>
-                  <option value="Customer List 1">Customer List 1</option>
-                  <option value="Customer List 2">Customer List 2</option>
-                </select>
-              </div>
-
-              {/* Message Type */}
-              <div>
-                <label className="block text-sm font-semibold mb-1 text-black">
-                  Select Message Type
+            <div className="w-full">
+              <label className="block text-sm mb-1 font-semibold text-black">
+                Schedule Broadcast
+              </label>
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="schedule"
+                    value="Yes"
+                    checked={formData.schedule === "Yes"}
+                    onChange={handleRadioChange}
+                    className="text-[#0AA89E]"
+                    style={{ accentColor: "#0AA89E" }}
+                    required
+                  />
+                  <span className="ml-2 text-[#717171]">
+                    Yes (Schedule for Later)
+                  </span>
                 </label>
-                <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="messageType"
-                      value="Pre-approved template message"
-                      checked={
-                        formData.messageType === "Pre-approved template message"
-                      }
-                      onChange={handleRadioChange}
-                      className="text-[#0AA89E]"
-                      style={{ accentColor: "#0AA89E" }}
-                      required
-                    />
-                    <span className="ml-2 text-[#717171]">
-                      Pre-approved template message
-                    </span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="messageType"
-                      value="Regular Message"
-                      checked={formData.messageType === "Regular Message"}
-                      onChange={handleRadioChange}
-                      className="text-[#0AA89E]"
-                      style={{ accentColor: "#0AA89E" }}
-                      required
-                    />
-                    <span className="ml-2 text-[#717171]">Regular Message</span>
-                  </label>
-                </div>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="schedule"
+                    value="No"
+                    checked={formData.schedule === "No"}
+                    onChange={handleRadioChange}
+                    className="text-[#0AA89E]"
+                    style={{ accentColor: "#0AA89E" }}
+                    required
+                  />
+                  <span className="ml-2 text-[#717171]">
+                    No (Send Instantly)
+                  </span>
+                </label>
               </div>
 
-              {formData.messageType === "Pre-approved template message" && (
-                <button
-                  type="button"
-                  className="w-full sm:w-auto px-4 py-2 border border-[#0AA89E] text-[#0AA89E] text-[15px] font-medium rounded"
-                >
-                  Select Template
-                </button>
-              )}
-
-              {formData.messageType === "Regular Message" && (
-                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between w-full">
-                  <div className="w-full lg:w-2/3 pt-4">
-                    <select
-                      name="regularMessageType"
-                      value={formData.regularMessageType}
-                      onChange={handleInputChange}
-                      className="w-full lg:w-[120%] p-2 border border-[#606060] rounded mb-2"
-                      required
-                    >
-                      <option value="Select Regular Message Type">
-                        Select Regular Message Type
-                      </option>
-                      <option value="Text Message">Text Message</option>
-                      <option value="Image Message">Image Message</option>
-                      <option value="Video Message">Video Message</option>
-                    </select>
-                    {/* Show image or video upload input based on regularMessageType */}
-                    {(formData.regularMessageType === "Image Message" ||
-                      formData.regularMessageType === "Video Message") && (
-                      <div className="w-full lg:w-[100%] mt-2">
-                        <CustomFileInput
-                          mediaType={
-                            formData.regularMessageType === "Image Message"
-                              ? "image"
-                              : "video"
-                          }
-                          accept={
-                            formData.regularMessageType === "Image Message"
-                              ? "image/*"
-                              : "video/*"
-                          }
-                        />
-                      </div>
-                    )}
-                    {/* Always show the textarea for message input */}
-                    <textarea
-                      name="message"
-                      placeholder="Message"
-                      value={formData.message}
-                      onChange={handleInputChange}
-                      className="w-full lg:w-[120%] h-36 p-2 border border-[#606060] rounded resize-none mt-2"
-                      required
-                    />
-                  </div>
-
-                  {/* Preview Section */}
-                  {/* Only show preview container when image or video is selected */}
-                  {(formData.regularMessageType === "Image Message" &&
-                    formData.image) ||
-                  (formData.regularMessageType === "Video Message" &&
-                    formData.video) ? (
-                    <div className="w-full lg:w-[40%] lg:mt-2 lg:ml-28 p-2 border border-[#606060] rounded">
-                      {formData.regularMessageType === "Image Message" &&
-                      formData.image ? (
-                        <div className="flex flex-col">
-                          <img
-                            src={formData.image}
-                            alt="Preview"
-                            className="w-full max-h-[300px] object-contain"
-                          />
-                          {formData.message && (
-                            <div className="w-full p-2 bg-white">
-                              {formData.message}
-                            </div>
-                          )}
-                        </div>
-                      ) : formData.regularMessageType === "Video Message" &&
-                        formData.video ? (
-                        <div className="flex flex-col">
-                          <video
-                            src={formData.video}
-                            controls
-                            className="w-full max-h-[300px] object-contain"
-                          />
-                          {formData.message && (
-                            <div className="w-full p-2 bg-white">
-                              {formData.message}
-                            </div>
-                          )}
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
+              {formData.schedule === "Yes" && (
+                <div className="w-full sm:w-1/2 mt-2">
+                  <DatePicker
+                    selected={selectedDate}
+                    onChange={(date) => setSelectedDate(date)}
+                    showTimeSelect
+                    timeFormat="HH:mm"
+                    timeIntervals={15}
+                    dateFormat="MMMM d, yyyy h:mm aa"
+                    minDate={new Date()}
+                    minTime={
+                      selectedDate &&
+                      new Date(selectedDate).toDateString() ===
+                        new Date().toDateString()
+                        ? new Date(
+                            0,
+                            0,
+                            0,
+                            new Date().getHours(),
+                            new Date().getMinutes() + 1
+                          )
+                        : new Date(0, 0, 0, 0, 0)
+                    }
+                    maxTime={new Date(0, 0, 0, 23, 45)}
+                    className="w-full border border-gray-300 rounded-md p-2 text-gray-700 focus:outline-none"
+                    customInput={<CustomDateInput />}
+                  />
                 </div>
               )}
+            </div>
 
-              {/* Schedule */}
-              <div className="w-full">
-                <label className="block text-sm mb-1 font-semibold text-black">
-                  Schedule Broadcast
-                </label>
-                <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="schedule"
-                      value="Yes"
-                      checked={formData.schedule === "Yes"}
-                      onChange={handleRadioChange}
-                      className="text-[#0AA89E]"
-                      style={{ accentColor: "#0AA89E" }}
-                      required
-                    />
-                    <span className="ml-2 text-[#717171]">
-                      Yes (Schedule for Later)
-                    </span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="schedule"
-                      value="No"
-                      checked={formData.schedule === "No"}
-                      onChange={handleRadioChange}
-                      className="text-[#0AA89E]"
-                      style={{ accentColor: "#0AA89E" }}
-                      required
-                    />
-                    <span className="ml-2 text-[#717171]">
-                      No (Send Instantly)
-                    </span>
-                  </label>
-                </div>
-
-                {formData.schedule === "Yes" && (
-                  <div className="w-full sm:w-1/2 mt-2">
-                    <DatePicker
-                      selected={selectedDate}
-                      onChange={(date) => setSelectedDate(date)}
-                      showTimeSelect
-                      dateFormat="Pp"
-                      customInput={<CustomDateInput />}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-4 text-left">
-                <button
-                  type="submit"
-                  className="w-full sm:w-[20%] py-2 bg-teal-500 text-white rounded hover:bg-teal-600"
-                >
-                  Add Broadcast
-                </button>
-              </div>
-            </form>
-          </div>
+            <div className="mt-4 text-left">
+              <button
+                type="submit"
+                className="w-full sm:w-[20%] py-2 bg-teal-500 text-white rounded hover:bg-teal-600"
+              >
+                Add Broadcast
+              </button>
+            </div>
+          </form>
         </div>
-      )}
+      </div>
+      <ConfirmationDialogInline />
     </>
   );
 };
 
 export default BroadcastPages;
+

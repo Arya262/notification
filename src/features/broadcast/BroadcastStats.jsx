@@ -4,23 +4,36 @@ import sentIcon from '../../assets/sent_brodcast.png';
 import totalIcon from '../../assets/S.png';
 
 const BroadcastStats = ({ data }) => {
+  // Validate data prop
+  if (!data || !Array.isArray(data)) {
+    return (
+      <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+        <div className="bg-white p-4 mt-0 rounded-xl shadow">
+          <p className="text-md text-gray-600">Invalid data</p>
+        </div>
+      </div>
+    );
+  }
+
   // Calculate dynamic stats
-  const totalBroadcast = data.length;
-  const liveBroadcast = data.filter(item => item.status === "Live").length;
-  const sentBroadcast = data.filter(item => item.status === "Opted-in" || item.status === "Stopped").length; // Adjust logic as needed
-  const scheduledBroadcast = data.filter(item => item.schedule === "Yes" || item.status === "Scheduled").length;
+  const totalContact = data.length;
+  const messageDelivered = data.filter((item) => item.status === "Live").length;
+  const messageRead = data.filter((item) => item.status === "Sent").length; // Fixed: Changed to "Sent"
+  const totalLinkClick = data.filter(
+    (item) => item.schedule === "Yes" || item.status === "Scheduled"
+  ).length;
 
   const stats = [
-    { label: "Total Broadcast", value: totalBroadcast, icon: brodcastIcon },
-    { label: "Live Broadcast", value: liveBroadcast, icon: liveIcon },
-    { label: "Sent Broadcast", value: sentBroadcast, icon: sentIcon },
-    { label: "Scheduled Broadcast", value: scheduledBroadcast, icon: totalIcon },
+    { label: "Total Contact", value: totalContact, icon: brodcastIcon },
+    { label: "Message Delivered", value: messageDelivered, icon: liveIcon },
+    { label: "Message Read", value: messageRead, icon: sentIcon },
+    { label: "Total link Click", value: totalLinkClick, icon: totalIcon },
   ];
 
   return (
-    <div className="hidden  sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+    <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
       {stats.map((item, index) => (
-        <div key={index} className="bg-white p-4 mt-0 rounded-xl shadow ">
+        <div key={index} className="bg-white p-4 mt-0 rounded-xl shadow">
           <div className="flex items-center gap-3">
             <img src={item.icon} alt={item.label} className="w-14 h-14" />
             <div>
@@ -34,4 +47,4 @@ const BroadcastStats = ({ data }) => {
   );
 };
 
-export default BroadcastStats;
+export default BroadcastStats; 

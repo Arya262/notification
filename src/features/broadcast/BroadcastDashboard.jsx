@@ -1,33 +1,89 @@
 import { useState, useEffect } from "react";
 import searchIcon from "../../assets/search.png";
 import deleteIcon from "../../assets/delete.png";
+import { HiDotsVertical } from "react-icons/hi"; // Adding the three-dot icon from react-icons
 
-const BroadcastDashboard = ({ data, onDelete }) => {
+const BroadcastDashboard = ({ onDelete }) => {
   const [search, setSearch] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
   const [activeFilter, setActiveFilter] = useState("All");
   const [selectAll, setSelectAll] = useState(false);
   const [selectedRows, setSelectedRows] = useState({});
+  const [menuOpen, setMenuOpen] = useState(null);
 
-  // Filter the data based on the active filter and search input
-  const filteredData = data.filter((row) => {
-    const matchesFilter =
-      activeFilter === "All" ||
-      (activeFilter === "Opted-in" && row.status === "Opted-in") ||
-      (activeFilter === "Opted-Out" && row.status === "Opted-Out") ||
-      (activeFilter === "Scheduled" && row.schedule === "Scheduled") ||
-      (activeFilter === "Stopped" && row.status === "Stopped") ||
-      (activeFilter === "Paused" && row.status === "Paused");
+  // Static data directly used for rendering
+  const staticData = [
+    {
+      date: "2025-04-07T12:59:00",
+      broadcastName: "Offer",
+      msgType: "Template Message",
+      schedule: "Instant",
+      status: "Live",
+      messageFunnel: {
+        totalContacts: 1200456,
+        deliveredPercentage: 80,
+        readPercentage: 70,
+        clicks: 1000,
+      },
+    },
+    {
+      date: "2025-04-07T12:59:00",
+      broadcastName: "Festival",
+      msgType: "Template Message",
+      schedule: "Instant",
+      status: "Live",
+      messageFunnel: {
+        totalContacts: 1500789,
+        deliveredPercentage: 90,
+        readPercentage: 85,
+        clicks: 2300,
+      },
+    },
+    {
+      date: "2025-04-06T10:30:00",
+      broadcastName: "Promo Deal",
+      msgType: "Text Message",
+      schedule: "Scheduled",
+      status: "Scheduled",
+      messageFunnel: {
+        totalContacts: 1800345,
+        deliveredPercentage: 75,
+        readPercentage: 60,
+        clicks: 1800,
+      },
+    },
+    {
+      date: "2025-04-05T15:45:00",
+      broadcastName: "Reminder",
+      msgType: "Template Message",
+      schedule: "Instant",
+      status: "Sent",
+      messageFunnel: {
+        totalContacts: 2500123,
+        deliveredPercentage: 95,
+        readPercentage: 90,
+        clicks: 5000,
+      },
+    },
+    {
+      date: "2025-04-04T09:00:00",
+      broadcastName: "Event Update",
+      msgType: "Text Message",
+      schedule: "Instant",
+      status: "Paused",
+      messageFunnel: {
+        totalContacts: 3100456,
+        deliveredPercentage: 60,
+        readPercentage: 30,
+        clicks: 1500,
+      },
+    },
+  ];
 
-    const matchesSearch =
-      row.name?.toLowerCase().includes(search.toLowerCase()) ||
-      row.broadcastName?.toLowerCase().includes(search.toLowerCase()) ||
-      row.type?.toLowerCase().includes(search.toLowerCase()) ||
-      row.msgType?.toLowerCase().includes(search.toLowerCase()) ||
-      row.schedule?.toLowerCase().includes(search.toLowerCase());
+  console.log("Static Data:", staticData); // Debug log to confirm static data
 
-    return matchesFilter && matchesSearch;
-  });
+  // Temporarily bypass filtering to ensure data is displayed
+  const filteredData = staticData;
 
   const handleSelectAllChange = (event) => {
     setSelectAll(event.target.checked);
@@ -50,12 +106,12 @@ const BroadcastDashboard = ({ data, onDelete }) => {
   };
 
   const statuses = {
-    All: data.length,
-    "Opted-in": data.filter((d) => d.status === "Opted-in").length,
-    "Opted-Out": data.filter((d) => d.status === "Opted-Out").length,
-    Scheduled: data.filter((d) => d.schedule === "Scheduled").length,
-    Stopped: data.filter((d) => d.status === "Stopped").length,
-    Paused: data.filter((d) => d.status === "Paused").length,
+    All: staticData.length,
+    Live: staticData.filter((d) => d.status === "Live").length,
+    Sent: staticData.filter((d) => d.status === "Sent").length,
+    Scheduled: staticData.filter((d) => d.schedule === "Scheduled").length,
+    Stopped: staticData.filter((d) => d.status === "Stopped").length,
+    Paused: staticData.filter((d) => d.status === "Paused").length,
   };
 
   const filters = [
@@ -66,14 +122,14 @@ const BroadcastDashboard = ({ data, onDelete }) => {
       width: "w-[90px]",
     },
     {
-      label: "Opted-in",
-      count: statuses["Opted-in"],
+      label: "Live",
+      count: statuses["Live"],
       color: "bg-teal-500",
       width: "w-[120px]",
     },
     {
-      label: "Opted-Out",
-      count: statuses["Opted-Out"],
+      label: "Sent",
+      count: statuses["Sent"],
       color: "bg-teal-500",
       width: "w-[120px]",
     },
@@ -101,28 +157,37 @@ const BroadcastDashboard = ({ data, onDelete }) => {
     const handleResize = () => {
       setIsMobileView(window.innerWidth < 1000);
     };
-
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const toggleMenu = (idx) => {
+    setMenuOpen(menuOpen === idx ? null : idx);
+  };
+
+  const handleDelete = (idx) => {
+    if (onDelete) {
+      onDelete(idx);
+    }
+    setMenuOpen(null);
+  };
+
   return (
     <div
       className={`w-full ${
-        data.length > 0 ? "bg-white shadow-sm" : ""
-      } rounded-xl mt-4 shadow-2xl min-h-fit`}
+        staticData.length > 0 ? "bg-white shadow-sm" : ""
+      } rounded-xl mt-4 shadow-sm min-h-fit`}
     >
       <div className="flex items-center shadow-2xl p-4">
-      <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide">
+        <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide">
           <div className="hidden md:flex items-center gap-4">
             {filters.map((f, i) => (
               <button
                 key={i}
                 className={`flex items-center justify-center h-10 text-md font-medium pl-2 pr-2 rounded-md ${
                   f.width
-                } transition-all duration-200 
-                ${
+                } transition-all duration-200 ${
                   activeFilter === f.label
                     ? `${f.color} text-white text-[14px]`
                     : "bg-transparent text-gray-700 text-[14px] hover:text-teal-500"
@@ -148,13 +213,17 @@ const BroadcastDashboard = ({ data, onDelete }) => {
                 </div>
               </button>
             ))}
-            <div className="hidden md:block lg:hidden">
+            <div className="block md:block lg:hidden">
               <button className="flex items-center justify-center h-10 w-10">
-                <img src={searchIcon} alt="Search" className="w-5 h-5 opacity-60" />
+                <img
+                  src={searchIcon}
+                  alt="Search"
+                  className="w-5 h-5 opacity-60"
+                />
               </button>
             </div>
           </div>
-          <div className="hidden ml-28 lg:block flex-shrink-0">
+          <div className="hidden lg:block flex-shrink-0 ml-28">
             <div className="relative w-[300px]">
               <img
                 src={searchIcon}
@@ -166,18 +235,18 @@ const BroadcastDashboard = ({ data, onDelete }) => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search template by Name or Category..."
-                className="pl-2 pr-8 py-2 border border-gray-300 text-sm rounded-md w-full focus:outline-none "
+                className="pl-2 pr-8 py-2 border border-gray-300 text-sm rounded-md w-full focus:outline-none"
               />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="overflow-x-auto  max-w-full">
-        <table className="w-full text-sm text-center   overflow-hidden">
+      <div className="overflow-x-auto max-w-full">
+        <table className="w-full text-sm text-center overflow-hidden table-auto">
           <thead className="bg-gray-100 border-b-2 shadow-sm border-gray-300">
             <tr>
-              <th className="px-6 py-3">
+              <th className="px-2 py-3 sm:px-6">
                 <div className="flex items-center justify-center h-full">
                   <input
                     type="checkbox"
@@ -187,25 +256,25 @@ const BroadcastDashboard = ({ data, onDelete }) => {
                   />
                 </div>
               </th>
-              <th className="px-6 py-5 text-center text-[16px] font-semibold font-sans text-gray-700">
+              <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
                 Date
               </th>
-              <th className="px-6 py-5 text-center text-[16px] font-semibold font-sans text-gray-700">
+              <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
                 Broadcast Name
               </th>
-              <th className="px-6 py-5 text-center text-[16px] font-semibold font-sans text-gray-700">
-                Type
-              </th>
-              <th className="px-6 py-5 text-center text-[16px] font-semibold font-sans text-gray-700">
+              <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
                 Message Type
               </th>
-              <th className="px-6 py-5 text-center text-[16px] font-semibold font-sans text-gray-700">
+              <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
                 Scheduled Broadcast
               </th>
-              <th className="px-6 py-5 text-center text-[16px] font-semibold font-sans text-gray-700">
+              <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
                 Status
               </th>
-              <th className="px-6 py-5 text-center text-[16px] font-semibold font-sans text-gray-700">
+              <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
+                Message Funnel
+              </th>
+              <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
                 Action
               </th>
             </tr>
@@ -220,7 +289,7 @@ const BroadcastDashboard = ({ data, onDelete }) => {
             ) : (
               filteredData.map((row, idx) => (
                 <tr key={idx} className="border-t hover:bg-gray-50 text-md">
-                  <td className="px-4 py-2">
+                  <td className="px-2 py-2 sm:px-4">
                     <div className="flex items-center justify-center h-full">
                       <input
                         type="checkbox"
@@ -230,31 +299,110 @@ const BroadcastDashboard = ({ data, onDelete }) => {
                       />
                     </div>
                   </td>
-                  <td className="px-4 py-5 whitespace-nowrap text-[16px] text-gray-700">
-                    {row.date}
+                  <td className="px-2 py-3 sm:px-4 sm:py-5 whitespace-nowrap text-[12px]  sm:text-[16px] text-gray-700">
+                    {row.date
+                      ? (() => {
+                          const date = new Date(row.date);
+                          const formattedDate = date.toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "2-digit",
+                            }
+                          );
+                          const hasTime =
+                            date.getHours() !== 0 || date.getMinutes() !== 0;
+                          if (hasTime) {
+                            const formattedTime = date.toLocaleTimeString(
+                              "en-US",
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true,
+                              }
+                            );
+                            return (
+                              <div className="flex flex-col">
+                                <span>{formattedDate}</span>
+                                <span>{formattedTime}</span>
+                              </div>
+                            );
+                          }
+                          return <span>{formattedDate}</span>;
+                        })()
+                      : "N/A"}
                   </td>
-                  <td className="px-4 py-5 text-[16px] text-gray-700">
-                    {row.name || row.broadcastName}
+                  <td className="px-2 py-3  text-[12px] sm:text-[16px] text-gray-700">
+                    {row.broadcastName}
                   </td>
-                  <td className="px-4 py-5 text-[16px] text-gray-700">
-                    {row.type}
-                  </td>
-                  <td className="px-4 py-5 text-[16px] text-gray-700">
+                  <td className="px-2 py-3  text-[12px] sm:text-[16px] text-gray-700">
                     {row.msgType}
                   </td>
-                  <td className="px-4 py-5 text-[16px] text-gray-700">
+                  <td className="px-2 py-3  text-[12px] sm:text-[16px] text-gray-700">
                     {row.schedule}
                   </td>
-                  <td className="px-4 py-5 text-[16px] font-semibold text-green-600">
+                  <td className="px-2 py-3  text-[12px] sm:text-[16px] text-green-600">
                     {row.status}
                   </td>
-                  <td className="px-4 py-2">
+                  
+                  <td className="px-2 py-3 text-[12px] justify-end sm:text-[16px] w-auto font-semibold text-gray-700">
+                    {row.messageFunnel ? (
+                      <div className="grid grid-cols-4 gap-4 justify-items-center ">
+                        <div className="flex flex-col items-center text-center">
+                          <span className="text-lg font-bold">
+                            {row.messageFunnel.totalContacts}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            Total contacts
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center text-center">
+                          <span className="text-lg font-bold">
+                            {row.messageFunnel.deliveredPercentage}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            Delivered 80% of total
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center text-center">
+                          <span className="text-lg font-bold">
+                            {row.messageFunnel.readPercentage}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            Read 72% of total
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center text-center">
+                          <span className="text-lg font-bold">
+                            {row.messageFunnel.clicks}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            gghiioClicks
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      "N/A"
+                    )}
+                  </td>
+                  <td className=" relative">
                     <button
-                      className="flex items-center justify-center hover:bg-red-600 w-8 h-8 rounded ml-11"
-                      onClick={() => onDelete && onDelete(idx)}
+                      className="flex items-center justify-center w-8 h-8 rounded hover:bg-gray-200 sm:ml-5"
+                      onClick={() => toggleMenu(idx)}
                     >
-                      <img src={deleteIcon} alt="Delete" className="w-7 h-7" />
+                      <HiDotsVertical className="w-6 h-6" />
                     </button>
+                    {menuOpen === idx && (
+                      <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow-lg z-10">
+                        <button
+                          className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100"
+                          onClick={() => handleDelete(idx)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))

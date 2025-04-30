@@ -118,9 +118,9 @@ export default function AddContact({ closePopup }) {
       )}
       <button
         onClick={handleSubmit}
-        className="mt-4 bg-teal-600 text-white px-4 py-2 rounded"
+        className="mt-4 bg-teal-600 text-white px-4 py-2 rounded mx-auto block"
       >
-        Submit
+        Add Contact
       </button>
     </div>
   );
