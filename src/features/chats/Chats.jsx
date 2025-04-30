@@ -25,11 +25,10 @@ const Chat = () => {
   const fetchContacts = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:3000/Conversionmessage`);
-      const contacts = response.data.Conversionmessage
-      const enriched = contacts
+      const response = await axios.get(`${API_BASE}/conversations?shop_id=1`);
+      const enriched = response.data
         .map((c) => ({
-          id: c.customer_id,
+          id: c.guest_id,
           conversation_id: c.conversation_id,
           name: `${c.name} ${c.last_name || ""}`.trim(),
           mobile_no: c.mobile_no,
@@ -93,7 +92,7 @@ const Chat = () => {
   const fetchMessagesForContact = async (conversationId) => {
     try {
       const response = await axios.get(
-        `http://localhost:3000/conversion?conversation_id=${conversationId}`
+        `${API_BASE}/messages?conversation_id=${conversationId}`
       );
       setMessages(response.data);
     } catch (error) {

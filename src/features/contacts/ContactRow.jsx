@@ -34,7 +34,7 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
   const handleSendMessageClick = async () => {
     try {
       const res = await fetch(
-        `http://192.168.1.41:3000/conversationid?customer_id=${contact.customer_id}`
+        `http://localhost:3000/conversationid?customer_id=${contact.customer_id}`
       );
       const data = await res.json();
 
@@ -62,10 +62,10 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
   return (
     <div
       ref={rowRef}
-      className="flex flex-wrap sm:flex-nowrap items-center px-3 py-4 border-b border-[#C3C3C3] relative text-sm sm:text-base"
+      className="flex items-center px-3 py-4 border-b border-[#C3C3C3] relative"
     >
       {/* Checkbox */}
-      <div className="w-full sm:w-auto sm:flex-[0_0_8%] flex justify-start sm:justify-center mb-2 sm:mb-0">
+      <div className="w-[8%] flex justify-center items-center">
         <input
           type="checkbox"
           className="w-4 h-4"
@@ -73,38 +73,40 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
           onChange={onCheckboxChange}
         />
       </div>
-  
+
       {/* Created Date */}
-      <div className="flex-1 min-w-[100px] truncate mb-2 sm:mb-0">{contact.date}</div>
-  
+      <div className="w-[15%] truncate">{contact.date}</div>
+
       {/* Status */}
-      <div className="flex-1 min-w-[100px] text-green-600 font-medium truncate mb-2 sm:mb-0">{contact.status}</div>
-  
+      <div className="w-[12%] font-medium text-green-600 truncate">
+        {contact.status}
+      </div>
+
       {/* Customer Name */}
-      <div className="flex-1 min-w-[120px] truncate mb-2 sm:mb-0">{contact.fullName}</div>
-  
+      <div className="w-[20%] truncate">{contact.fullName}</div>
+
       {/* WhatsApp Number */}
-      <div className="flex-1 min-w-[120px] truncate mb-2 sm:mb-0">{contact.number}</div>
-  
+      <div className="w-[18%] truncate">{contact.number}</div>
+
       {/* 24 Hour Status */}
-      <div className="flex-1 min-w-[120px] mb-2 sm:mb-0">
+      <div className="w-[14%]">
         <span
-          className={`inline-block px-3 py-1 rounded-full text-white text-xs sm:text-sm font-medium text-center min-w-[80px]
-          ${contact.is_active === 1 ? "bg-green-500" : "bg-red-400"}`}
+          className={`inline-block px-3 py-1 rounded-full text-white text-sm font-medium min-w-[80px] text-center
+            ${contact.is_active === 1 ? "bg-green-500" : "bg-red-400"}`}
         >
           {contact.is_active === 1 ? "Active" : "Inactive"}
         </span>
       </div>
-  
+
       {/* Send Button + Three Dot Menu */}
       <div
-        className="flex-1 min-w-[150px] flex justify-end sm:justify-end items-center gap-2 relative"
+        className="w-[13%] flex justify-end items-center gap-2 relative"
         ref={dropdownRef}
       >
         {/* Send Message Button */}
         <button
           onClick={handleSendMessageClick}
-          className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-3 py-2 rounded-full whitespace-nowrap text-xs sm:text-sm"
+          className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-3 py-2 rounded-full whitespace-nowrap"
           aria-label={`Send message to ${contact.fullName}`}
         >
           <svg
@@ -115,11 +117,15 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
             stroke="currentColor"
             strokeWidth="2"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M5 12h14M12 5l7 7-7 7"
+            />
           </svg>
-          <span>Send</span>
+          <span className="text-sm font-medium">Send Message</span>
         </button>
-  
+
         {/* Three Dots */}
         <button
           onClick={toggleDropdown}
@@ -133,16 +139,18 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
             viewBox="0 0 24 24"
             strokeWidth={2}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v.01M12 12v.01M12 19v.01" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 5v.01M12 12v.01M12 19v.01"
+            />
           </svg>
         </button>
-  
-        {/* Dropdown */}
+
+        {/* Dropdown Menu */}
         {isDropdownOpen && (
           <div
-            className={`absolute right-0 ${
-              shouldFlipUp ? "bottom-12" : "top-12"
-            } w-44 bg-white border border-gray-200 rounded-md shadow-lg z-20`}
+            className={`absolute right-0 ${shouldFlipUp ? "bottom-12" : "top-12"} w-44 bg-white border border-gray-200 rounded-md shadow-lg z-20`}
           >
             <button
               onClick={() => console.log("Edit", contact.id)}
@@ -150,6 +158,7 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
             >
               Edit
             </button>
+
             <button
               onClick={() => console.log("Delete", contact.id)}
               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
