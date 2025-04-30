@@ -2,7 +2,11 @@ import { IoSearchOutline } from "react-icons/io5";
 import { formatTime } from "../../utils/time";
 
 const ChatSidebar = ({
-  contacts,selectedContact,searchQuery,onSearchChange,onSelectContact,
+  contacts,
+  selectedContact,
+  searchQuery,
+  onSearchChange,
+  onSelectContact,
 }) => {
   const filteredContacts = contacts.filter((c) =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -43,11 +47,10 @@ const ChatSidebar = ({
           >
             {/* Avatar */}
             <img
-              src={contact.image || "/default-avatar.png"}
-              alt={contact.name}
-              className="w-10 h-10 rounded-full object-cover mr-4"
-            />
-
+                src={contact.image || "/default-avatar.jpeg"}
+                alt="User Avatar"
+                className="w-10 h-10 rounded-full object-cover mr-4"
+              />
             {/* Contact Details */}
             <div className="flex-1">
               <div className="flex justify-between items-center">
