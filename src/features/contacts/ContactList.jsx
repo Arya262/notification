@@ -153,7 +153,7 @@ export default function ContactList() {
             >
               ×
             </button>
-            <AddContact onClose={closePopup} />
+            <AddContact closePopup={closePopup} />
           </div>
         </div>
       )}
