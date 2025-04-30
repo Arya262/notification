@@ -13,7 +13,7 @@ const Templates = () => {
   const fetchTemplates = async () => {
    setLoading(true);
    try {
-    const response = await fetch("http://192.168.1.41:3000/templates?shop_id=1");
+    const response = await fetch("http://localhost:3000/templates");
     const data = await response.json();
     if (Array.isArray(data.templates)) {
      setTemplates(data.templates);

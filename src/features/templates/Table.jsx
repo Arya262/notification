@@ -370,7 +370,3 @@ const Table = ({ templates = []  }) => {
 };
 
 export default Table;
-
-
-
-

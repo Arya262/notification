@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Send } from "lucide-react";
-import SendTemplate from "./SendTemplate"; // Import the template component
-
+import SendTemplate from "./chatfeautures/SendTemplate"; 
 const MessageInput = ({ onSendMessage }) => {
   const [message, setMessage] = useState("");
   const [showTemplates, setShowTemplates] = useState(false); // Modal state
