@@ -25,7 +25,7 @@ const Chat = () => {
   const fetchContacts = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE}/conversations?shop_id=1`);
+      const response = await axios.get(`https://pika-driving-gannet.ngrok-free.app/contacts?shop_id=1`);
       const enriched = response.data
         .map((c) => ({
           id: c.guest_id,
@@ -92,7 +92,7 @@ const Chat = () => {
   const fetchMessagesForContact = async (conversationId) => {
     try {
       const response = await axios.get(
-        `${API_BASE}/messages?conversation_id=${conversationId}`
+        `https://pika-driving-gannet.ngrok-free.app/conversations?shop_id=1`
       );
       setMessages(response.data);
     } catch (error) {

@@ -2,11 +2,7 @@ import { IoSearchOutline } from "react-icons/io5";
 import { formatTime } from "../../utils/time";
 
 const ChatSidebar = ({
-  contacts,
-  selectedContact,
-  searchQuery,
-  onSearchChange,
-  onSelectContact,
+  contacts,selectedContact,searchQuery,onSearchChange,onSelectContact,
 }) => {
   const filteredContacts = contacts.filter((c) =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -15,9 +11,7 @@ const ChatSidebar = ({
   return (
     <div className="w-full md:w-1/3 bg-white border-r border-gray-200 p-4">
       {/* Title */}
-      <h2 className="text-2xl font-semibold mb-4 text-black">
-        Inbox
-      </h2>
+      <h2 className="text-2xl font-semibold mb-4 text-black">Inbox</h2>
 
       {/* Search Input */}
       <div className="relative mb-4">
@@ -36,8 +30,11 @@ const ChatSidebar = ({
         {filteredContacts.map((contact) => (
           <div
             key={contact.id}
+            role="button"
+            tabIndex={0}
             onClick={() => onSelectContact(contact)}
-            className={`flex items-center px-4 py-2 cursor-pointer rounded-xl transition border
+            onKeyDown={(e) => e.key === "Enter" && onSelectContact(contact)}
+            className={`flex items-center px-4 py-3 cursor-pointer rounded-xl transition border focus:outline-none
               ${
                 selectedContact?.id === contact.id
                   ? "border-[#0AA89E] bg-white"
@@ -51,17 +48,25 @@ const ChatSidebar = ({
               className="w-10 h-10 rounded-full object-cover mr-4"
             />
 
-            {/* Name & Time */}
-            <div className="flex-1 flex justify-between items-center">
-              <p className="font-semibold text-black">{contact.name}</p>
-              <p className="text-sm text-gray-500">
-                {formatTime(contact.updated_at).toLowerCase()}
-              </p>
+            {/* Contact Details */}
+            <div className="flex-1">
+              <div className="flex justify-between items-center">
+                <p className="font-semibold text-black">{contact.name}</p>
+                <p className="text-sm text-gray-500">
+                  {formatTime(contact.updated_at).toLowerCase()}
+                </p>
+              </div>
+              {/* Optional Last Message */}
+              {contact.lastMessage && (
+                <p className="text-sm text-gray-500 truncate mt-0.5">
+                  {contact.lastMessage}
+                </p>
+              )}
             </div>
           </div>
         ))}
 
-        {/* Empty state */}
+        {/* Empty State */}
         {filteredContacts.length === 0 && (
           <p className="text-center text-gray-400 text-sm mt-4">
             No contacts found.

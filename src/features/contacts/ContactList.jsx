@@ -10,7 +10,7 @@ export default function ContactList() {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   useEffect(() => {
-    fetch("http://192.168.1.41:3000/contacts?shop_id=1")
+    fetch("https://pika-driving-gannet.ngrok-free.app/contacts?shop_id=1")
       .then((res) => res.json())
       .then((data) => {
         const transformed = data.map((item) => ({
