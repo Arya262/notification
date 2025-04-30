@@ -51,6 +51,7 @@ const Chat = () => {
     if (location.state?.contact) {
       handleSelectContact(location.state.contact);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
   // Close user details if click is outside of the user details area or profile button
@@ -102,17 +103,25 @@ const Chat = () => {
 
   const handleSearchChange = (e) => setSearchQuery(e.target.value);
 
-  const handleSendMessage = async (newMessageText) => {
+  const handleSendMessage = async (input) => {
     if (!selectedContact) {
       console.error("No contact selected");
       return;
     }
-
+  
     const newMessage = {
       conversation_id: selectedContact.conversation_id,
-      message: newMessageText,
     };
-
+  
+    if (typeof input === "string") {
+      newMessage.message = input;
+    } else if (typeof input === "object" && input.template_name) {
+      newMessage.element_name = input.template_name;
+    } else {
+      console.warn("Invalid message format");
+      return;
+    }
+  
     try {
       const response = await axios.post(`${API_BASE}/sendmessage`, newMessage);
       console.log("Response from API:", response.data);
@@ -122,6 +131,7 @@ const Chat = () => {
       console.error("Error sending message:", error);
     }
   };
+  
 
   const toggleUserDetails = () => {
     setShowUserDetails((prev) => !prev); 

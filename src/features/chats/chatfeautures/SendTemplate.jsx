@@ -56,6 +56,11 @@ const SendTemplate = ({ onSelect }) => {
     return () => debouncedSearch.cancel(); // Cleanup
   }, [searchTerm, templates]);
 
+  const handleTemplateClick = (template) => { 
+    console.log("Template selected:", template.element_name); 
+    if (onSelect) onSelect(template.element_name); 
+   };
+
   return (
     <div className="bg-white rounded-lg shadow-xl w-[850px] max-w-full p-6 relative overflow-hidden">
       <h2 className="text-lg font-semibold mb-4 text-center text-gray-800">
@@ -100,9 +105,11 @@ const SendTemplate = ({ onSelect }) => {
                 ) : (
                   filteredTemplates.map((template, index) => (
                     <tr
-                      key={index}
-                      className="border-t border-gray-200 hover:bg-gray-50 transition"
-                    >
+                      key={index} 
+ className="border-t border-gray-200 hover:bg-gray-50 transition cursor-pointer" 
+ onClick={() => handleTemplateClick(template)} 
+>
+                    
                       <td className="px-4 py-4 whitespace-nowrap">
                         <span className="bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded">
                           {template.status || "N/A"}
@@ -123,8 +130,9 @@ const SendTemplate = ({ onSelect }) => {
                       <td className="px-4 py-4">{template.template_type || "Unknown"}</td>
                       <td className="px-4 py-4 text-center">
                         <button
-                          onClick={() => {
+                          onClick={(e) => {
                             console.log("Template selected:", template.element_name);
+                            e.stopPropagation(); // prevents row click from firing 
                             if (onSelect) onSelect(template.element_name);
                           }}
                           className="bg-teal-500 hover:bg-teal-600 text-white text-xs px-3 py-1 rounded"

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Send } from "lucide-react";
-import SendTemplate from "./chatfeautures/SendTemplate"; 
+import SendTemplate from "./chatfeautures/SendTemplate";
 const MessageInput = ({ onSendMessage }) => {
   const [message, setMessage] = useState("");
   const [showTemplates, setShowTemplates] = useState(false); // Modal state
@@ -20,7 +20,10 @@ const MessageInput = ({ onSendMessage }) => {
   return (
     <>
       <div className="border-gray-200 p-3 bg-white">
-        <form onSubmit={handleSubmit} className="flex items-center w-full max-w-3xl mx-auto">
+        <form
+          onSubmit={handleSubmit}
+          className="flex items-center w-full max-w-3xl mx-auto"
+        >
           <input
             type="text"
             value={message}
@@ -41,12 +44,11 @@ const MessageInput = ({ onSendMessage }) => {
       {/* Template Modal */}
       {showTemplates && (
         <div className="fixed inset-0 flex justify-center items-center z-50">
-
           <div className="relative">
             <SendTemplate
               onSelect={(templateName) => {
-                onSendMessage(`[TEMPLATE] ${templateName}`);
-                setShowTemplates(false); // Close modal
+                onSendMessage({ template_name: templateName });
+                setShowTemplates(false);
               }}
             />
             <button
