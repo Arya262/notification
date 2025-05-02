@@ -9,8 +9,9 @@ const Broadcast = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [highlightCancel, setHighlightCancel] = useState(false);
   const [storageError, setStorageError] = useState(null);
-  
-  // Initialize state with localStorage data or defaults
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [deleteIndex, setDeleteIndex] = useState(null);
+
   const [broadcastData, setBroadcastData] = useState(() => {
     try {
       const savedData = localStorage.getItem("broadcastData");
@@ -21,14 +22,7 @@ const Broadcast = () => {
               date: "Apr 07, 2025",
               name: "Offer",
               type: "Manual Broadcast",
-              msgType: "Template Massage",
-              schedule: "Instant",
-              status: "Live",
-            },{
-              date: "Apr 07, 2025",
-              name: "Offer",
-              type: "Manual Broadcast",
-              msgType: "Template Massage",
+              msgType: "Template Message",
               schedule: "Instant",
               status: "Live",
             },
@@ -36,7 +30,7 @@ const Broadcast = () => {
               date: "Apr 07, 2025",
               name: "Festival",
               type: "Manual Broadcast",
-              msgType: "Template Massage",
+              msgType: "Template Message",
               schedule: "Instant",
               status: "Live",
             },
@@ -48,7 +42,7 @@ const Broadcast = () => {
           date: "Apr 07, 2025",
           name: "Offer",
           type: "Manual Broadcast",
-          msgType: "Template Massage",
+          msgType: "Template Message",
           schedule: "Instant",
           status: "Live",
         },
@@ -56,7 +50,7 @@ const Broadcast = () => {
           date: "Apr 07, 2025",
           name: "Festival",
           type: "Manual Broadcast",
-          msgType: "Template Massage",
+          msgType: "Template Message",
           schedule: "Instant",
           status: "Live",
         },
@@ -66,21 +60,18 @@ const Broadcast = () => {
 
   const location = useLocation();
 
-  // Optimized function to save data to localStorage
   const saveToLocalStorage = (data) => {
     try {
-      // Remove any large media files before saving
-      const dataToStore = data.map(item => {
+      const dataToStore = data.map((item) => {
         const { image, video, ...rest } = item;
         return rest;
       });
-      
+
       localStorage.setItem("broadcastData", JSON.stringify(dataToStore));
       setStorageError(null);
     } catch (error) {
       console.error("Storage error:", error);
       setStorageError("Could not save all data locally. Some features may be limited.");
-      // Implement fallback strategy here if needed
     }
   };
 
@@ -94,13 +85,28 @@ const Broadcast = () => {
   }, [location.state]);
 
   useEffect(() => {
-    // Only save when broadcastData changes for other reasons
-    saveToLocalStorage(broadcastData);
+    if (!location.state?.formData) {
+      saveToLocalStorage(broadcastData);
+    }
   }, [broadcastData]);
 
   const handleDelete = (index) => {
-    const newData = broadcastData.filter((_, i) => i !== index);
-    setBroadcastData(newData);
+    setDeleteIndex(index);
+    setShowConfirmModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteIndex !== null) {
+      const newData = broadcastData.filter((_, i) => i !== deleteIndex);
+      setBroadcastData(newData);
+    }
+    setShowConfirmModal(false);
+    setDeleteIndex(null);
+  };
+
+  const cancelDelete = () => {
+    setShowConfirmModal(false);
+    setDeleteIndex(null);
   };
 
   return (
@@ -110,7 +116,7 @@ const Broadcast = () => {
           <p>{storageError}</p>
         </div>
       )}
-      
+
       <div className="flex items-center justify-between">
         <h2 className="text-xl pt-0 font-semibold">Broadcast WhatsApp Campaigns</h2>
         <button
@@ -125,6 +131,7 @@ const Broadcast = () => {
       <BroadcastStats data={broadcastData} />
       <BroadcastDashboard data={broadcastData} onDelete={handleDelete} />
 
+      {/* Add Broadcast Popup */}
       {showPopup && (
         <div
           className="fixed inset-0 bg-white/40 flex items-center justify-center z-50 transition-all duration-300"
@@ -141,10 +148,38 @@ const Broadcast = () => {
             } transition-all duration-300`}
             onClick={(e) => e.stopPropagation()}
           >
-            <BroadcastPages 
-              onClose={() => setShowPopup(false)} 
+            <BroadcastPages
+              onClose={() => setShowPopup(false)}
               showCustomAlert={storageError}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md animate-fadeIn">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Confirm Deletion
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this broadcast?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={cancelDelete}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

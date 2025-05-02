@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import searchIcon from "../../assets/search.png";
 import deleteIcon from "../../assets/delete.png";
-import { HiDotsVertical } from "react-icons/hi"; // Adding the three-dot icon from react-icons
+import { HiDotsVertical } from "react-icons/hi"; 
 
 const BroadcastDashboard = ({ onDelete }) => {
   const [search, setSearch] = useState("");
@@ -24,58 +24,6 @@ const BroadcastDashboard = ({ onDelete }) => {
         deliveredPercentage: 80,
         readPercentage: 70,
         clicks: 1000,
-      },
-    },
-    {
-      date: "2025-04-07T12:59:00",
-      broadcastName: "Festival",
-      msgType: "Template Message",
-      schedule: "Instant",
-      status: "Live",
-      messageFunnel: {
-        totalContacts: 1500789,
-        deliveredPercentage: 90,
-        readPercentage: 85,
-        clicks: 2300,
-      },
-    },
-    {
-      date: "2025-04-06T10:30:00",
-      broadcastName: "Promo Deal",
-      msgType: "Text Message",
-      schedule: "Scheduled",
-      status: "Scheduled",
-      messageFunnel: {
-        totalContacts: 1800345,
-        deliveredPercentage: 75,
-        readPercentage: 60,
-        clicks: 1800,
-      },
-    },
-    {
-      date: "2025-04-05T15:45:00",
-      broadcastName: "Reminder",
-      msgType: "Template Message",
-      schedule: "Instant",
-      status: "Sent",
-      messageFunnel: {
-        totalContacts: 2500123,
-        deliveredPercentage: 95,
-        readPercentage: 90,
-        clicks: 5000,
-      },
-    },
-    {
-      date: "2025-04-04T09:00:00",
-      broadcastName: "Event Update",
-      msgType: "Text Message",
-      schedule: "Instant",
-      status: "Paused",
-      messageFunnel: {
-        totalContacts: 3100456,
-        deliveredPercentage: 60,
-        readPercentage: 30,
-        clicks: 1500,
       },
     },
   ];

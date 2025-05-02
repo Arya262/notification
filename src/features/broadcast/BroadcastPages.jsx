@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import React, { useState, useRef, useEffect, forwardRef } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import SendTemplate from "../chats/chatfeautures/SendTemplate"
 
 const BroadcastPages = ({ onClose, showCustomAlert }) => {
   const [formData, setFormData] = useState({
@@ -24,6 +25,26 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
   const navigate = useNavigate();
   const modalRef = useRef(null);
   const dialogRef = useRef(null);
+
+  const [customerLists, setCustomerLists] = useState([]); // Stores customer list data
+  const [loading, setLoading] = useState(true); // Tracks loading state
+  const [error, setError] = useState(null); // Error state for the API request
+
+  useEffect(() => {
+    const fetchCustomerLists = async () => {
+      try {
+        const response = await fetch("https://api.example.com/customers"); // Replace with your API URL
+        const data = await response.json();
+        setCustomerLists(data); // Assuming the response is an array of customer lists
+      } catch (err) {
+        setError("Failed to fetch customer lists");
+      } finally {
+        setLoading(false); // Set loading to false once the request completes
+      }
+    };
+
+    fetchCustomerLists();
+  }, []); // Empty dependency array ensures this runs once when the component mounts
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -290,16 +311,24 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
     );
   };
 
+  const [isTemplateOpen, setIsTemplateOpen] = useState(false);
+
+  const openTemplate = () => {
+    setIsTemplateOpen(true);
+  };
+
+  const closeTemplate = () => {
+    setIsTemplateOpen(false);
+  };
   return (
     <>
       <div className="flex items-center justify-center font-poppins">
-      <div
-  ref={modalRef}
-  className={`w-full max-w-[900px] p-4 bg-white rounded-lg shadow-lg border ${
-    highlightBorder ? "border-teal-500" : "border-transparent"
-  } transition-all duration-300`}
->
-
+        <div
+          ref={modalRef}
+          className={`w-full max-w-[900px] p-4 bg-white rounded-lg shadow-lg border ${
+            highlightBorder ? "border-teal-500" : "border-transparent"
+          } transition-all duration-300`}
+        >
           <div className="flex justify-between items-center mb-4 border-b pb-3 border-[#DFDFDF]">
             <h2 className="text-2xl text-black font-medium">Add Broadcast</h2>
             <button
@@ -345,8 +374,18 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
                 <option value="Select Customer List">
                   Select Customer List
                 </option>
-                <option value="Customer List 1">Customer List 1</option>
-                <option value="Customer List 2">Customer List 2</option>
+                {loading ? (
+                  <option>Loading...</option> // Show loading option while fetching data
+                ) : error ? (
+                  <option>{error}</option> // Show error message if the API fails
+                ) : (
+                  customerLists.map((customer, index) => (
+                    <option key={index} value={customer.name}>
+                      {customer.name}{" "}
+                      {/* Assuming 'name' is the field from the API response */}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
@@ -389,12 +428,27 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
             </div>
 
             {formData.messageType === "Pre-approved template message" && (
-              <button
-                type="button"
-                className="w-full sm:w-auto px-4 py-2 border border-[#0AA89E] text-[#0AA89E] text-[15px] font-medium rounded"
-              >
-                Select Template
-              </button>
+              <div>
+                <button
+                  type="button"
+                  className="w-full sm:w-auto px-4 py-2 border border-[#0AA89E] text-[#0AA89E] text-[15px] font-medium rounded"
+                  onClick={openTemplate}
+                >
+                  Select Template
+                </button>
+
+                {isTemplateOpen && (
+                  <>
+                    {/* Background Overlay with White Blur */}
+                    <div className="fixed inset-0  bg-opacity-5 backdrop-blur-sm z-40" />
+
+                    {/* Modal Container */}
+                    <div className="fixed inset-0 flex items-center justify-center z-50">
+                      <SendTemplate closeTemplate={closeTemplate} />
+                    </div>
+                  </>
+                )}
+              </div>
             )}
 
             {formData.messageType === "Regular Message" && (
@@ -565,4 +619,3 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
 };
 
 export default BroadcastPages;
-

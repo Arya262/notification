@@ -9,9 +9,8 @@ export default function AddContact({ closePopup }) {
   const [phone, setPhone] = useState("+1 ");
   const [optStatus, setOptStatus] = useState("Opted In");
   const [name, setName] = useState("");
-  const [tags, setTags] = useState("");
-  const [csvUrl, setCsvUrl] = useState("");
   const [file, setFile] = useState(null);
+  const [groupName, setGroupName] = useState("");
   const [countryCodes, setCountryCodes] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [phoneError, setPhoneError] = useState("");
@@ -85,9 +84,7 @@ export default function AddContact({ closePopup }) {
           if (data.success) {
             setSuccessMessage(data.message || "Contact added successfully!");
             setErrorMessage("");
-            setTimeout(() => {
-              closePopup();
-            }, 1000);
+            closePopup();
           } else {
             setErrorMessage(data.message || "Failed to add contact.");
             setSuccessMessage("");
@@ -99,33 +96,13 @@ export default function AddContact({ closePopup }) {
           setSuccessMessage("");
         });
     } else {
-      if (csvUrl) {
-        fetch("http://localhost:3000/importcsvfromurl", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ csvUrl }),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.success) {
-              setSuccessMessage(data.message || "Contacts imported from URL!");
-              setErrorMessage("");
-              setTimeout(() => closePopup(), 1000);
-            } else {
-              setErrorMessage(data.message || "Failed to import from URL.");
-              setSuccessMessage("");
-            }
-          })
-          .catch((err) => {
-            console.error("Import from URL failed:", err);
-            setErrorMessage("An error occurred while importing from URL.");
-            setSuccessMessage("");
-          });
-      } else if (file) {
+      if (file) {
         const formData = new FormData();
         formData.append("file", file);
+        formData.append("shop_id", "1");
+        formData.append("group_name", groupName.trim());
 
-        fetch("http://localhost:3000/importcsvfile", {
+        fetch("http://localhost:3000/addcustomers", {
           method: "POST",
           body: formData,
         })
@@ -134,7 +111,7 @@ export default function AddContact({ closePopup }) {
             if (data.success) {
               setSuccessMessage(data.message || "Contacts imported from file!");
               setErrorMessage("");
-              setTimeout(() => closePopup(), 1000);
+              closePopup();
             } else {
               setErrorMessage(data.message || "Failed to import from file.");
               setSuccessMessage("");
@@ -146,7 +123,7 @@ export default function AddContact({ closePopup }) {
             setSuccessMessage("");
           });
       } else {
-        setErrorMessage("Please provide a CSV file or a valid URL.");
+        setErrorMessage("Please provide a CSV file.");
         setSuccessMessage("");
       }
     }
@@ -183,14 +160,14 @@ export default function AddContact({ closePopup }) {
           setName={setName}
         />
       )}
-{tab === "bulk" && (
-  <BulkContactForm
-    csvUrl={csvUrl}
-    setCsvUrl={setCsvUrl}
-    file={file}
-    setFile={setFile}
-  />
-)}
+      {tab === "bulk" && (
+        <BulkContactForm
+          file={file}
+          setFile={setFile}
+          groupName={groupName}
+          setGroupName={setGroupName}
+        />
+      )}
       <button
         onClick={handleSubmit}
         className="mt-4 bg-teal-600 text-white px-4 py-2 rounded mx-auto block"
