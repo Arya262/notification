@@ -56,22 +56,21 @@ const SendTemplate = ({ onSelect, onClose }) => {
     return () => debouncedSearch.cancel(); // Cleanup
   }, [searchTerm, templates]);
 
-  const handleTemplateClick = (template) => { 
-    console.log("Template selected:", template.element_name); 
-    if (onSelect) onSelect(template.element_name); 
+  const handleTemplateClick = (template) => {
+    console.log("Template selected:", template.element_name);
+    if (onSelect) onSelect(template.element_name);
   };
 
   return (
     <div className="bg-white rounded-lg shadow-xl w-[850px] max-w-full p-6 relative overflow-hidden">
       {/* Close Button */}
-      {onClose && (
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-        >
-          &times;
-        </button>
-      )}
+      <button
+        onClick={onClose}
+        className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-xl font-bold focus:outline-none"
+        aria-label="Close"
+      >
+        &times;
+      </button>
 
       <h2 className="text-lg font-semibold mb-4 text-center text-gray-800">
         Choose a Template
@@ -115,9 +114,9 @@ const SendTemplate = ({ onSelect, onClose }) => {
                 ) : (
                   filteredTemplates.map((template, index) => (
                     <tr
-                      key={index} 
-                      className="border-t border-gray-200 hover:bg-gray-50 transition cursor-pointer" 
-                      onClick={() => handleTemplateClick(template)} 
+                      key={index}
+                      className="border-t border-gray-200 hover:bg-gray-50 transition cursor-pointer"
+                      onClick={() => handleTemplateClick(template)}
                     >
                       <td className="px-4 py-4 whitespace-nowrap">
                         <span className="bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded">
@@ -140,8 +139,8 @@ const SendTemplate = ({ onSelect, onClose }) => {
                       <td className="px-4 py-4 text-center">
                         <button
                           onClick={(e) => {
+                            e.stopPropagation();
                             console.log("Template selected:", template.element_name);
-                            e.stopPropagation(); // prevents row click from firing 
                             if (onSelect) onSelect(template.element_name);
                           }}
                           className="bg-teal-500 hover:bg-teal-600 text-white text-xs px-3 py-1 rounded"

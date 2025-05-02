@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import React, { useState, useRef, useEffect, forwardRef } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import SendTemplate from "../chats/chatfeautures/SendTemplate"
+import SendTemplate from "../chats/chatfeautures/SendTemplate";
 
 const BroadcastPages = ({ onClose, showCustomAlert }) => {
   const [formData, setFormData] = useState({
@@ -53,10 +53,10 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
         setLoading(false); // Stop loading
       }
     };
-  
+
     fetchCustomerLists();
   }, []);
-   // Empty dependency array ensures this runs once when the component mounts
+  // Empty dependency array ensures this runs once when the component mounts
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -438,12 +438,17 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
 
                 {isTemplateOpen && (
                   <>
-                    {/* Background Overlay with White Blur */}
-                    <div className="fixed inset-0  bg-opacity-5 backdrop-blur-sm z-40" />
+                    {/* Background Overlay */}
+                    <div className="fixed inset-0 bg-white bg-opacity-5 backdrop-blur-sm z-40" />
 
-                    {/* Modal Container */}
+                    {/* Modal */}
                     <div className="fixed inset-0 flex items-center justify-center z-50">
-                      <SendTemplate closeTemplate={closeTemplate} />
+                      <SendTemplate
+                        onClose={closeTemplate}
+                        onSelect={(templateName) => {
+                          closeTemplate(); // Close modal after selection
+                        }}
+                      />
                     </div>
                   </>
                 )}
