@@ -66,12 +66,12 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
     >
       {/* Checkbox */}
       <div className="w-[8%] flex justify-center items-center">
-        <input
-          type="checkbox"
-          className="w-4 h-4"
-          checked={isChecked}
-          onChange={onCheckboxChange}
-        />
+      <input
+            type="checkbox"
+            className="form-checkbox w-4 h-4"
+            checked={isChecked}
+            onChange={onCheckboxChange}
+          />
       </div>
 
       {/* Created Date */}

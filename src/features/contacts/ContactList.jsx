@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useRef } from "react";
 import ContactRow from "./ContactRow";
 import AddContact from "./Addcontact";
 
@@ -6,8 +6,12 @@ export default function ContactList() {
   const [contacts, setContacts] = useState([]);
   const [filter, setFilter] = useState("All");
   const [loading, setLoading] = useState(true);
-  const [selectedIds, setSelectedIds] = useState([]);
+  const [selectedRows, setSelectedRows] = useState({});
+  const [selectAll, setSelectAll] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [isCrossHighlighted, setIsCrossHighlighted] = useState(false);
+  const popupRef = useRef(null);
+  
 
   useEffect(() => {
     fetch("http://localhost:3000/contacts?shop_id=1")
@@ -47,25 +51,41 @@ export default function ContactList() {
 
   const filterButtons = ["All", "Opted-in", "Opted-Out"];
 
-  const handleCheckboxChange = (id) => {
-    setSelectedIds(
-      (prev) =>
-        prev.includes(id)
-          ? prev.filter((sid) => sid !== id) // Deselect the contact
-          : [...prev, id] // Select the contact
-    );
-  };
-
-  const toggleSelectAll = () => {
-    const currentIds = filteredContacts.map((c) => c.id);
-    const allSelected = currentIds.every((id) => selectedIds.includes(id));
-
-    if (allSelected) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(currentIds);
+  // Handle Select All checkbox change
+  const handleSelectAllChange = (event) => {
+    const checked = event.target.checked;
+    setSelectAll(checked);
+    const newSelected = {};
+    if (checked) {
+      filteredContacts.forEach((_, idx) => {
+        newSelected[idx] = true;
+      });
     }
+    setSelectedRows(newSelected);
   };
+
+  // Handle individual checkbox change
+  const handleCheckboxChange = (idx, event) => {
+    setSelectedRows((prev) => ({
+      ...prev,
+      [idx]: event.target.checked,
+    }));
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (popupRef.current && !popupRef.current.contains(event.target)) {
+        setTimeout(() => setIsCrossHighlighted(true), 0);
+      } else {
+        setIsCrossHighlighted(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const openPopup = () => setIsPopupOpen(true);
   const closePopup = () => setIsPopupOpen(false);
@@ -105,15 +125,12 @@ export default function ContactList() {
         <div className="min-w-[900px] bg-white rounded-2xl shadow-[0px_-0.91px_3.66px_0px_#00000042] overflow-hidden">
           <div className="flex p-3 border-b font-semibold text-gray-700 bg-[#F4F4F4]">
             <div className="w-[8%] flex justify-center items-center">
-              <input
-                type="checkbox"
-                className="w-4 h-4"
-                checked={
-                  filteredContacts.length > 0 &&
-                  filteredContacts.every((c) => selectedIds.includes(c.id))
-                }
-                onChange={toggleSelectAll}
-              />
+            <input
+                    type="checkbox"
+                    className="form-checkbox w-4 h-4"
+                    checked={selectAll}
+                    onChange={handleSelectAllChange}
+                  />
             </div>
             <div className="w-[15%]">Created Date</div>
             <div className="w-[12%]">Status</div>
@@ -132,12 +149,12 @@ export default function ContactList() {
               No contacts found.
             </div>
           ) : (
-            filteredContacts.map((c) => (
-              <div key={c.id} className="hover:bg-gray-50 transition">
+            filteredContacts.map((contact, idx) => (
+              <div key={contact.id} className="hover:bg-gray-50 transition">
                 <ContactRow
-                  contact={c}
-                  isChecked={selectedIds.includes(c.id)}
-                  onCheckboxChange={() => handleCheckboxChange(c.id)}
+                  contact={contact}
+                  isChecked={!!selectedRows[idx]}
+                  onCheckboxChange={(e) => handleCheckboxChange(idx, e)}
                 />
               </div>
             ))
@@ -147,13 +164,20 @@ export default function ContactList() {
       {isPopupOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}>
           <div className="bg-white rounded-lg w-full max-w-3xl shadow-lg relative">
-            <button
+          <div
+            ref={popupRef}
+            className="bg-white rounded-lg w-full max-w-3xl shadow-lg relative"
+          >
+          <button
               onClick={closePopup}
-              className="absolute top-3 right-4 text-gray-600 hover:text-black text-2xl font-bold"
+              className={`absolute top-2 right-4 text-gray-600 hover:text-black text-3xl font-bold w-8 h-8 flex items-center justify-center pb-2 rounded-full transition-colors ${
+                isCrossHighlighted ? "bg-red-500 text-white hover:text-white" : "bg-gray-100"
+              }`}
             >
               ×
             </button>
             <AddContact closePopup={closePopup} />
+          </div>
           </div>
         </div>
       )}

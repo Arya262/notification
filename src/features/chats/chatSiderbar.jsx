@@ -38,7 +38,7 @@ const ChatSidebar = ({
             tabIndex={0}
             onClick={() => onSelectContact(contact)}
             onKeyDown={(e) => e.key === "Enter" && onSelectContact(contact)}
-            className={`flex items-center px-4 py-3 cursor-pointer rounded-xl transition border focus:outline-none
+            className={`flex items-center px-2 py-1 cursor-pointer rounded-xl transition border focus:outline-none
               ${
                 selectedContact?.id === contact.id
                   ? "border-[#0AA89E] bg-white"

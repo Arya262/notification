@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import ContactTabs from "./ContactTabs";
 import SuccessErrorMessage from "./SuccessErrorMessage";
 import SingleContactForm from "./SingleContactForm";
+import BulkContactForm from "./BulkContactForm";
 
 export default function AddContact({ closePopup }) {
   const [tab, setTab] = useState("single");
@@ -98,7 +99,56 @@ export default function AddContact({ closePopup }) {
           setSuccessMessage("");
         });
     } else {
-      console.log({ csvUrl, file });
+      if (csvUrl) {
+        fetch("http://localhost:3000/importcsvfromurl", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ csvUrl }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              setSuccessMessage(data.message || "Contacts imported from URL!");
+              setErrorMessage("");
+              setTimeout(() => closePopup(), 1000);
+            } else {
+              setErrorMessage(data.message || "Failed to import from URL.");
+              setSuccessMessage("");
+            }
+          })
+          .catch((err) => {
+            console.error("Import from URL failed:", err);
+            setErrorMessage("An error occurred while importing from URL.");
+            setSuccessMessage("");
+          });
+      } else if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        fetch("http://localhost:3000/importcsvfile", {
+          method: "POST",
+          body: formData,
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              setSuccessMessage(data.message || "Contacts imported from file!");
+              setErrorMessage("");
+              setTimeout(() => closePopup(), 1000);
+            } else {
+              setErrorMessage(data.message || "Failed to import from file.");
+              setSuccessMessage("");
+            }
+          })
+          .catch((err) => {
+            console.error("Import from file failed:", err);
+            setErrorMessage("An error occurred while importing from file.");
+            setSuccessMessage("");
+          });
+      } else {
+        setErrorMessage("Please provide a CSV file or a valid URL.");
+        setSuccessMessage("");
+      }
     }
   };
 
@@ -130,9 +180,17 @@ export default function AddContact({ closePopup }) {
           optStatus={optStatus}
           setOptStatus={setOptStatus}
           name={name}
-          setName={setName} // ✅ This fixes the missing name issue
+          setName={setName}
         />
       )}
+{tab === "bulk" && (
+  <BulkContactForm
+    csvUrl={csvUrl}
+    setCsvUrl={setCsvUrl}
+    file={file}
+    setFile={setFile}
+  />
+)}
       <button
         onClick={handleSubmit}
         className="mt-4 bg-teal-600 text-white px-4 py-2 rounded mx-auto block"
