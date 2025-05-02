@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { debounce } from "lodash";
 
-const SendTemplate = ({ onSelect }) => {
+const SendTemplate = ({ onSelect, onClose }) => {
   const [templates, setTemplates] = useState([]);
   const [filteredTemplates, setFilteredTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,10 +59,20 @@ const SendTemplate = ({ onSelect }) => {
   const handleTemplateClick = (template) => { 
     console.log("Template selected:", template.element_name); 
     if (onSelect) onSelect(template.element_name); 
-   };
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-xl w-[850px] max-w-full p-6 relative overflow-hidden">
+      {/* Close Button */}
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+        >
+          &times;
+        </button>
+      )}
+
       <h2 className="text-lg font-semibold mb-4 text-center text-gray-800">
         Choose a Template
       </h2>
@@ -106,10 +116,9 @@ const SendTemplate = ({ onSelect }) => {
                   filteredTemplates.map((template, index) => (
                     <tr
                       key={index} 
- className="border-t border-gray-200 hover:bg-gray-50 transition cursor-pointer" 
- onClick={() => handleTemplateClick(template)} 
->
-                    
+                      className="border-t border-gray-200 hover:bg-gray-50 transition cursor-pointer" 
+                      onClick={() => handleTemplateClick(template)} 
+                    >
                       <td className="px-4 py-4 whitespace-nowrap">
                         <span className="bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded">
                           {template.status || "N/A"}

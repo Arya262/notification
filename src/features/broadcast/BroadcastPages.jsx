@@ -423,19 +423,6 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
                     Pre-approved template message
                   </span>
                 </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="messageType"
-                    value="Regular Message"
-                    checked={formData.messageType === "Regular Message"}
-                    onChange={handleRadioChange}
-                    className="text-[#0AA89E]"
-                    style={{ accentColor: "#0AA89E" }}
-                    required
-                  />
-                  <span className="ml-2 text-[#717171]">Regular Message</span>
-                </label>
               </div>
             </div>
 
