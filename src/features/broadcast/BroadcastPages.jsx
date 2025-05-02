@@ -32,19 +32,31 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
 
   useEffect(() => {
     const fetchCustomerLists = async () => {
+      setLoading(true); // Start loading
       try {
-        const response = await fetch("https://api.example.com/customers"); // Replace with your API URL
-        const data = await response.json();
-        setCustomerLists(data); // Assuming the response is an array of customer lists
+        const response = await fetch("http://localhost:3000/returnGroups");
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data)) {
+          setCustomerLists(result.data);
+          setError(null); // Clear any previous errors
+        } else {
+          throw new Error("Invalid data format received from API");
+        }
       } catch (err) {
         setError("Failed to fetch customer lists");
+        setCustomerLists([]); // Clear customer lists on error
+        console.error("Error fetching customer lists:", err);
       } finally {
-        setLoading(false); // Set loading to false once the request completes
+        setLoading(false); // Stop loading
       }
     };
-
+  
     fetchCustomerLists();
-  }, []); // Empty dependency array ensures this runs once when the component mounts
+  }, []);
+   // Empty dependency array ensures this runs once when the component mounts
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -379,9 +391,9 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
                 ) : error ? (
                   <option>{error}</option> // Show error message if the API fails
                 ) : (
-                  customerLists.map((customer, index) => (
-                    <option key={index} value={customer.name}>
-                      {customer.name}{" "}
+                  customerLists.map((customer, group_id) => (
+                    <option key={group_id} value={customer.group_name}>
+                      {customer.group_name}{" "}
                       {/* Assuming 'name' is the field from the API response */}
                     </option>
                   ))
