@@ -13,6 +13,7 @@ const Setting = lazy(() => import("./features/settings/Setting"));
 const Broadcast = lazy(() => import("./features/broadcast/Broadcast"));
 const NotFound = lazy(() => import("./components/NotFound"));
 const DashboardHome = lazy(() => import("./features/dashboard/DashboardHome"));
+const ExploreTemplates = lazy(() => import("./features/templates/ExploreTemplates"));
 
 function App() {
   return (
@@ -43,6 +44,14 @@ function App() {
             element={
               <ErrorBoundary>
                 <Templates />
+              </ErrorBoundary>
+            }
+          />
+                    <Route
+            path="templates/explore"
+            element={
+              <ErrorBoundary>
+                <ExploreTemplates />
               </ErrorBoundary>
             }
           />

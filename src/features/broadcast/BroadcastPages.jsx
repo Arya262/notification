@@ -263,7 +263,7 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
 
     return (
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300"
+        className="fixed inset-0 bg- bg-opacity-5 flex items-center justify-center z-50 transition-opacity duration-300"
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div
@@ -439,14 +439,14 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
                 {isTemplateOpen && (
                   <>
                     {/* Background Overlay */}
-                    <div className="fixed inset-0 bg-white bg-opacity-5 backdrop-blur-sm z-40" />
+                    <div className="fixed inset-0 backdrop-blur-sm z-40" />
 
                     {/* Modal */}
                     <div className="fixed inset-0 flex items-center justify-center z-50">
                       <SendTemplate
                         onClose={closeTemplate}
                         onSelect={(templateName) => {
-                          closeTemplate(); // Close modal after selection
+                          closeTemplate(); 
                         }}
                       />
                     </div>

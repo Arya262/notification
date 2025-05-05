@@ -90,6 +90,13 @@ export default function ContactList() {
   const openPopup = () => setIsPopupOpen(true);
   const closePopup = () => setIsPopupOpen(false);
 
+  useEffect(() => {
+    const total = filteredContacts.length;
+    const selected = Object.values(selectedRows).filter(Boolean).length;
+    setSelectAll(selected === total && total > 0);
+  }, [selectedRows, filteredContacts.length]);
+  
+
   return (
     <div className="flex-1">
       <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
