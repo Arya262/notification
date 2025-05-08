@@ -73,8 +73,21 @@ const BroadcastForm = ({
             onClick={openTemplate}
             disabled={isSubmitting}
           >
-            Select Template
+            {formData.selectedTemplate ? 'Change Template' : 'Select Template'}
           </button>
+
+          {formData.selectedTemplate && (
+            <div className="mt-2 p-3 border border-gray-200 rounded-md">
+              <h4 className="font-medium text-gray-700">Selected Template:</h4>
+              <p className="text-sm text-gray-600">{formData.selectedTemplate.element_name}</p>
+              {formData.selectedTemplate.container_meta?.header && (
+                <p className="text-sm text-gray-600 mt-1">Header: {formData.selectedTemplate.container_meta.header}</p>
+              )}
+              {formData.selectedTemplate.container_meta?.data && (
+                <p className="text-sm text-gray-600 mt-1">Content: {formData.selectedTemplate.container_meta.data}</p>
+              )}
+            </div>
+          )}
 
           {isTemplateOpen && (
             <>

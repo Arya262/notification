@@ -133,6 +133,8 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
         } : null
       };
 
+      console.log("Submitting form data with template:", updatedFormData);
+
       // API call to save broadcast
       const response = await fetch("http://localhost:3000/saveBroadcast", {
         method: "POST",

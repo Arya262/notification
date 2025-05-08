@@ -57,8 +57,7 @@ const SendTemplate = ({ onSelect, onClose }) => {
   }, [searchTerm, templates]);
 
   const handleTemplateClick = (template) => {
-    console.log("Template selected:", template.element_name);
-    if (onSelect) onSelect(template.element_name);
+    if (onSelect) onSelect(template);
   };
 
   return (
@@ -140,8 +139,8 @@ const SendTemplate = ({ onSelect, onClose }) => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            console.log("Template selected:", template.element_name);
-                            if (onSelect) onSelect(template.element_name);
+                            console.log("Template selected:", template);
+                            if (onSelect) onSelect(template);
                           }}
                           className="bg-teal-500 hover:bg-teal-600 text-white text-xs px-3 py-1 rounded"
                         >
