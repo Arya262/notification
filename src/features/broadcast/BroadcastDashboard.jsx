@@ -10,28 +10,38 @@ const BroadcastDashboard = ({ onDelete }) => {
   const [selectAll, setSelectAll] = useState(false);
   const [selectedRows, setSelectedRows] = useState({});
   const [menuOpen, setMenuOpen] = useState(null);
+  const [broadcasts, setBroadcasts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Static data directly used for rendering
-  const staticData = [
-    {
-      date: "2025-04-07T12:59:00",
-      broadcastName: "Offer",
-      msgType: "Template Message",
-      schedule: "Instant",
-      status: "Live",
-      messageFunnel: {
-        totalContacts: 1200456,
-        deliveredPercentage: 80,
-        readPercentage: 70,
-        clicks: 1000,
-      },
-    },
-  ];
+  // Fetch broadcasts from API
+  useEffect(() => {
+    const fetchBroadcasts = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('YOUR_API_ENDPOINT/broadcasts');
+        if (!response.ok) {
+          throw new Error('Failed to fetch broadcasts');
+        }
+        const data = await response.json();
+        setBroadcasts(data);
+        setError(null);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  console.log("Static Data:", staticData); // Debug log to confirm static data
+    fetchBroadcasts();
+  }, []);
 
-  // Temporarily bypass filtering to ensure data is displayed
-  const filteredData = staticData;
+  // Filter data based on search and active filter
+  const filteredData = broadcasts.filter(broadcast => {
+    const matchesSearch = broadcast.broadcastName.toLowerCase().includes(search.toLowerCase());
+    const matchesFilter = activeFilter === "All" || broadcast.status === activeFilter;
+    return matchesSearch && matchesFilter;
+  });
 
   const handleSelectAllChange = (event) => {
     setSelectAll(event.target.checked);
@@ -54,12 +64,12 @@ const BroadcastDashboard = ({ onDelete }) => {
   };
 
   const statuses = {
-    All: staticData.length,
-    Live: staticData.filter((d) => d.status === "Live").length,
-    Sent: staticData.filter((d) => d.status === "Sent").length,
-    Scheduled: staticData.filter((d) => d.schedule === "Scheduled").length,
-    Stopped: staticData.filter((d) => d.status === "Stopped").length,
-    Paused: staticData.filter((d) => d.status === "Paused").length,
+    All: broadcasts.length,
+    Live: broadcasts.filter((d) => d.status === "Live").length,
+    Sent: broadcasts.filter((d) => d.status === "Sent").length,
+    Scheduled: broadcasts.filter((d) => d.schedule === "Scheduled").length,
+    Stopped: broadcasts.filter((d) => d.status === "Stopped").length,
+    Paused: broadcasts.filter((d) => d.status === "Paused").length,
   };
 
   const filters = [
@@ -114,17 +124,49 @@ const BroadcastDashboard = ({ onDelete }) => {
     setMenuOpen(menuOpen === idx ? null : idx);
   };
 
-  const handleDelete = (idx) => {
-    if (onDelete) {
-      onDelete(idx);
-    }
-    setMenuOpen(null);
-  };
+  // const handleDelete = async (idx) => {
+  //   try {
+  //     const broadcastToDelete = filteredData[idx];
+  //     const response = await fetch(`YOUR_API_ENDPOINT/broadcasts/${broadcastToDelete.id}`, {
+  //       method: 'DELETE',
+  //     });
+      
+  //     if (!response.ok) {
+  //       throw new Error('Failed to delete broadcast');
+  //     }
+
+  //     // Update local state after successful deletion
+  //     setBroadcasts(broadcasts.filter(b => b.id !== broadcastToDelete.id));
+      
+  //     if (onDelete) {
+  //       onDelete(idx);
+  //     }
+  //     setMenuOpen(null);
+  //   } catch (err) {
+  //     setError(err.message);
+  //   }
+  // };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-red-500">Error: {error}</div>
+      </div>
+    );
+  }
 
   return (
     <div
       className={`w-full ${
-        staticData.length > 0 ? "bg-white shadow-sm" : ""
+        broadcasts.length > 0 ? "bg-white shadow-sm" : ""
       } rounded-xl mt-4 shadow-sm min-h-fit`}
     >
       <div className="flex items-center shadow-2xl p-4">
@@ -147,15 +189,9 @@ const BroadcastDashboard = ({ onDelete }) => {
                 <div className="flex items-center gap-0">
                   <span className="whitespace-nowrap">{f.label}</span>
                   <span
-                    className={`text-md font-bold flex items-center justify-center rounded ${
-                      activeFilter === f.label ? "text-white" : ""
-                    }`}
+                    className={`text-md font-bold flex items-center justify-center rounded ${activeFilter === f.label ? "text-white" : ""}`}
                     style={{
-                      backgroundColor: "transparent",
-                      padding: "0 4px",
-                      marginLeft: "0",
-                    }}
-                  >
+                      backgroundColor: "transparent",padding: "0 4px",marginLeft: "0",}}>
                     ({f.count})
                   </span>
                 </div>
@@ -163,45 +199,25 @@ const BroadcastDashboard = ({ onDelete }) => {
             ))}
             <div className="block md:block lg:hidden">
               <button className="flex items-center justify-center h-10 w-10">
-                <img
-                  src={searchIcon}
-                  alt="Search"
-                  className="w-5 h-5 opacity-60"
-                />
+                <img src={searchIcon}alt="Search"className="w-5 h-5 opacity-60"/>
               </button>
             </div>
           </div>
           <div className="hidden lg:block flex-shrink-0 ml-28">
             <div className="relative w-[300px]">
-              <img
-                src={searchIcon}
-                alt="Search"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 opacity-60"
-              />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search template by Name or Category..."
-                className="pl-2 pr-8 py-2 border border-gray-300 text-sm rounded-md w-full focus:outline-none"
-              />
+              <img src={searchIcon}alt="Search"className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 opacity-60"/>
+              <input type="text"value={search}onChange={(e) => setSearch(e.target.value)}placeholder="Search template by Name or Category..." className="pl-2 pr-8 py-2 border border-gray-300 text-sm rounded-md w-full focus:outline-none"/>
             </div>
           </div>
         </div>
       </div>
-
       <div className="overflow-x-auto max-w-full">
         <table className="w-full text-sm text-center overflow-hidden table-auto">
           <thead className="bg-gray-100 border-b-2 shadow-sm border-gray-300">
             <tr>
               <th className="px-2 py-3 sm:px-6">
                 <div className="flex items-center justify-center h-full">
-                  <input
-                    type="checkbox"
-                    className="form-checkbox w-4 h-4"
-                    checked={selectAll}
-                    onChange={handleSelectAllChange}
-                  />
+                  <input type="checkbox"className="form-checkbox w-4 h-4" checked={selectAll} onChange={handleSelectAllChange}/>
                 </div>
               </th>
               <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
@@ -326,7 +342,7 @@ const BroadcastDashboard = ({ onDelete }) => {
                             {row.messageFunnel.clicks}
                           </span>
                           <span className="text-sm text-gray-500">
-                            gghiioClicks
+                           Clicks
                           </span>
                         </div>
                       </div>
@@ -335,18 +351,12 @@ const BroadcastDashboard = ({ onDelete }) => {
                     )}
                   </td>
                   <td className=" relative">
-                    <button
-                      className="flex items-center justify-center w-8 h-8 rounded hover:bg-gray-200 sm:ml-5"
-                      onClick={() => toggleMenu(idx)}
-                    >
+                    <button className="flex items-center justify-center w-8 h-8 rounded hover:bg-gray-200 sm:ml-5"onClick={() => toggleMenu(idx)}>
                       <HiDotsVertical className="w-6 h-6" />
                     </button>
                     {menuOpen === idx && (
                       <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow-lg z-10">
-                        <button
-                          className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100"
-                          onClick={() => handleDelete(idx)}
-                        >
+                        <button className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100"onClick={() => handleDelete(idx)}>
                           Delete
                         </button>
                       </div>
