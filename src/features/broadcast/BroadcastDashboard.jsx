@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import searchIcon from "../../assets/search.png";
 import FilterBar from "./components/FilterBar";
 import SearchBar from "./components/SearchBar";
 import BroadcastTable from "./components/BroadcastTable";
 
-const BroadcastDashboard = ({ onDelete }) => {
+const BroadcastDashboard = forwardRef(({ onBroadcastsUpdate }, ref) => {
   const [search, setSearch] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
   const [activeFilter, setActiveFilter] = useState("All");
@@ -16,30 +16,39 @@ const BroadcastDashboard = ({ onDelete }) => {
   const [error, setError] = useState(null);
 
   // Fetch broadcasts from API
-  useEffect(() => {
-    const fetchBroadcasts = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("http://localhost:3000/broadcasts");
-        if (!response.ok) {
-          throw new Error("Failed to fetch broadcasts");
-        }
-        const data = await response.json();
-        setBroadcasts(Array.isArray(data.broadcasts) ? data.broadcasts : []);
-        setError(null);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+  const fetchBroadcasts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("http://localhost:3000/broadcasts");
+      if (!response.ok) {
+        throw new Error("Failed to fetch broadcasts");
       }
-    };
+      const data = await response.json();
+      const newBroadcasts = Array.isArray(data.broadcasts) ? data.broadcasts : [];
+      setBroadcasts(newBroadcasts);
+      if (onBroadcastsUpdate) {
+        onBroadcastsUpdate(newBroadcasts);
+      }
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Expose fetchBroadcasts to parent component
+  useImperativeHandle(ref, () => ({
+    fetchBroadcasts
+  }));
+
+  useEffect(() => {
     fetchBroadcasts();
   }, []);
 
   // Filter data based on search and active filter
   const filteredData = broadcasts.filter((broadcast) => {
-    const name = broadcast.broadcastName || "";
+    const name = broadcast.broadcast_name || "";
     const matchesSearch = name.toLowerCase().includes(search.toLowerCase());
     const matchesFilter =
       activeFilter === "All" || broadcast.status === activeFilter;
@@ -142,12 +151,10 @@ const BroadcastDashboard = ({ onDelete }) => {
         throw new Error("Failed to delete broadcast");
       }
 
-      setBroadcasts(
-        broadcasts.filter((b) => b.id !== broadcastToDelete.id)
-      );
-
-      if (onDelete) {
-        onDelete(idx);
+      const newBroadcasts = broadcasts.filter((b) => b.id !== broadcastToDelete.id);
+      setBroadcasts(newBroadcasts);
+      if (onBroadcastsUpdate) {
+        onBroadcastsUpdate(newBroadcasts);
       }
       setMenuOpen(null);
     } catch (err) {
@@ -194,6 +201,6 @@ const BroadcastDashboard = ({ onDelete }) => {
       />
     </div>
   );
-};
+});
 
 export default BroadcastDashboard;

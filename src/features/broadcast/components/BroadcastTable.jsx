@@ -69,7 +69,9 @@ const BroadcastTable = ({
           {row.message_type}
         </td>
         <td className="px-2 py-3 text-[12px] sm:text-[16px] text-gray-700">
-          {row.schedule}
+          {row.schedule.toLowerCase() === "yes"
+            ? formatDate(row.schedule_date)
+            : "No"}
         </td>
         <td className="px-2 py-3 text-[12px] sm:text-[16px] text-green-600">
           {row.status}

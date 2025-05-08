@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import BroadcastStats from "./BroadcastStats";
 import vendor from "../../assets/vector.png";
@@ -6,11 +6,13 @@ import BroadcastDashboard from "./BroadcastDashboard";
 import BroadcastPages from "./BroadcastPages";
 
 const Broadcast = () => {
+  const broadcastDashboardRef = useRef(null);
   const [showPopup, setShowPopup] = useState(false);
   const [highlightCancel, setHighlightCancel] = useState(false);
   const [storageError, setStorageError] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [deleteIndex, setDeleteIndex] = useState(null);
+  const [broadcasts, setBroadcasts] = useState([]);
 
   const [broadcastData, setBroadcastData] = useState(() => {
     try {
@@ -109,7 +111,15 @@ const Broadcast = () => {
     setDeleteIndex(null);
   };
 
-  
+  const handleBroadcastCreated = () => {
+    if (broadcastDashboardRef.current) {
+      broadcastDashboardRef.current.fetchBroadcasts();
+    }
+  };
+
+  const handleBroadcastsUpdate = (newBroadcasts) => {
+    setBroadcasts(newBroadcasts);
+  };
 
   return (
     <div className="p-0 bg-white min-h-screen">
@@ -130,8 +140,11 @@ const Broadcast = () => {
         </button>
       </div>
 
-      <BroadcastStats data={broadcastData} />
-      <BroadcastDashboard data={broadcastData} onDelete={handleDelete} />
+      <BroadcastStats data={broadcasts} />
+      <BroadcastDashboard 
+        ref={broadcastDashboardRef}
+        onBroadcastsUpdate={handleBroadcastsUpdate}
+      />
 
       {/* Add Broadcast Popup */}
       {showPopup && (
@@ -153,6 +166,7 @@ const Broadcast = () => {
             <BroadcastPages
               onClose={() => setShowPopup(false)}
               showCustomAlert={storageError}
+              onBroadcastCreated={handleBroadcastCreated}
             />
           </div>
         </div>

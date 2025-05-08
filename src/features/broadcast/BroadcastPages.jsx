@@ -6,7 +6,7 @@ import BroadcastForm from "./components/BroadcastForm";
 import AlertDialog from "./components/AlertDialog";
 import ConfirmationDialog from "./components/ConfirmationDialog";
 
-const BroadcastPages = ({ onClose, showCustomAlert }) => {
+const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
   const [formData, setFormData] = useState({
     broadcastName: "",
     customerList: "Select Customer List",
@@ -118,8 +118,6 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
         date: formData.schedule === "Yes" && selectedDate ? selectedDate : new Date(),
         status: formData.schedule === "No" ? "Live" : "Scheduled",
         type: "Manual Broadcast",
-       
-       
       };
 
       console.log("Submitting form data with template:", updatedFormData);
@@ -142,6 +140,11 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
       if (result.success) {
         setAlertMessage("Broadcast saved successfully!");
         setShowAlert(true);
+        
+        // Call the refresh function if provided
+        if (onBroadcastCreated) {
+          onBroadcastCreated();
+        }
         
         // Close alert after 2 seconds
         setTimeout(() => {

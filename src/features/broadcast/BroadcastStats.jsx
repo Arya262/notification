@@ -15,19 +15,21 @@ const BroadcastStats = ({ data }) => {
     );
   }
 
-  // Calculate dynamic stats
-  const totalContact = data.length;
-  const messageDelivered = data.filter((item) => item.status === "Live").length;
-  const messageRead = data.filter((item) => item.status === "Sent").length; // Fixed: Changed to "Sent"
-  const totalLinkClick = data.filter(
-    (item) => item.schedule === "Yes" || item.status === "Scheduled"
-  ).length;
+  // Calculate total stats from message funnel data
+  const totalStats = data.reduce((acc, item) => {
+    return {
+      totalContacts: acc.totalContacts + (item.sent || 0),
+      delivered: acc.delivered + (item.delivered || 0),
+      read: acc.read + (item.read || 0),
+      clicks: acc.clicks + (item.clicked || 0)
+    };
+  }, { totalContacts: 0, delivered: 0, read: 0, clicks: 0 });
 
   const stats = [
-    { label: "Total Contact", value: totalContact, icon: brodcastIcon },
-    { label: "Message Delivered", value: messageDelivered, icon: liveIcon },
-    { label: "Message Read", value: messageRead, icon: sentIcon },
-    { label: "Total link Click", value: totalLinkClick, icon: totalIcon },
+    { label: "Total Contact", value: totalStats.totalContacts, icon: brodcastIcon },
+    { label: "Message Delivered", value: totalStats.delivered, icon: liveIcon },
+    { label: "Message Read", value: totalStats.read, icon: sentIcon },
+    { label: "Total link Click", value: totalStats.clicks, icon: totalIcon },
   ];
 
   return (
