@@ -14,7 +14,7 @@ const ExploreTemplates = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch("http://localhost:3000/templates");
+        const response = await fetch("http://localhost:3000/templates?shop_id=1");
         const data = await response.json();
         if (Array.isArray(data.templates)) {
           setTemplates(data.templates);

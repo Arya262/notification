@@ -93,12 +93,14 @@ const BroadcastForm = ({
             <>
               <div className="fixed inset-0 backdrop-blur-sm z-40" />
               <div className="fixed inset-0 flex items-center justify-center z-50">
-                <SendTemplate
-                  onClose={closeTemplate}
-                  onSelect={(template) => {
-                    onTemplateSelect(template);
-                  }}
-                />
+              <SendTemplate
+  onClose={closeTemplate}
+  onSelect={(template) => {
+    onTemplateSelect(template); // full template object
+  }}
+  returnFullTemplate={true} // Pass the full template object
+/>
+
               </div>
             </>
           )}

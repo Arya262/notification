@@ -45,12 +45,14 @@ const MessageInput = ({ onSendMessage }) => {
       {showTemplates && (
         <div className="fixed inset-0 flex justify-center items-center z-50">
           <div className="relative">
-            <SendTemplate
-              onSelect={(templateName) => {
-                onSendMessage({ template_name: templateName });
-                setShowTemplates(false);
-              }}
-            />
+          <SendTemplate
+  onSelect={(templateName) => {
+    onSendMessage({ template_name: templateName });
+    setShowTemplates(false);
+  }}
+  returnFullTemplate={false} // Only pass the name
+/>
+
             <button
               onClick={() => setShowTemplates(false)}
               className="absolute top-2 right-2 text-white bg-red-500 rounded-full px-2 py-1 text-xs"

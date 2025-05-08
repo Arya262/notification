@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { debounce } from "lodash";
 
-const SendTemplate = ({ onSelect, onClose }) => {
+const SendTemplate = ({ onSelect, onClose, returnFullTemplate = false }) => {
   const [templates, setTemplates] = useState([]);
   const [filteredTemplates, setFilteredTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,7 +57,10 @@ const SendTemplate = ({ onSelect, onClose }) => {
   }, [searchTerm, templates]);
 
   const handleTemplateClick = (template) => {
-    if (onSelect) onSelect(template);
+    // Return either the full template or just the name based on the prop
+    if (onSelect) {
+      onSelect(returnFullTemplate ? template : template.element_name);
+    }
   };
 
   return (
@@ -139,8 +142,7 @@ const SendTemplate = ({ onSelect, onClose }) => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            console.log("Template selected:", template);
-                            if (onSelect) onSelect(template);
+                            handleTemplateClick(template);
                           }}
                           className="bg-teal-500 hover:bg-teal-600 text-white text-xs px-3 py-1 rounded"
                         >
@@ -158,5 +160,6 @@ const SendTemplate = ({ onSelect, onClose }) => {
     </div>
   );
 };
+
 
 export default SendTemplate;
