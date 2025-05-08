@@ -13,10 +13,6 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
     messageType: "Pre-approved template message",
     schedule: "No",
     scheduleDate: "",
-    regularMessageType: "Text Message",
-    message: "",
-    image: "",
-    video: "",
     selectedTemplate: null,
   });
 
@@ -122,21 +118,14 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
         date: formData.schedule === "Yes" && selectedDate ? selectedDate : new Date(),
         status: formData.schedule === "No" ? "Live" : "Scheduled",
         type: "Manual Broadcast",
-        msgType: formData.messageType === "Regular Message" ? formData.regularMessageType : "Template Message",
-        template: formData.selectedTemplate ? {
-          name: formData.selectedTemplate.element_name,
-          type: formData.selectedTemplate.template_type,
-          data: formData.selectedTemplate.container_meta?.data,
-          header: formData.selectedTemplate.container_meta?.header,
-          footer: formData.selectedTemplate.container_meta?.footer,
-          buttons: formData.selectedTemplate.container_meta?.buttons
-        } : null
+       
+       
       };
 
       console.log("Submitting form data with template:", updatedFormData);
 
       // API call to save broadcast
-      const response = await fetch("http://localhost:3000/saveBroadcast", {
+      const response = await fetch("http://localhost:3000/getBroadcastCustomers", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
