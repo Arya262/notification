@@ -17,6 +17,7 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
     message: "",
     image: "",
     video: "",
+    selectedTemplate: null,
   });
 
   const [selectedDate, setSelectedDate] = useState(null);
@@ -122,6 +123,14 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
         status: formData.schedule === "No" ? "Live" : "Scheduled",
         type: "Manual Broadcast",
         msgType: formData.messageType === "Regular Message" ? formData.regularMessageType : "Template Message",
+        template: formData.selectedTemplate ? {
+          name: formData.selectedTemplate.element_name,
+          type: formData.selectedTemplate.template_type,
+          data: formData.selectedTemplate.container_meta?.data,
+          header: formData.selectedTemplate.container_meta?.header,
+          footer: formData.selectedTemplate.container_meta?.footer,
+          buttons: formData.selectedTemplate.container_meta?.buttons
+        } : null
       };
 
       // API call to save broadcast
@@ -160,6 +169,9 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
       setError(err.message);
       setAlertMessage("Failed to save broadcast. Please try again.");
       setShowAlert(true);
+      setTimeout(() => {
+        setShowAlert(false);
+      }, 2000);
     } finally {
       setIsSubmitting(false);
     }
@@ -200,6 +212,14 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
     setHighlightBorder(false);
   };
 
+  const handleTemplateSelect = (template) => {
+    setFormData(prevData => ({
+      ...prevData,
+      selectedTemplate: template
+    }));
+    closeTemplate();
+  };
+
   return (
     <>
       <div className="flex items-center justify-center font-poppins">
@@ -232,6 +252,7 @@ const BroadcastPages = ({ onClose, showCustomAlert }) => {
             customerLists={customerLists}
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
+            onTemplateSelect={handleTemplateSelect}
           />
         </div>
       </div>

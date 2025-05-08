@@ -18,7 +18,8 @@ const BroadcastForm = ({
   error,
   customerLists,
   onSubmit,
-  isSubmitting
+  isSubmitting,
+  onTemplateSelect
 }) => {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
@@ -81,8 +82,8 @@ const BroadcastForm = ({
               <div className="fixed inset-0 flex items-center justify-center z-50">
                 <SendTemplate
                   onClose={closeTemplate}
-                  onSelect={(templateName) => {
-                    closeTemplate();
+                  onSelect={(template) => {
+                    onTemplateSelect(template);
                   }}
                 />
               </div>
