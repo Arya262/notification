@@ -9,88 +9,50 @@ const Broadcast = () => {
   const broadcastDashboardRef = useRef(null);
   const [showPopup, setShowPopup] = useState(false);
   const [highlightCancel, setHighlightCancel] = useState(false);
-  const [storageError, setStorageError] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [deleteIndex, setDeleteIndex] = useState(null);
   const [broadcasts, setBroadcasts] = useState([]);
-
-  const [broadcastData, setBroadcastData] = useState(() => {
-    try {
-      const savedData = localStorage.getItem("broadcastData");
-      return savedData
-        ? JSON.parse(savedData)
-        : [
-            {
-              date: "Apr 07, 2025",
-              name: "Offer",
-              type: "Manual Broadcast",
-              msgType: "Template Message",
-              schedule: "Instant",
-              status: "Live",
-            },
-            {
-              date: "Apr 07, 2025",
-              name: "Festival",
-              type: "Manual Broadcast",
-              msgType: "Template Message",
-              schedule: "Instant",
-              status: "Live",
-            },
-          ];
-    } catch (error) {
-      console.error("Error loading from localStorage:", error);
-      return [
-        {
-          date: "Apr 07, 2025",
-          name: "Offer",
-          type: "Manual Broadcast",
-          msgType: "Template Message",
-          schedule: "Instant",
-          status: "Live",
-        },
-        {
-          date: "Apr 07, 2025",
-          name: "Festival",
-          type: "Manual Broadcast",
-          msgType: "Template Message",
-          schedule: "Instant",
-          status: "Live",
-        },
-      ];
-    }
-  });
+  const [selectedRows, setSelectedRows] = useState({});
+  const [selectAll, setSelectAll] = useState(false);
 
   const location = useLocation();
 
-  const saveToLocalStorage = (data) => {
-    try {
-      const dataToStore = data.map((item) => {
-        const { image, video, ...rest } = item;
-        return rest;
-      });
-
-      localStorage.setItem("broadcastData", JSON.stringify(dataToStore));
-      setStorageError(null);
-    } catch (error) {
-      console.error("Storage error:", error);
-      setStorageError("Could not save all data locally. Some features may be limited.");
-    }
-  };
-
   useEffect(() => {
     if (location.state?.formData) {
-      const newData = [...broadcastData, location.state.formData];
-      setBroadcastData(newData);
-      saveToLocalStorage(newData);
+      // After creating a new broadcast, refresh the list
+      if (broadcastDashboardRef.current) {
+        broadcastDashboardRef.current.fetchBroadcasts();
+      }
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
 
-  useEffect(() => {
-    if (!location.state?.formData) {
-      saveToLocalStorage(broadcastData);
+  // Handle Select All checkbox change
+  const handleSelectAllChange = (event) => {
+    const checked = event.target.checked;
+    setSelectAll(checked);
+    const newSelected = {};
+    if (checked) {
+      broadcasts.forEach((_, idx) => {
+        newSelected[idx] = true;
+      });
     }
-  }, [broadcastData]);
+    setSelectedRows(newSelected);
+  };
+
+  // Handle individual checkbox change
+  const handleCheckboxChange = (idx, event) => {
+    setSelectedRows((prev) => ({
+      ...prev,
+      [idx]: event.target.checked,
+    }));
+  };
+
+  useEffect(() => {
+    const total = broadcasts.length;
+    const selected = Object.values(selectedRows).filter(Boolean).length;
+    setSelectAll(selected === total && total > 0);
+  }, [selectedRows, broadcasts.length]);
 
   const handleDelete = (index) => {
     setDeleteIndex(index);
@@ -99,8 +61,9 @@ const Broadcast = () => {
 
   const confirmDelete = () => {
     if (deleteIndex !== null) {
-      const newData = broadcastData.filter((_, i) => i !== deleteIndex);
-      setBroadcastData(newData);
+      if (broadcastDashboardRef.current) {
+        broadcastDashboardRef.current.handleDelete(deleteIndex);
+      }
     }
     setShowConfirmModal(false);
     setDeleteIndex(null);
@@ -123,12 +86,6 @@ const Broadcast = () => {
 
   return (
     <div className="p-0 bg-white min-h-screen">
-      {storageError && (
-        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4">
-          <p>{storageError}</p>
-        </div>
-      )}
-
       <div className="flex items-center justify-between">
         <h2 className="text-xl pt-0 font-semibold">Broadcast WhatsApp Campaigns</h2>
         <button
@@ -144,6 +101,10 @@ const Broadcast = () => {
       <BroadcastDashboard 
         ref={broadcastDashboardRef}
         onBroadcastsUpdate={handleBroadcastsUpdate}
+        selectAll={selectAll}
+        handleSelectAllChange={handleSelectAllChange}
+        selectedRows={selectedRows}
+        handleCheckboxChange={handleCheckboxChange}
       />
 
       {/* Add Broadcast Popup */}
@@ -165,7 +126,6 @@ const Broadcast = () => {
           >
             <BroadcastPages
               onClose={() => setShowPopup(false)}
-              showCustomAlert={storageError}
               onBroadcastCreated={handleBroadcastCreated}
             />
           </div>

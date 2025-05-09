@@ -1,6 +1,16 @@
 import { forwardRef, useState } from "react";
 import deleteIcon from "../../assets/delete.png";
 
+// Function to generate a consistent color based on name
+const getAvatarColor = (name) => {
+  const colors = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
+    '#FFEEAD', '#D4A5A5', '#9B59B6', '#3498DB'
+  ];
+  const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return colors[index % colors.length];
+};
+
 const ChatHeader = forwardRef(({ selectedContact, onProfileClick }, profileButtonRef) => {
   const [deleting, setDeleting] = useState(false);
 
@@ -21,11 +31,30 @@ const ChatHeader = forwardRef(({ selectedContact, onProfileClick }, profileButto
     }
   };
 
-  // Fallback avatar logic
-  const avatarSrc =
-    selectedContact.image && selectedContact.image.trim() !== ""
-      ? selectedContact.image
-      : "/default-avatar.jpeg"; // Make sure this image is in your public folder
+  // Function to render avatar
+  const renderAvatar = (contact) => {
+    if (contact.image) {
+      return (
+        <img
+          src={contact.image}
+          alt="User Avatar"
+          className="w-10 h-10 rounded-full object-cover"
+        />
+      );
+    }
+    
+    const firstLetter = contact.name.charAt(0).toUpperCase();
+    const bgColor = getAvatarColor(contact.name);
+    
+    return (
+      <div 
+        className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
+        style={{ backgroundColor: bgColor }}
+      >
+        {firstLetter}
+      </div>
+    );
+  };
 
   return (
     <div className="chat-header flex justify-between items-center px-4 py-2 border-b border-gray-200 bg-white">
@@ -35,11 +64,7 @@ const ChatHeader = forwardRef(({ selectedContact, onProfileClick }, profileButto
         onClick={onProfileClick}
         ref={profileButtonRef}
       >
-        <img
-          src={avatarSrc}
-          alt="User Avatar"
-          className="w-10 h-10 rounded-full object-cover"
-        />
+        {renderAvatar(selectedContact)}
         <h3 className="font-semibold text-lg text-black">
           {selectedContact.name}
         </h3>

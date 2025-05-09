@@ -1,16 +1,52 @@
 import { IoSearchOutline } from "react-icons/io5";
 import { formatTime } from "../../utils/time";
 
+// Function to generate a consistent color based on name
+const getAvatarColor = (name) => {
+  const colors = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
+    '#FFEEAD', '#D4A5A5', '#9B59B6', '#3498DB'
+  ];
+  const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return colors[index % colors.length];
+};
+
 const ChatSidebar = ({
   contacts,
   selectedContact,
   searchQuery,
   onSearchChange,
   onSelectContact,
+  onDeleteContact, // <-- NEW PROP for removing contact after delete
 }) => {
   const filteredContacts = contacts.filter((c) =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Function to render avatar
+  const renderAvatar = (contact) => {
+    if (contact.image) {
+      return (
+        <img
+          src={contact.image}
+          alt="User Avatar"
+          className="w-10 h-10 rounded-full object-cover mr-4"
+        />
+      );
+    }
+    
+    const firstLetter = contact.name.charAt(0).toUpperCase();
+    const bgColor = getAvatarColor(contact.name);
+    
+    return (
+      <div 
+        className="w-10 h-10 rounded-full mr-4 flex items-center justify-center text-white font-semibold"
+        style={{ backgroundColor: bgColor }}
+      >
+        {firstLetter}
+      </div>
+    );
+  };
 
   return (
     <div className="w-full md:w-1/3 bg-white border-r border-gray-200 p-4">
@@ -30,47 +66,54 @@ const ChatSidebar = ({
       </div>
 
       {/* Contacts List */}
-      <div className="space-y-2 overflow-y-auto max-h-[65vh] scrollbar-hide">
-        {filteredContacts.map((contact) => (
-          <div
-            key={contact.id}
-            role="button"
-            tabIndex={0}
-            onClick={() => onSelectContact(contact)}
-            onKeyDown={(e) => e.key === "Enter" && onSelectContact(contact)}
-            className={`flex items-center px-2 py-1 cursor-pointer rounded-xl transition border focus:outline-none
-              ${
-                selectedContact?.id === contact.id
-                  ? "border-[#0AA89E] bg-white"
-                  : "border-[#E0E0E0] bg-white hover:bg-gray-100"
-              }`}
-          >
-            {/* Avatar */}
-            <img
-                src={contact.image || "/default-avatar.jpeg"}
-                alt="User Avatar"
-                className="w-10 h-10 rounded-full object-cover mr-4"
-              />
-            {/* Contact Details */}
-            <div className="flex-1">
-              <div className="flex justify-between items-center">
-                <p className="font-semibold text-black">{contact.name}</p>
-                <p className="text-sm text-gray-500">
-                  {formatTime(contact.updated_at).toLowerCase()}
-                </p>
-              </div>
-              {/* Optional Last Message */}
-              {contact.lastMessage && (
-                <p className="text-sm text-gray-500 truncate mt-0.5">
-                  {contact.lastMessage}
-                </p>
-              )}
-            </div>
-          </div>
-        ))}
+      <div className="space-y-2 overflow-y-auto max-h-[70vh] scrollbar-hide">
+        {filteredContacts.length > 0 ? (
+          filteredContacts.map((contact) => (
+            <div
+              key={contact.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => onSelectContact(contact)}
+              onKeyDown={(e) => e.key === "Enter" && onSelectContact(contact)}
+              className={`flex items-center px-2 py-1 cursor-pointer rounded-xl transition border focus:outline-none
+                ${
+                  selectedContact?.id === contact.id
+                    ? "border-[#0AA89E] bg-white"
+                    : "border-[#E0E0E0] bg-white hover:bg-gray-100"
+                }`}
+            >
+              {/* Avatar */}
+              {renderAvatar(contact)}
 
-        {/* Empty State */}
-        {filteredContacts.length === 0 && (
+              {/* Contact Details */}
+              <div className="flex-1">
+                <div className="flex justify-between items-center">
+                  <p className="font-semibold text-black">{contact.name}</p>
+                  <p className="text-sm text-gray-500">
+                    {formatTime(contact.lastMessageTime)}
+                  </p>
+                </div>
+                {/* Optional Last Message */}
+                {contact.lastMessage && (
+                  <p className="text-sm text-gray-500 truncate mt-0.5">
+                    {contact.lastMessage}
+                  </p>
+                )}
+              </div>
+
+              {/* Small delete button beside contact if you want (optional) */}
+              {/* <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteContact?.(contact.id);
+                }}
+                className="text-gray-400 hover:text-red-500 ml-2"
+              >
+                ✖
+              </button> */}
+            </div>
+          ))
+        ) : (
           <p className="text-center text-gray-400 text-sm mt-4">
             No contacts found.
           </p>

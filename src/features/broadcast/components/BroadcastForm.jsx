@@ -1,7 +1,6 @@
 import React from 'react';
-import MessageTypeSelector from './MessageTypeSelector';
-import RegularMessage from './RegularMessage';
 import ScheduleSelector from './ScheduleSelector';
+import MessageTypeSelector from './MessageTypeSelector';
 
 const BroadcastForm = ({
   formData,
@@ -63,58 +62,46 @@ const BroadcastForm = ({
         disabled={isSubmitting}
       />
 
-      {formData.messageType === "Pre-approved template message" && (
-        <div>
-          <button
-            type="button"
-            className={`w-full sm:w-auto px-4 py-2 border border-[#0AA89E] text-[#0AA89E] text-[15px] font-medium rounded ${
-              isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#0AA89E] hover:text-white'
-            }`}
-            onClick={openTemplate}
-            disabled={isSubmitting}
-          >
-            {formData.selectedTemplate ? 'Change Template' : 'Select Template'}
-          </button>
-
-          {formData.selectedTemplate && (
-            <div className="mt-2 p-3 border border-gray-200 rounded-md">
-              <h4 className="font-medium text-gray-700">Selected Template:</h4>
-              <p className="text-sm text-gray-600">{formData.selectedTemplate.element_name}</p>
-              {formData.selectedTemplate.container_meta?.header && (
-                <p className="text-sm text-gray-600 mt-1">Header: {formData.selectedTemplate.container_meta.header}</p>
-              )}
-              {formData.selectedTemplate.container_meta?.data && (
-                <p className="text-sm text-gray-600 mt-1">Content: {formData.selectedTemplate.container_meta.data}</p>
-              )}
-            </div>
-          )}
-
-          {isTemplateOpen && (
-            <>
-              <div className="fixed inset-0 backdrop-blur-sm z-40" />
-              <div className="fixed inset-0 flex items-center justify-center z-50">
-              <SendTemplate
-  onClose={closeTemplate}
-  onSelect={(template) => {
-    onTemplateSelect(template); // full template object
-  }}
-  returnFullTemplate={true} // Pass the full template object
-/>
-
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {formData.messageType === "Regular Message" && (
-        <RegularMessage
-          formData={formData}
-          handleInputChange={handleInputChange}
-          handleMediaChange={handleMediaChange}
+      <div>
+        <button
+          type="button"
+          className={`w-full sm:w-auto px-4 py-2 border border-[#0AA89E] text-[#0AA89E] text-[15px] font-medium rounded ${
+            isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#0AA89E] hover:text-white'
+          }`}
+          onClick={openTemplate}
           disabled={isSubmitting}
-        />
-      )}
+        >
+          {formData.selectedTemplate ? 'Change Template' : 'Select Template'}
+        </button>
+
+        {formData.selectedTemplate && (
+          <div className="mt-2 p-3 border border-gray-200 rounded-md">
+            <h4 className="font-medium text-gray-700">Selected Template:</h4>
+            <p className="text-sm text-gray-600">{formData.selectedTemplate.element_name}</p>
+            {formData.selectedTemplate.container_meta?.header && (
+              <p className="text-sm text-gray-600 mt-1">Header: {formData.selectedTemplate.container_meta.header}</p>
+            )}
+            {formData.selectedTemplate.container_meta?.data && (
+              <p className="text-sm text-gray-600 mt-1">Content: {formData.selectedTemplate.container_meta.data}</p>
+            )}
+          </div>
+        )}
+
+        {isTemplateOpen && (
+          <>
+            <div className="fixed inset-0 backdrop-blur-sm z-40" />
+            <div className="fixed inset-0 flex items-center justify-center z-50">
+              <SendTemplate
+                onClose={closeTemplate}
+                onSelect={(template) => {
+                  onTemplateSelect(template);
+                }}
+                returnFullTemplate={true}
+              />
+            </div>
+          </>
+        )}
+      </div>
 
       <ScheduleSelector
         formData={formData}

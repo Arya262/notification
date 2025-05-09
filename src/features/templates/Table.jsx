@@ -1,6 +1,8 @@
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import { HiDotsVertical } from "react-icons/hi";
+import { IoSearch } from "react-icons/io5";
+import ActionMenu from '../broadcast/components/ActionMenu';
 
-
-import React, { useState, useMemo, useEffect } from "react";
 const Table = ({ templates = []  }) => {
     const [activeFilter, setActiveFilter] = useState("All");
     const [searchTerm, setSearchTerm] = useState("");
@@ -8,6 +10,10 @@ const Table = ({ templates = []  }) => {
     // const [editedTemplate, setEditedTemplate] = useState({});
     const [showMobileSearch, setShowMobileSearch] = useState(false);
     const [localTemplates, setLocalTemplates] = useState([]);
+    const [menuOpen, setMenuOpen] = useState(null);
+    const [shouldFlipUp, setShouldFlipUp] = useState(false);
+    const dropdownRef = useRef(null);
+    const rowRefs = useRef({});
 
     useEffect(() => {
         const savedTemplates = localStorage.getItem("templates");
@@ -96,6 +102,34 @@ const Table = ({ templates = []  }) => {
         { label: "Pending", count: filteredCounts.pending },
         { label: "Rejected", count: filteredCounts.rejected },
     ];
+
+    const toggleMenu = (index) => {
+        setMenuOpen((prev) => {
+            const next = prev === index ? null : index;
+            if (next !== null && rowRefs.current[index]) {
+                const rect = rowRefs.current[index].getBoundingClientRect();
+                const spaceBelow = window.innerHeight - rect.bottom;
+                setShouldFlipUp(spaceBelow < 160);
+            }
+            return next;
+        });
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setMenuOpen(null);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleDelete = (index) => {
+        // Add your delete logic here
+        console.log("Delete template at index:", index);
+    };
+
     return (
    
         <div className="w-full font-sans rounded-[16px] scrollbar-hide scroll-smooth bg-white shadow-[0px_0.91px_3.66px_0px_#00000042] overflow-hidden">
@@ -116,25 +150,15 @@ const Table = ({ templates = []  }) => {
                             {filters.map((f, i) => (
                                 <button
                                     key={i}
-                                    className={`flex items-center justify-center h-8 text-xs font-medium px-2 rounded-md ${f.width} transition-all duration-200 ${activeFilter === f.label
-                                        ? 'bg-teal-500 text-white'
-                                        : 'bg-transparent text-gray-700 hover:text-teal-500'
-                                        } scroll-snap-align-start`}
+                                    className={`px-4 py-2 min-h-[40px] rounded-md text-sm font-medium transition 
+                                        ${
+                                            activeFilter === f.label
+                                                ? "bg-[#05a3a3] text-white"
+                                                : "text-gray-700 hover:text-[#05a3a3]"
+                                        }`}
                                     onClick={() => setActiveFilter(f.label)}
                                 >
-                                    <div className="flex items-center gap-1">
-                                        <span className="whitespace-nowrap">{f.label}</span>
-                                        <span
-                                            className={`text-xs font-bold flex items-center justify-center rounded ${activeFilter === f.label ? 'text-white' : 'text-gray-700'
-                                                }`}
-                                            style={{
-                                                backgroundColor: 'transparent',
-                                                padding: '0 4px',
-                                            }}
-                                        >
-                                            ({f.count})
-                                        </span>
-                                    </div>
+                                    {f.label} ({f.count})
                                 </button>
                             ))}
                             {/* Search Icon for Mobile */}
@@ -144,11 +168,7 @@ const Table = ({ templates = []  }) => {
                                     className="flex items-center justify-center h-9 w-9 border border-gray-300 rounded-md"
                                     aria-label="Toggle search input"
                                 >
-                                    <img
-                                        src="search.png"
-                                        alt="Search"
-                                        className="w-4 h-4 opacity-60"
-                                    />
+                                    <IoSearch className="w-4 h-4 text-gray-400" />
                                 </button>
                             </div>
                         </div>
@@ -159,50 +179,22 @@ const Table = ({ templates = []  }) => {
                         {filters.map((f, i) => (
                             <button
                                 key={i}
-                                className={`flex items-center justify-center h-8 sm:h-9 md:h-10 text-xs sm:text-sm md:text-base font-medium px-2 sm:px-3 rounded-md ${f.width} transition-all duration-200 ${activeFilter === f.label
-                                    ? 'bg-teal-500 text-white'
-                                    : 'bg-transparent text-gray-700 hover:text-teal-500'
+                                className={`px-4 py-2 min-h-[40px] rounded-md text-sm font-medium transition 
+                                    ${
+                                        activeFilter === f.label
+                                            ? "bg-[#05a3a3] text-white"
+                                            : "text-gray-700 hover:text-[#05a3a3]"
                                     }`}
                                 onClick={() => setActiveFilter(f.label)}
                             >
-                                <div className="flex items-center gap-1">
-                                    <span className="whitespace-nowrap">{f.label}</span>
-                                    <span
-                                        className={`text-xs sm:text-sm font-bold flex items-center justify-center rounded ${activeFilter === f.label ? 'text-white' : 'text-gray-700'
-                                            }`}
-                                        style={{
-                                            backgroundColor: 'transparent',
-                                            padding: '0 4px',
-                                        }}
-                                    >
-                                        ({f.count})
-                                    </span>
-                                </div>
+                                {f.label} ({f.count})
                             </button>
                         ))}
-                        {/* Search Icon for Mobile (Hidden on Desktop) */}
-                        <div className="sm:hidden flex items-center">
-                            <button
-                                onClick={() => setShowMobileSearch((prev) => !prev)}
-                                className="flex items-center justify-center h-7 w-7 border border-gray-300 rounded-md"
-                                aria-label="Toggle search input"
-                            >
-                                <img
-                                    src="search.png"
-                                    alt="Search"
-                                    className="w-3.5 h-3.5 opacity-60"
-                                />
-                            </button>
-                        </div>
                     </div>
 
                     {/* Search Input for Tablet/Desktop */}
                     <div className="hidden sm:block flex-grow max-w-[400px] relative ml-auto">
-                        <img
-                            src="search.png"
-                            alt="Search"
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 opacity-60"
-                        />
+                        <IoSearch className="absolute right-2 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                             type="text"
                             value={searchTerm}
@@ -217,11 +209,7 @@ const Table = ({ templates = []  }) => {
                 {showMobileSearch && (
                     <div className="sm:hidden w-full px-2 mt-2">
                         <div className="relative">
-                            <img
-                                src="search.png"
-                                alt="Search"
-                                className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 opacity-60"
-                            />
+                            <IoSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                             <input
                                 type="text"
                                 value={searchTerm}
@@ -239,12 +227,12 @@ const Table = ({ templates = []  }) => {
                 <table className="min-w-[800px] w-full text-sm sm:text-base text-center ">
                     <thead className="bg-gray-100 border-b-2 border-gray-200 font-semibold text-gray-700">
                         <tr>
-                            <th className="py-3 px-4 text-nowrap">Date</th>
-                            <th className="py-3 px-4 text-nowrap">Template Name</th>
-                            <th className="py-3 px-4 text-nowrap">Type</th>
-                            <th className="py-3 px-4 text-nowrap">Message Type</th>
-                            <th className="py-3 px-4 text-nowrap">Status</th>
-                            <th className="py-3 px-4 text-nowrap">Action</th>
+                            <th className="py-4 px-4 text-nowrap">Date</th>
+                            <th className="py-4 px-4 text-nowrap">Template Name</th>
+                            <th className="py-4 px-4 text-nowrap">Type</th>
+                            <th className="py-4 px-4 text-nowrap">Message Type</th>
+                            <th className="py-4 px-4 text-nowrap">Status</th>
+                            <th className="py-4 px-4 text-nowrap">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -258,106 +246,88 @@ const Table = ({ templates = []  }) => {
                             displayedTemplates.map((template, index) => (
                                 <tr
                                     key={index}
-                                    className="bg-white h-[60px] border-b text-sm sm:text-base border-[#C3C3C3]"
+                                    ref={el => rowRefs.current[index] = el}
+                                    className="border-b border-[#C3C3C3] hover:bg-gray-50"
                                 >
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm sm:text-base md:text-[16px]">
-                                        {/* {editRow === template.id ? (
-                                            <input
-                                                type="date"
-                                                name="created_on"
-                                                value={editedTemplate.created_on || ''}
-                                                onChange={handleChange}
-                                                className="px-2 py-1 border rounded w-full text-sm sm:text-base md:text-[16px]"
-                                            />
-                                        ) : (
-                                            new Date(template.created_on).toLocaleDateString()
-                                        )} */}
-                                          {new Date(template.created_on).toLocaleDateString()||'-'}
-                                    </td>
-                                    <td className="px-4 py-2 break-words whitespace-normal max-w-[150px] sm:max-w-[200px] text-sm sm:text-base">
-                                        {template?.element_name || '-'}
-                                    </td>
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm sm:text-base">
-                                        {template?.template_type
-                                            ? template.template_type.charAt(0).toUpperCase() +
-                                            template.template_type.slice(1)
-                                            : '-'}
-                                    </td>
-                                    <td className="px-4 py-2 whitespace-normal text-sm sm:text-base">
-                                        {/* {editRow === template.id ? (
-                                            <input
-                                                type="text"
-                                                name="category"
-                                                value={editedTemplate.category || ''}
-                                                onChange={handleChange}
-                                                className="px-2 py-1 border rounded w-full text-sm sm:text-base"
-                                            />
-                                        ) : (
-                                            template.category
-                                                ? template.category.charAt(0).toUpperCase() +
-                                                template.category.slice(1)
-                                                : '-'
-                                        )} */}
-                                       { template.category
-                                                ? template.category.charAt(0).toUpperCase() +
-                                                template.category.slice(1)
-                                                : '-'
-                                       }
-                                    </td>
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm sm:text-base">
-                                        <span
-                                            className={`inline-flex items-center justify-center text-xs sm:text-sm px-3 py-1 rounded-full text-white font-semibold border-[0.91px] ${template?.status?.toLowerCase() === 'approved'
-                                                ? 'bg-green-500'
-                                                : template?.status?.toLowerCase() === 'pending'
-                                                    ? 'bg-gray-400'
-                                                    : 'bg-red-500'
-                                                }`}
-                                        >
-                                            {template?.status
-                                                ? template.status.charAt(0).toUpperCase() +
-                                                template.status.slice(1)
-                                                : 'Unknown'}
+                                    <td className="py-4 px-4">{new Date(template.created_on).toLocaleDateString() || '-'}</td>
+                                    <td className="py-4 px-4">{template?.element_name || '-'}</td>
+                                    <td className="py-4 px-4">{template?.template_type ? template.template_type.charAt(0).toUpperCase() + template.template_type.slice(1) : '-'}</td>
+                                    <td className="py-4 px-4">{template.category ? template.category.charAt(0).toUpperCase() + template.category.slice(1) : '-'}</td>
+                                    <td className="py-4 px-4">
+                                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                            template.status?.toLowerCase() === 'approved' ? 'bg-green-100 text-green-800' :
+                                            template.status?.toLowerCase() === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                            'bg-red-100 text-red-800'
+                                        }`}>
+                                            {template.status}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm sm:text-base">
-                                       
-                                            <div className="flex gap-2 justify-center">
-                                                <button
-                                                    className="bg-gray-100 hover:bg-gray-200 p-1.5 sm:p-2 rounded-md transition-colors duration-200"
-                                                    aria-label="Edit Template"
-                                                    // onClick={() => handleEditClick(template)}
+                                    <td className="py-4 px-4">
+                                        <div className="flex justify-center items-center gap-2 relative" ref={dropdownRef}>
+                                            {/* Send Message Button */}
+                                            <button
+                                                onClick={() => console.log("Send message to", template.id)}
+                                                className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-3 py-2 rounded-full whitespace-nowrap"
+                                                aria-label={`Send message to ${template.element_name}`}
+                                            >
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    className="w-4 h-4 transform rotate-45"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
                                                 >
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                        strokeWidth={2}
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            d="M11 5H6a2 2 0 00-2 2v11.5A1.5 1.5 0 005.5 20H17a2 2 0 002-2v-5m-1.293-6.707a1 1 0 011.414 1.414L12.414 15H11v-1.414l6.707-6.707z"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                                <button
-                                                    className="bg-red-500 hover:bg-red-600 text-white p-1.5 sm:p-2 rounded-md transition-colors duration-200"
-                                                    aria-label="Delete Template"
-                                                    // onClick={() => handleDeleteClick(template.id)}
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        d="M5 12h14M12 5l7 7-7 7"
+                                                    />
+                                                </svg>
+                                                <span className="text-sm font-medium">Send Message</span>
+                                            </button>
+
+                                            {/* Three Dots */}
+                                            <button
+                                                onClick={() => toggleMenu(index)}
+                                                className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
+                                                aria-label="Template options"
+                                            >
+                                                <svg
+                                                    className="w-5 h-5 text-gray-600"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                    strokeWidth={2}
                                                 >
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        className="w-3.5 h-3.5 sm:w-4 sm:h-4"
-                                                        fill="currentColor"
-                                                        viewBox="0 0 24 24"
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        d="M12 5v.01M12 12v.01M12 19v.01"
+                                                    />
+                                                </svg>
+                                            </button>
+
+                                            {/* Dropdown Menu */}
+                                            {menuOpen === index && (
+                                                <div
+                                                    className={`absolute right-0 ${shouldFlipUp ? "bottom-12" : "top-12"} w-44 bg-white border border-gray-200 rounded-md shadow-lg z-20`}
+                                                >
+                                                    <button
+                                                        onClick={() => console.log("Edit", template.id)}
+                                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                                     >
-                                                        <path d="M6 7h12v12a2 2 0 01-2 2H8a2 2 0 01-2-2V7zm3 3v6m6-6v6M9 4h6a1 1 0 011 1v1H8V5a1 1 0 011-1z" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                       
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(index)}
+                                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))

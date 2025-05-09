@@ -7,8 +7,8 @@ const BroadcastStats = ({ data }) => {
   // Validate data prop
   if (!data || !Array.isArray(data)) {
     return (
-      <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-        <div className="bg-white p-4 mt-0 rounded-xl shadow">
+      <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url("/path-to-your-background-image.jpg")' }}>
+        <div className="bg-white/90 p-4 mt-0 rounded-xl shadow">
           <p className="text-md text-gray-600">Invalid data</p>
         </div>
       </div>
@@ -33,9 +33,9 @@ const BroadcastStats = ({ data }) => {
   ];
 
   return (
-    <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+    <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url("/path-to-your-background-image.jpg")' }}>
       {stats.map((item, index) => (
-        <div key={index} className="bg-white p-4 mt-0 rounded-xl shadow">
+        <div key={index} className="bg-white/90 p-4 mt-0 rounded-xl shadow backdrop-blur-sm">
           <div className="flex items-center gap-3">
             <img src={item.icon} alt={item.label} className="w-14 h-14" />
             <div>

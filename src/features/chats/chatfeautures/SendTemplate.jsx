@@ -16,11 +16,8 @@ const SendTemplate = ({ onSelect, onClose, returnFullTemplate = false }) => {
         const response = await fetch("http://localhost:3000/templates?shop_id=1");
         const data = await response.json();
         if (Array.isArray(data.templates)) {
-          const approvedTemplates = data.templates.filter(
-            (template) => template.status?.toLowerCase() === "approved"
-          );
-          setTemplates(approvedTemplates);
-          setFilteredTemplates(approvedTemplates);
+          setTemplates(data.templates);
+          setFilteredTemplates(data.templates);
         } else {
           console.error("Invalid response format:", data);
           setError("Unexpected response format from server.");
@@ -121,7 +118,11 @@ const SendTemplate = ({ onSelect, onClose, returnFullTemplate = false }) => {
                       onClick={() => handleTemplateClick(template)}
                     >
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <span className="bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded">
+                        <span className={`${
+                          template.status?.toLowerCase() === 'approved' 
+                            ? 'bg-green-100 text-green-700' 
+                            : 'bg-yellow-100 text-yellow-700'
+                        } text-xs font-medium px-2 py-1 rounded`}>
                           {template.status || "N/A"}
                         </span>
                         <div className="text-xs text-gray-500 mt-1">

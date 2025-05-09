@@ -1,6 +1,85 @@
 import React, { useState, useEffect,useRef } from "react";
 import ContactRow from "./ContactRow";
 import AddContact from "./Addcontact";
+import vendor from "../../assets/vector.png";
+
+const ConfirmationDialog = ({ showExitDialog, hasUnsavedChanges, cancelExit, confirmExit }) => {
+  const dialogRef = useRef(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        cancelExit();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [cancelExit]);
+
+  useEffect(() => {
+    dialogRef.current?.focus();
+  }, []);
+
+  if (!showExitDialog) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-opacity-5 flex items-center justify-center z-50 transition-opacity duration-300"
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      <div
+        ref={dialogRef}
+        className="bg-white rounded-xl p-6 w-full max-w-sm shadow-lg transform transition-all duration-300 scale-100"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dialog-title"
+        aria-describedby="dialog-message"
+        tabIndex="-1"
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <svg
+            className="w-6 h-6 text-teal-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+          <h3 id="dialog-title" className="text-lg font-semibold text-gray-800">
+            Exit Confirmation
+          </h3>
+        </div>
+        <p id="dialog-message" className="text-gray-600 mb-6">
+          {hasUnsavedChanges
+            ? "You have unsaved changes. Are you sure you want to exit?"
+            : "Are you sure you want to exit?"}
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={cancelExit}
+            className="px-3 py-2 w-[70px] bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            aria-label="Cancel"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={confirmExit}
+            className="px-3 py-2 w-[70px] bg-teal-500 text-white rounded-md hover:bg-teal-500 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            aria-label="Confirm"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function ContactList() {
   const [contacts, setContacts] = useState([]);
@@ -10,6 +89,7 @@ export default function ContactList() {
   const [selectAll, setSelectAll] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isCrossHighlighted, setIsCrossHighlighted] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
   const popupRef = useRef(null);
   
 
@@ -97,6 +177,21 @@ export default function ContactList() {
   }, [selectedRows, filteredContacts.length]);
   
 
+  const handleCloseAndNavigate = () => {
+    setShowExitDialog(true);
+  };
+
+  const confirmExit = () => {
+    setIsPopupOpen(false);
+    setShowExitDialog(false);
+    setIsCrossHighlighted(false);
+  };
+
+  const cancelExit = () => {
+    setShowExitDialog(false);
+    setIsCrossHighlighted(false);
+  };
+
   return (
     <div className="flex-1">
       <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
@@ -120,11 +215,13 @@ export default function ContactList() {
           </div>
         </div>
 
+        {/* <button*/}
         <button
-          onClick={openPopup} // <-- Add this line
-          className="flex items-center gap-2 bg-[#05a3a3] text-white px-4 py-2 min-h-[40px] rounded-md text-sm font-medium"
+          className="bg-teal-500 hover:bg-teal-600 text-white flex items-center gap-2 px-4 py-2 rounded"
+          onClick={openPopup}
         >
-          <span className="text-lg font-bold">+</span> Add Contact
+          <img src={vendor} alt="plus sign" className="w-5 h-5" />
+          Add Contact
         </button>
       </div>
 
@@ -169,14 +266,24 @@ export default function ContactList() {
         </div>
       </div>
       {isPopupOpen && (
-        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}>
-          <div className="bg-white rounded-lg w-full max-w-3xl shadow-lg relative">
+        <div
+          className="fixed inset-0 bg-white/40 flex items-center justify-center z-50 transition-all duration-300"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsCrossHighlighted(true);
+              setTimeout(() => setIsCrossHighlighted(false), 2000);
+            }
+          }}
+        >
           <div
             ref={popupRef}
-            className="bg-white rounded-lg w-full max-w-3xl shadow-lg relative"
+            className={`bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto relative sm:animate-slideUp border ${
+              isCrossHighlighted ? "border-teal-500" : "border-gray-300"
+            } transition-all duration-300`}
+            onClick={(e) => e.stopPropagation()}
           >
-          <button
-              onClick={closePopup}
+            <button
+              onClick={handleCloseAndNavigate}
               className={`absolute top-2 right-4 text-gray-600 hover:text-black text-3xl font-bold w-8 h-8 flex items-center justify-center pb-2 rounded-full transition-colors ${
                 isCrossHighlighted ? "bg-red-500 text-white hover:text-white" : "bg-gray-100"
               }`}
@@ -185,9 +292,14 @@ export default function ContactList() {
             </button>
             <AddContact closePopup={closePopup} />
           </div>
-          </div>
         </div>
       )}
+      <ConfirmationDialog
+        showExitDialog={showExitDialog}
+        hasUnsavedChanges={false}
+        cancelExit={cancelExit}
+        confirmExit={confirmExit}
+      />
     </div>
   );
 }

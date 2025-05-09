@@ -4,12 +4,16 @@ import FilterBar from "./components/FilterBar";
 import SearchBar from "./components/SearchBar";
 import BroadcastTable from "./components/BroadcastTable";
 
-const BroadcastDashboard = forwardRef(({ onBroadcastsUpdate }, ref) => {
+const BroadcastDashboard = forwardRef(({ 
+  onBroadcastsUpdate, 
+  selectAll, 
+  handleSelectAllChange, 
+  selectedRows, 
+  handleCheckboxChange 
+}, ref) => {
   const [search, setSearch] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
   const [activeFilter, setActiveFilter] = useState("All");
-  const [selectAll, setSelectAll] = useState(false);
-  const [selectedRows, setSelectedRows] = useState({});
   const [menuOpen, setMenuOpen] = useState(null);
   const [broadcasts, setBroadcasts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,27 +58,6 @@ const BroadcastDashboard = forwardRef(({ onBroadcastsUpdate }, ref) => {
       activeFilter === "All" || broadcast.status === activeFilter;
     return matchesSearch && matchesFilter;
   });
-  
-
-  const handleSelectAllChange = (event) => {
-    setSelectAll(event.target.checked);
-    const newSelectedRows = {};
-    if (event.target.checked) {
-      filteredData.forEach((row, idx) => {
-        newSelectedRows[idx] = true;
-      });
-    } else {
-      setSelectedRows({});
-    }
-    setSelectedRows(newSelectedRows);
-  };
-
-  const handleCheckboxChange = (idx, event) => {
-    setSelectedRows({
-      ...selectedRows,
-      [idx]: event.target.checked,
-    });
-  };
 
   const statuses = {
     All: broadcasts.length,

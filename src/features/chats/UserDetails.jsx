@@ -1,7 +1,42 @@
 import { formatTime } from "../../utils/time"
 
+// Function to generate a consistent color based on name
+const getAvatarColor = (name) => {
+  const colors = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
+    '#FFEEAD', '#D4A5A5', '#9B59B6', '#3498DB'
+  ];
+  const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return colors[index % colors.length];
+};
+
 const UserDetails = ({ isExpanded, setIsExpanded, selectedContact }) => {
   if (!selectedContact) return null;
+
+  // Function to render avatar
+  const renderAvatar = (contact) => {
+    if (contact.image) {
+      return (
+        <img
+          src={contact.image}
+          alt="User Avatar"
+          className="w-full h-full object-cover"
+        />
+      );
+    }
+    
+    const firstLetter = contact.name.charAt(0).toUpperCase();
+    const bgColor = getAvatarColor(contact.name);
+    
+    return (
+      <div 
+        className="w-full h-full rounded-full flex items-center justify-center text-white font-semibold text-2xl"
+        style={{ backgroundColor: bgColor }}
+      >
+        {firstLetter}
+      </div>
+    );
+  };
 
   return (
     <div className="w-full md:w-auto md:min-w-[300px] bg-white border-l border-gray-300 p-0">
@@ -9,11 +44,7 @@ const UserDetails = ({ isExpanded, setIsExpanded, selectedContact }) => {
         {/* Profile Info */}
         <div className="profile mt-3 text-center">
           <div className="avatar mx-auto mb-2 w-16 h-16 rounded-full overflow-hidden">
-            <img
-              src={selectedContact.image || "/default-avatar.jpeg"}
-              alt="User Avatar"
-              className="w-full h-full object-cover"
-            />
+            {renderAvatar(selectedContact)}
           </div>
           <h3 className="font-semibold text-lg">{selectedContact.name}</h3>
           <p>{selectedContact.mobile_no}</p>

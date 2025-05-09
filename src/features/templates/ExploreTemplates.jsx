@@ -81,6 +81,10 @@ const ExploreTemplates = () => {
                 src={template.image_url || "/placeholder.jpg"}
                 alt={template.element_name}
                 className="w-full h-48 object-cover p-2 rounded-2xl"
+                onError={(e) => {
+                  e.target.onerror = null; // Prevent infinite loop
+                  e.target.src = "/placeholder.jpg";
+                }}
               />
               <div className="p-4 flex-1">
                 <h3 className="font-semibold text-lg mb-2">
