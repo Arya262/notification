@@ -13,6 +13,8 @@ const TemplateType = ({ formData, handleChange, errors }) => {
                 value={type}
                 checked={formData.templateType === type}
                 onChange={() => handleChange("templateType", type)}
+                className="text-[#0AA89E]"
+                style={{ accentColor: "#0AA89E" }}
               />
               {type.charAt(0).toUpperCase() + type.slice(1)}
             </label>

@@ -138,7 +138,7 @@ const Chat = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row w-full h-screen border border-gray-300 rounded-2xl bg-white mx-auto max-w-screen-2xl overflow-hidden">
+<div className="flex flex-col md:flex-row w-full h-screen border border-gray-300 rounded-2xl bg-white mx-auto max-w-screen-2xl overflow-hidden">
       {loading ? (
         <div className="p-6 text-center text-gray-500 w-full md:w-1/3">
           Loading contacts...

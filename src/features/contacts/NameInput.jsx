@@ -1,14 +1,13 @@
 export default function NameInput({ name, setName }) {
   return (
-    <div className="mb-4">
-      <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+    <div className="mb-6">
+      <label className="block text-sm font-medium mb-2 text-gray-700">Name</label>
       <input
-        id="name"
         type="text"
+        placeholder="Enter name"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-        placeholder="Enter name"
+        className="w-full border border-gray-300 p-2 rounded-md text-gray-700 h-[38px] focus:border-[#05A3A3] focus:outline-none focus:ring-1 focus:ring-[#05A3A3] transition-all duration-150 ease-in-out"
       />
     </div>
   );

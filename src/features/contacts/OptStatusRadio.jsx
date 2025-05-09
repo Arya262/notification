@@ -11,7 +11,8 @@ export default function OptStatusRadio({ optStatus, setOptStatus }) {
               value={status}
               checked={optStatus === status}
               onChange={(e) => setOptStatus(e.target.value)}
-              className="form-radio text-red-600"
+              className="text-[#0AA89E]"
+              style={{ accentColor: "#0AA89E" }}
             />
             <span className="ml-2 text-gray-700">{status}</span>
           </label>

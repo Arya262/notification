@@ -75,7 +75,9 @@ const BroadcastTable = ({
       );
     }
 
-    return filteredData.map((row, idx) => (
+    return filteredData
+  .filter((row) => row.status !== "Stopped" && row.status !== "Paused")
+  .map((row, idx) => (
       <tr 
         key={idx} 
         ref={el => rowRefs.current[idx] = el}

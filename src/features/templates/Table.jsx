@@ -6,8 +6,6 @@ import ActionMenu from '../broadcast/components/ActionMenu';
 const Table = ({ templates = []  }) => {
     const [activeFilter, setActiveFilter] = useState("All");
     const [searchTerm, setSearchTerm] = useState("");
-    // const [editRow, setEditRow] = useState(null);
-    // const [editedTemplate, setEditedTemplate] = useState({});
     const [showMobileSearch, setShowMobileSearch] = useState(false);
     const [localTemplates, setLocalTemplates] = useState([]);
     const [menuOpen, setMenuOpen] = useState(null);
@@ -55,46 +53,6 @@ const Table = ({ templates = []  }) => {
                 t.category?.toLowerCase().includes(term)
         );
     }, [statusFilteredTemplates, searchTerm]);
-
-    // const handleEditClick = (template) => {
-    //     setEditRow(template.id);
-    //     setEditedTemplate({ ...template });
-    // };
-
-    // const handleSaveEdit = (id) => {
-    //     const capitalizedTemplate = {
-    //         ...editedTemplate,
-    //         element_name: editedTemplate.element_name?.charAt(0).toUpperCase() + editedTemplate.element_name?.slice(1),
-    //         category: editedTemplate.category?.charAt(0).toUpperCase() + editedTemplate.category?.slice(1),
-    //     };
-
-    //     const updatedTemplates = localTemplates.map(template =>
-    //         template.id === id ? { ...template, ...capitalizedTemplate } : template
-    //     );
-
-    //     setLocalTemplates(updatedTemplates);
-    //     setEditRow(null);
-    //     setEditedTemplate({});
-    // };
-
-    // const handleCancelEdit = () => {
-    //     setEditRow(null);
-    // };
-
-    // const handleChange = (e) => {
-    //     const { name, value } = e.target;
-    //     const capitalized = value.charAt(0).toUpperCase() + value.slice(1);
-    //     setEditedTemplate(prev => ({
-    //         ...prev,
-    //         [name]: capitalized,
-    //     }));
-    // };
-
-    // const handleDeleteClick = (id) => {
-    //     onDelete(id);
-    //     const updated = localTemplates.filter(t => t.id !== id);
-    //     setLocalTemplates(updated);
-    // };
 
     const filters = [
         { label: "All", count: filteredCounts.all },

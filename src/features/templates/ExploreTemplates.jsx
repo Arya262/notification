@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Modal from "./Modal";
+import vendor from "../../assets/vector.png";
 
 const ExploreTemplates = () => {
   const [templates, setTemplates] = useState([]);
@@ -56,11 +57,11 @@ const ExploreTemplates = () => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Explore Templates</h2>
         <button
+          className="bg-teal-500 hover:bg-teal-600 text-white flex items-center gap-2 px-4 py-2 rounded"
           onClick={() => setIsModalOpen(true)}
-          className="bg-teal-500 text-white px-4 py-2 rounded-md flex items-center gap-2 hover:bg-teal-600 transition"
-          aria-label="Add new template"
         >
-          <span aria-hidden="true">➕</span> Add New Templates
+          <img src={vendor} alt="plus sign" className="w-5 h-5" />
+          Add New Templates
         </button>
       </div>
 
@@ -77,15 +78,17 @@ const ExploreTemplates = () => {
               key={template.id || template.element_name}
               className="bg-white rounded-xl shadow-md overflow-hidden flex flex-col"
             >
-              <img
-                src={template.image_url || "/placeholder.jpg"}
-                alt={template.element_name}
-                className="w-full h-48 object-cover p-2 rounded-2xl"
-                onError={(e) => {
-                  e.target.onerror = null; // Prevent infinite loop
-                  e.target.src = "/placeholder.jpg";
-                }}
-              />
+              {template.image_url && (
+                <img
+                  src={template.image_url}
+                  alt={template.element_name}
+                  className="w-full h-48 object-cover p-2 rounded-2xl"
+                  onError={(e) => {
+                    e.target.onerror = null; // Prevent infinite loop
+                    e.target.src = "/placeholder.jpg";
+                  }}
+                />
+              )}
               <div className="p-4 flex-1">
                 <h3 className="font-semibold text-lg mb-2">
                   {template.element_name}
@@ -97,8 +100,8 @@ const ExploreTemplates = () => {
               </div>
               <button
                 type="button"
-                className="bg-white text-black px-6 py-3 font-medium rounded 
-                  hover:bg-teal-500 hover:text-white transition duration-300 ease-in-out"
+                className="bg-teal-50 text-black px-6 py-3 font-medium rounded 
+                  border border-gray-300 hover:bg-teal-500 hover:text-white hover:border-teal-500 transition duration-300 ease-in-out"
               >
                 Send Template
               </button>

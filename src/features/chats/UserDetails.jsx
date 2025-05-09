@@ -3,8 +3,8 @@ import { formatTime } from "../../utils/time"
 // Function to generate a consistent color based on name
 const getAvatarColor = (name) => {
   const colors = [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
-    '#FFEEAD', '#D4A5A5', '#9B59B6', '#3498DB'
+    '#f91d06', '#0080ff','#7504ec', '#14d47b', 
+    '#ff6d10', '#d413e2', '#9B59B6', '#2196f3'
   ];
   const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   return colors[index % colors.length];
@@ -72,7 +72,7 @@ const UserDetails = ({ isExpanded, setIsExpanded, selectedContact }) => {
           className="details-toggle cursor-pointer flex items-center justify-between px-2 py-2 text-gray-600 hover:text-black"
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          <span className="text-sm font-semibold">GENERAL DETAILS</span>
+          <span className="text-sm font-semibold bg-[#F5F5F5]">GENERAL DETAILS</span>
           <svg
             className={`w-4 h-4 transform transition-transform ${isExpanded ? "rotate-180" : ""}`}
             fill="none"

@@ -25,6 +25,8 @@ const FooterAndActions = ({ formData, handleChange, errors }) => {
                 value={type}
                 checked={formData.actionType === type}
                 onChange={() => handleChange("actionType", type)}
+                className="text-[#0AA89E]"
+                style={{ accentColor: "#0AA89E" }}
               />
               {{
                 none: "None",

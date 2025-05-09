@@ -1,3 +1,4 @@
+import React from 'react';
 import brodcastIcon from '../../assets/Total_brodcast.png';
 import liveIcon from '../../assets/Live_brodcast.png';
 import sentIcon from '../../assets/sent_brodcast.png';
@@ -15,8 +16,11 @@ const BroadcastStats = ({ data }) => {
     );
   }
 
-  // Calculate total stats from message funnel data
-  const totalStats = data.reduce((acc, item) => {
+  // Filter out broadcasts with status "Stopped" or "Paused"
+  const filteredData = data.filter(item => item.status !== 'Stopped' && item.status !== 'Paused');
+
+  // Calculate total stats from filtered message funnel data
+  const totalStats = filteredData.reduce((acc, item) => {
     return {
       totalContacts: acc.totalContacts + (item.sent || 0),
       delivered: acc.delivered + (item.delivered || 0),
@@ -49,4 +53,4 @@ const BroadcastStats = ({ data }) => {
   );
 };
 
-export default BroadcastStats; 
+export default BroadcastStats;

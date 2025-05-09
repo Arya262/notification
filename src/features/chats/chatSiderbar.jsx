@@ -4,8 +4,8 @@ import { formatTime } from "../../utils/time";
 // Function to generate a consistent color based on name
 const getAvatarColor = (name) => {
   const colors = [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
-    '#FFEEAD', '#D4A5A5', '#9B59B6', '#3498DB'
+    '#f91d06', '#0080ff','#7504ec', '#14d47b', 
+    '#ff6d10', '#d413e2', '#9B59B6', '#2196f3'
   ];
   const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   return colors[index % colors.length];

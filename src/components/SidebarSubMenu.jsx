@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { FileText } from "lucide-react";
+import { FileText, List, Compass } from "lucide-react";
 
 const SidebarSubMenu = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
@@ -18,7 +18,7 @@ const SidebarSubMenu = ({ isOpen, setIsOpen }) => {
           </span>
           <span>Templates</span>
         </div>
-        <span className="text-gray-500">{">"}</span>
+        <span className="text-gray-500 transition-transform duration-300 group-hover:rotate-90">{">"}</span>
       </div>
 
       {/* Submenu */}
@@ -33,7 +33,9 @@ const SidebarSubMenu = ({ isOpen, setIsOpen }) => {
             }`
           }
         >
-          <span className="w-2 h-2 bg-black rounded-full"></span>
+          <span className={({ isActive }) => `w-5 h-5 flex items-center justify-center text-gray-600 ${isActive ? "text-teal-500" : ""}`}>
+            <List size={22} />
+          </span>
           Template List
         </NavLink>
         <NavLink
@@ -45,7 +47,9 @@ const SidebarSubMenu = ({ isOpen, setIsOpen }) => {
             }`
           }
         >
-          <span className="w-2 h-2 bg-black rounded-full"></span>
+          <span className={({ isActive }) => `w-5 h-5 flex items-center justify-center text-gray-600 ${isActive ? "text-teal-500" : ""}`}>
+            <Compass size={22} />
+          </span>
           Explore Templates
         </NavLink>
       </div>
