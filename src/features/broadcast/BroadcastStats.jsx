@@ -5,7 +5,7 @@ import sentIcon from '../../assets/sent_brodcast.png';
 import totalIcon from '../../assets/S.png';
 
 const BroadcastStats = ({ data }) => {
-  // Validate data prop
+
   if (!data || !Array.isArray(data)) {
     return (
       <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url("/path-to-your-background-image.jpg")' }}>
@@ -16,10 +16,10 @@ const BroadcastStats = ({ data }) => {
     );
   }
 
-  // Filter out broadcasts with status "Stopped" or "Paused"
+  
   const filteredData = data.filter(item => item.status !== 'Stopped' && item.status !== 'Paused');
 
-  // Calculate total stats from filtered message funnel data
+  
   const totalStats = filteredData.reduce((acc, item) => {
     return {
       totalContacts: acc.totalContacts + (item.sent || 0),

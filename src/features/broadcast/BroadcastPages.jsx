@@ -1,78 +1,134 @@
-import { useNavigate } from "react-router-dom";
-import React, { useState, useRef, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import SendTemplate from "../chats/chatfeautures/SendTemplate";
 import BroadcastHeader from "./components/BroadcastHeader";
 import BroadcastForm from "./components/BroadcastForm";
 import AlertDialog from "./components/AlertDialog";
 import ConfirmationDialog from "./components/ConfirmationDialog";
+import { API_ENDPOINTS } from "../../config/api";
 
 const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const modalRef = useRef(null);
+  const highlightRef = useRef({ close: false, border: false });
+  const timeoutRef = useRef(null);
+  const [forceUpdate, setForceUpdate] = useState(0);
+
   const [formData, setFormData] = useState({
     broadcastName: "",
     customerList: "Select Customer List",
     messageType: "Pre-approved template message",
     schedule: "No",
     scheduleDate: "",
-    selectedTemplate: null,
+    selectedTemplate: location.state?.selectedTemplate || null,
   });
 
   const [selectedDate, setSelectedDate] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
-  const [highlightClose, setHighlightClose] = useState(false);
-  const [highlightBorder, setHighlightBorder] = useState(false);
   const [showExitDialog, setShowExitDialog] = useState(false);
-  const navigate = useNavigate();
-  const modalRef = useRef(null);
   const [isTemplateOpen, setIsTemplateOpen] = useState(false);
   const [customerLists, setCustomerLists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+ 
   useEffect(() => {
+    if (location.state?.selectedTemplate) {
+      setFormData(prevData => ({
+        ...prevData,
+        selectedTemplate: location.state.selectedTemplate
+      }));
+      
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state, navigate, location.pathname]);
+
+  const handleTemplateSelect = useCallback((template) => {
+    if (template === formData.selectedTemplate) return;
+    
+    setFormData(prevData => ({
+      ...prevData,
+      selectedTemplate: template
+    }));
+    setIsTemplateOpen(false);
+  }, [formData.selectedTemplate]);
+
+  useEffect(() => {
+    let isMounted = true;
+    
     const fetchCustomerLists = async () => {
+      if (!isMounted) return;
+      
       setLoading(true);
       try {
-        const response = await fetch("http://localhost:3000/returnGroups");
+        const response = await fetch(API_ENDPOINTS.GROUPS.GET_ALL);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const result = await response.json();
-        if (result.success && Array.isArray(result.data)) {
+        if (isMounted && result.success && Array.isArray(result.data)) {
           setCustomerLists(result.data);
           setError(null);
         } else {
           throw new Error("Invalid data format received from API");
         }
       } catch (err) {
-        setError("Failed to fetch customer lists");
-        setCustomerLists([]);
-        console.error("Error fetching customer lists:", err);
+        if (isMounted) {
+          setError("Failed to fetch customer lists");
+          setCustomerLists([]);
+          console.error("Error fetching customer lists:", err);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchCustomerLists();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
-        setHighlightClose(true);
-        setHighlightBorder(true);
-        const timer = setTimeout(() => {
-          setHighlightClose(false);
-          setHighlightBorder(false);
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+
+        
+        highlightRef.current = { close: true, border: true };
+        setForceUpdate(prev => prev + 1);
+        
+        
+        timeoutRef.current = setTimeout(() => {
+          highlightRef.current = { close: false, border: false };
+          setForceUpdate(prev => prev + 1);
         }, 3000);
-        return () => clearTimeout(timer);
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+    useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
   }, []);
 
@@ -122,8 +178,8 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
 
       console.log("Submitting form data with template:", updatedFormData);
 
-      // API call to save broadcast
-      const response = await fetch("http://localhost:3000/getBroadcastCustomers", {
+      console.log("Using API endpoint:", API_ENDPOINTS.BROADCASTS.GET_CUSTOMERS);
+      const response = await fetch(API_ENDPOINTS.BROADCASTS.GET_CUSTOMERS, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -141,12 +197,12 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
         setAlertMessage("Broadcast saved successfully!");
         setShowAlert(true);
         
-        // Call the refresh function if provided
+     
         if (onBroadcastCreated) {
           onBroadcastCreated();
         }
         
-        // Close alert after 2 seconds
+        
         setTimeout(() => {
           setShowAlert(false);
           onClose();
@@ -180,6 +236,11 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
   };
 
   const handleCloseAndNavigate = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    highlightRef.current = { close: false, border: false };
+    setForceUpdate(prev => prev + 1);
     setShowExitDialog(true);
   };
 
@@ -193,25 +254,23 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
   );
 
   const confirmExit = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    highlightRef.current = { close: false, border: false };
+    setForceUpdate(prev => prev + 1);
     onClose();
     navigate("/broadcast");
     setShowExitDialog(false);
-    setHighlightClose(false);
-    setHighlightBorder(false);
   };
 
   const cancelExit = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    highlightRef.current = { close: false, border: false };
+    setForceUpdate(prev => prev + 1);
     setShowExitDialog(false);
-    setHighlightClose(false);
-    setHighlightBorder(false);
-  };
-
-  const handleTemplateSelect = (template) => {
-    setFormData(prevData => ({
-      ...prevData,
-      selectedTemplate: template
-    }));
-    closeTemplate();
   };
 
   return (
@@ -220,10 +279,13 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
         <div
           ref={modalRef}
           className={`w-full max-w-[900px] p-4 bg-white rounded-lg shadow-lg border ${
-            highlightBorder ? "border-teal-500" : "border-transparent"
+            highlightRef.current.border ? "border-teal-500" : "border-transparent"
           } transition-all duration-300`}
         >
-          <BroadcastHeader onClose={handleCloseAndNavigate} highlightClose={highlightClose} />
+          <BroadcastHeader 
+            onClose={handleCloseAndNavigate} 
+            highlightClose={highlightRef.current.close} 
+          />
           
           <AlertDialog 
             showAlert={showAlert} 

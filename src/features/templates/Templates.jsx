@@ -4,6 +4,7 @@ import ErrorBoundary from "../../components/ErrorBoundary"
 import approvedIcon from "../../assets/Approve.png"
 import pendingIcon from "../../assets/Pending.png";
 import rejectedIcon from "../../assets/Rejected.png";
+import { API_ENDPOINTS } from "../../config/api";
 
 const Templates = () => {
  const [templates, setTemplates] = useState([]);
@@ -13,7 +14,7 @@ const Templates = () => {
   const fetchTemplates = async () => {
    setLoading(true);
    try {
-    const response = await fetch("http://localhost:3000/templates");
+     const response = await fetch(API_ENDPOINTS.TEMPLATES.GET_ALL + "?shop_id=1");
     const data = await response.json();
     if (Array.isArray(data.templates)) {
      setTemplates(data.templates);

@@ -33,7 +33,7 @@ const SidebarSubMenu = ({ isOpen, setIsOpen }) => {
             }`
           }
         >
-          <span className={({ isActive }) => `w-5 h-5 flex items-center justify-center text-gray-600 ${isActive ? "text-teal-500" : ""}`}>
+           <span className="w-5 h-5 flex items-center justify-center text-gray-600 group-hover:text-teal-500">
             <List size={22} />
           </span>
           Template List
@@ -47,7 +47,7 @@ const SidebarSubMenu = ({ isOpen, setIsOpen }) => {
             }`
           }
         >
-          <span className={({ isActive }) => `w-5 h-5 flex items-center justify-center text-gray-600 ${isActive ? "text-teal-500" : ""}`}>
+           <span className="w-5 h-5 flex items-center justify-center text-gray-600 group-hover:text-teal-500">
             <Compass size={22} />
           </span>
           Explore Templates

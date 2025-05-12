@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
 import Modal from "./Modal";
 import vendor from "../../assets/vector.png";
+import { useNavigate } from "react-router-dom";
+import { API_ENDPOINTS } from "../../config/api";
 
 const ExploreTemplates = () => {
+  const navigate = useNavigate();
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -15,7 +18,7 @@ const ExploreTemplates = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch("http://localhost:3000/templates?shop_id=1");
+        const response = await fetch(API_ENDPOINTS.TEMPLATES.GET_ALL + "?shop_id=1");
         const data = await response.json();
         if (Array.isArray(data.templates)) {
           setTemplates(data.templates);
@@ -100,6 +103,12 @@ const ExploreTemplates = () => {
               </div>
               <button
                 type="button"
+                onClick={() => navigate('/broadcast', { 
+                  state: { 
+                    selectedTemplate: template,
+                    openForm: true 
+                  } 
+                })}
                 className="bg-teal-50 text-black px-6 py-3 font-medium rounded 
                   border border-gray-300 hover:bg-teal-500 hover:text-white hover:border-teal-500 transition duration-300 ease-in-out"
               >
@@ -120,3 +129,4 @@ const ExploreTemplates = () => {
 };
 
 export default ExploreTemplates;
+

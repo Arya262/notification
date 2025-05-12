@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { debounce } from "lodash";
+import { API_ENDPOINTS } from "../../../config/api";
 
 const SendTemplate = ({ onSelect, onClose, returnFullTemplate = false }) => {
   const [templates, setTemplates] = useState([]);
@@ -13,7 +14,7 @@ const SendTemplate = ({ onSelect, onClose, returnFullTemplate = false }) => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch("http://localhost:3000/templates?shop_id=1");
+        const response = await fetch(API_ENDPOINTS.TEMPLATES.GET_ALL + "?shop_id=1");
         const data = await response.json();
         if (Array.isArray(data.templates)) {
           setTemplates(data.templates);

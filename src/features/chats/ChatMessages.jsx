@@ -51,10 +51,22 @@ const ChatMessages = ({ selectedContact, messages, isTyping }) => {
   const renderMessage = (msg, index) => {
     const sent = msg.status !== "received";
     const key = msg.message_id || index;
-    const message = { ...msg, sent_at: formatTime(msg.sent_at) };
+    
+    // Format the time in WhatsApp style
+    const messageTime = new Date(msg.sent_at);
+    const formattedTime = messageTime.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }).toLowerCase();
+    
+    const message = { 
+      ...msg, 
+      sent_at: formattedTime 
+    };
 
-    return (
-      <div key={key} className="mb-4"> {/* Add margin-bottom here */}
+      return (
+      <div key={key} className="mb-4">
         {(() => {
           switch (msg.message_type) {
             case "text":

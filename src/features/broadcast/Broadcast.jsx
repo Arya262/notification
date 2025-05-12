@@ -25,6 +25,13 @@ const Broadcast = () => {
       }
       window.history.replaceState({}, document.title);
     }
+    
+    // Automatically open the form if openForm is true
+    if (location.state?.openForm) {
+      setShowPopup(true);
+      // Clear the state after opening the form
+      window.history.replaceState({}, document.title);
+    }
   }, [location.state]);
 
   // Handle Select All checkbox change

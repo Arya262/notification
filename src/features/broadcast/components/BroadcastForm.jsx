@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import ScheduleSelector from './ScheduleSelector';
 import MessageTypeSelector from './MessageTypeSelector';
 
@@ -20,40 +21,94 @@ const BroadcastForm = ({
   isSubmitting,
   onTemplateSelect
 }) => {
+  const [errors, setErrors] = useState({});
+  const location = useLocation();
+
+  useEffect(() => {
+    // Check if we have a pre-selected template from navigation
+    if (location.state?.selectedTemplate) {
+      onTemplateSelect(location.state.selectedTemplate);
+    }
+  }, [location.state, onTemplateSelect]);
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Validate Broadcast Name
+    if (!formData.broadcastName.trim()) {
+      newErrors.broadcastName = 'Broadcast name is required';
+    }
+
+    // Validate Customer List
+    if (!formData.customerList || formData.customerList === 'Select Customer List') {
+      newErrors.customerList = 'Please select a customer list';
+    }
+
+    // Validate Template
+    if (!formData.selectedTemplate) {
+      newErrors.template = 'Please select a template';
+    }
+
+    // Validate Schedule
+    if (formData.schedule === 'Yes' && !selectedDate) {
+      newErrors.schedule = 'Please select a date and time';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      onSubmit(e);
+    }
+  };
+
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-2">
-        <input
-          type="text"
-          name="broadcastName"
-          placeholder="BroadcastName"
-          value={formData.broadcastName}
-          onChange={handleInputChange}
-          className="w-full sm:w-1/2 p-2 border border-[#606060] rounded text-gray-500 focus:outline-none"
-          required
-          disabled={isSubmitting}
-        />
-        <select
-          name="customerList"
-          value={formData.customerList}
-          onChange={handleInputChange}
-          className="w-full sm:w-1/2 p-2 border border-[#606060] rounded text-gray-500 focus:outline-none"
-          required
-          disabled={isSubmitting}
-        >
-          <option value="Select Customer List">Select Customer List</option>
-          {loading ? (
-            <option>Loading...</option>
-          ) : error ? (
-            <option>{error}</option>
-          ) : (
-            customerLists.map((customer, group_id) => (
-              <option key={group_id} value={customer.group_name}>
-                {customer.group_name}
-              </option>
-            ))
+        <div className="w-full sm:w-1/2">
+          <input
+            type="text"
+            name="broadcastName"
+            placeholder="BroadcastName"
+            value={formData.broadcastName}
+            onChange={handleInputChange}
+            className={`w-full p-2 border ${errors.broadcastName ? 'border-red-500' : 'border-[#606060]'} rounded text-gray-500 focus:outline-none`}
+            required
+            disabled={isSubmitting}
+          />
+          {errors.broadcastName && (
+            <p className="text-red-500 text-sm mt-1">{errors.broadcastName}</p>
           )}
-        </select>
+        </div>
+        <div className="w-full sm:w-1/2">
+          <select
+            name="customerList"
+            value={formData.customerList}
+            onChange={handleInputChange}
+            className={`w-full p-2 border ${errors.customerList ? 'border-red-500' : 'border-[#606060]'} rounded text-gray-500 focus:outline-none`}
+            required
+            disabled={isSubmitting}
+          >
+            <option value="Select Customer List">Select Customer List</option>
+            {loading ? (
+              <option>Loading...</option>
+            ) : error ? (
+              <option>{error}</option>
+            ) : (
+              customerLists.map((customer, group_id) => (
+                <option key={group_id} value={customer.group_name}>
+                  {customer.group_name}
+                </option>
+              ))
+            )}
+          </select>
+          {errors.customerList && (
+            <p className="text-red-500 text-sm mt-1">{errors.customerList}</p>
+          )}
+        </div>
       </div>
 
       <MessageTypeSelector 
@@ -63,28 +118,40 @@ const BroadcastForm = ({
       />
 
       <div>
-        <button
-          type="button"
-          className={`w-full sm:w-auto px-4 py-2 border border-[#0AA89E] text-[#0AA89E] text-[15px] font-medium rounded ${
-            isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#0AA89E] hover:text-white'
-          }`}
-          onClick={openTemplate}
-          disabled={isSubmitting}
-        >
-          {formData.selectedTemplate ? 'Change Template' : 'Select Template'}
-        </button>
+        <div className="flex items-start gap-4">
+          <button
+            type="button"
+            className={`w-[200px] px-4 py-2 border border-[#0AA89E] text-[#0AA89E] text-[15px] font-medium rounded ${
+              isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#0AA89E] hover:text-white'
+            }`}
+            onClick={openTemplate}
+            disabled={isSubmitting}
+          >
+            {formData.selectedTemplate ? 'Change Template' : 'Select Template'}
+          </button>
 
-        {formData.selectedTemplate && (
-          <div className="mt-2 p-3 border border-gray-200 rounded-md">
-            <h4 className="font-medium text-gray-700">Selected Template:</h4>
-            <p className="text-sm text-gray-600">{formData.selectedTemplate.element_name}</p>
-            {formData.selectedTemplate.container_meta?.header && (
-              <p className="text-sm text-gray-600 mt-1">Header: {formData.selectedTemplate.container_meta.header}</p>
-            )}
-            {formData.selectedTemplate.container_meta?.data && (
-              <p className="text-sm text-gray-600 mt-1">Content: {formData.selectedTemplate.container_meta.data}</p>
-            )}
-          </div>
+          {formData.selectedTemplate && (
+            <div className="w-[600px] h-[200px] p-4 border border-gray-200 rounded-md bg-gray-50 overflow-y-auto">
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">{formData.selectedTemplate.element_name}</p>
+
+                {formData.selectedTemplate.container_meta?.header && (
+                  <p className="text-sm text-gray-600 p-2">
+                    {formData.selectedTemplate.container_meta.header}
+                  </p>
+                )}
+
+                {formData.selectedTemplate.container_meta?.data && (
+                  <p className="text-sm text-gray-600 p-2">
+                    {formData.selectedTemplate.container_meta.data}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+        {errors.template && (
+          <p className="text-red-500 text-sm mt-1">{errors.template}</p>
         )}
 
         {isTemplateOpen && (
@@ -95,6 +162,7 @@ const BroadcastForm = ({
                 onClose={closeTemplate}
                 onSelect={(template) => {
                   onTemplateSelect(template);
+                  setErrors(prev => ({ ...prev, template: '' }));
                 }}
                 returnFullTemplate={true}
               />
@@ -107,9 +175,15 @@ const BroadcastForm = ({
         formData={formData}
         handleRadioChange={handleRadioChange}
         selectedDate={selectedDate}
-        setSelectedDate={setSelectedDate}
+        setSelectedDate={(date) => {
+          setSelectedDate(date);
+          setErrors(prev => ({ ...prev, schedule: '' }));
+        }}
         disabled={isSubmitting}
       />
+      {errors.schedule && (
+        <p className="text-red-500 text-sm mt-1">{errors.schedule}</p>
+      )}
 
       <div className="mt-4 text-left">
         <button

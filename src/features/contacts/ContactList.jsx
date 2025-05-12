@@ -1,9 +1,15 @@
-import React, { useState, useEffect,useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ContactRow from "./ContactRow";
 import AddContact from "./Addcontact";
 import vendor from "../../assets/vector.png";
+import { API_ENDPOINTS } from "../../config/api";
 
-const ConfirmationDialog = ({ showExitDialog, hasUnsavedChanges, cancelExit, confirmExit }) => {
+const ConfirmationDialog = ({
+  showExitDialog,
+  hasUnsavedChanges,
+  cancelExit,
+  confirmExit,
+}) => {
   const dialogRef = useRef(null);
 
   useEffect(() => {
@@ -91,31 +97,33 @@ export default function ContactList() {
   const [isCrossHighlighted, setIsCrossHighlighted] = useState(false);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const popupRef = useRef(null);
-  
+
+  const fetchContacts = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.CONTACTS.GET_ALL + "?shop_id=1");
+      const data = await response.json();
+      const transformed = data.map((item) => ({
+        ...item,
+        status: item.is_active ? "Opted-in" : "Opted-Out",
+        customer_id: item.customer_id,
+        date: new Date(item.created_at).toLocaleDateString("en-US", {
+          month: "short",
+          day: "2-digit",
+          year: "numeric",
+        }),
+        number: `${item.country_code || ""} ${item.mobile_no}`,
+        fullName: `${item.name} ${item.last_name || ""}`.trim(),
+      }));
+      setContacts(transformed);
+      setLoading(false);
+    } catch (err) {
+      console.error("Failed to fetch contacts:", err);
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetch("http://localhost:3000/contacts?shop_id=1")
-      .then((res) => res.json())
-      .then((data) => {
-        const transformed = data.map((item) => ({
-          ...item,
-          status: item.is_active ? "Opted-in" : "Opted-Out",
-          customer_id: item.customer_id,
-          date: new Date(item.created_at).toLocaleDateString("en-US", {
-            month: "short",
-            day: "2-digit",
-            year: "numeric",
-          }),
-          number: `${item.country_code || ""} ${item.mobile_no}`,
-          fullName: `${item.name} ${item.last_name || ""}`.trim(),
-        }));
-        setContacts(transformed);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch contacts:", err);
-        setLoading(false);
-      });
+    fetchContacts();
   }, []);
 
   const filterCounts = {
@@ -175,7 +183,6 @@ export default function ContactList() {
     const selected = Object.values(selectedRows).filter(Boolean).length;
     setSelectAll(selected === total && total > 0);
   }, [selectedRows, filteredContacts.length]);
-  
 
   const handleCloseAndNavigate = () => {
     setShowExitDialog(true);
@@ -217,7 +224,7 @@ export default function ContactList() {
 
         {/* <button*/}
         <button
-          className="bg-teal-500 hover:bg-teal-600 text-white flex items-center gap-2 px-4 py-2 rounded"
+          className="bg-teal-500 hover:bg-teal-600 text-white flex items-center gap-2 px-4 py-2 rounded cursor-pointer"
           onClick={openPopup}
         >
           <img src={vendor} alt="plus sign" className="w-5 h-5" />
@@ -227,42 +234,66 @@ export default function ContactList() {
 
       <div className="overflow-x-auto">
         <div className="min-w-[900px] bg-white rounded-2xl shadow-[0px_-0.91px_3.66px_0px_#00000042] overflow-hidden">
-          <div className="flex p-3 border-b font-semibold text-gray-700 bg-[#F4F4F4]">
-            <div className="w-[8%] flex justify-center items-center">
-            <input
-                    type="checkbox"
-                    className="form-checkbox w-4 h-4"
-                    checked={selectAll}
-                    onChange={handleSelectAllChange}
+          <table className="w-full text-sm text-center overflow-hidden table-auto">
+            <thead className="bg-[#F4F4F4] border-b-2 shadow-sm border-gray-300">
+              <tr>
+                <th className="px-2 py-3 sm:px-6">
+                  <div className="flex items-center justify-center h-full">
+                    <input
+                      type="checkbox"
+                      className="form-checkbox w-4 h-4"
+                      checked={selectAll}
+                      onChange={handleSelectAllChange}
+                    />
+                  </div>
+                </th>
+                <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
+                  Created Date
+                </th>
+                <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
+                  Status
+                </th>
+                <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
+                  Customer Name
+                </th>
+                <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
+                  WhatsApp Number
+                </th>
+                <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
+                  24 Hour Status
+                </th>
+                <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody className="max-h-[calc(100vh-300px)] overflow-y-auto">
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="text-center py-8">
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-teal-500"></div>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredContacts.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="text-center py-4 text-gray-500">
+                    No contacts found.
+                  </td>
+                </tr>
+              ) : (
+                filteredContacts.map((contact, idx) => (
+                  <ContactRow
+                    key={contact.id || idx}
+                    contact={contact}
+                    isChecked={!!selectedRows[idx]}
+                    onCheckboxChange={(e) => handleCheckboxChange(idx, e)}
                   />
-            </div>
-            <div className="w-[15%]">Created Date</div>
-            <div className="w-[12%]">Status</div>
-            <div className="w-[20%]">Customer Name</div>
-            <div className="w-[18%]">WhatsApp Number</div>
-            <div className="w-[14%]">24 Hour Status</div>
-            <div className="w-[13%] min-w-[200px] text-center">Action</div>
-          </div>
-
-          {loading ? (
-            <div className="p-4 text-center text-gray-500">
-              Loading contacts...
-            </div>
-          ) : filteredContacts.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">
-              No contacts found.
-            </div>
-          ) : (
-            filteredContacts.map((contact, idx) => (
-              <div key={contact.id} className="hover:bg-gray-50 transition">
-                <ContactRow
-                  contact={contact}
-                  isChecked={!!selectedRows[idx]}
-                  onCheckboxChange={(e) => handleCheckboxChange(idx, e)}
-                />
-              </div>
-            ))
-          )}
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
       {isPopupOpen && (
@@ -285,7 +316,9 @@ export default function ContactList() {
             <button
               onClick={handleCloseAndNavigate}
               className={`absolute top-2 right-4 text-gray-600 hover:text-black text-3xl font-bold w-8 h-8 flex items-center justify-center pb-2 rounded-full transition-colors ${
-                isCrossHighlighted ? "bg-red-500 text-white hover:text-white" : "bg-gray-100"
+                isCrossHighlighted
+                  ? "bg-red-500 text-white hover:text-white"
+                  : "bg-gray-100"
               }`}
             >
               ×

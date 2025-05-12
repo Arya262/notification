@@ -1,4 +1,5 @@
 import React from 'react';
+import { BsCalendar3 } from 'react-icons/bs';
 
 const CustomDateInput = React.forwardRef(({ value, onClick }, ref) => (
   <div className="flex items-center w-full border border-gray-300 rounded-md p-2 text-gray-700 cursor-pointer">
@@ -11,11 +12,9 @@ const CustomDateInput = React.forwardRef(({ value, onClick }, ref) => (
       className="w-full bg-transparent outline-none cursor-pointer text-base sm:text-lg"
       placeholder="Select date & time"
     />
-    <img
-      src="/calendar.png"
-      alt="calendar"
+    <BsCalendar3 
       onClick={onClick}
-      className="w-7 h-6 sm:w-7 sm:h-7 ml-2 text-teal-500 flex-shrink-0"
+      className="w-6 h-6 text-[#0AA89E] flex-shrink-0 cursor-pointer"
     />
   </div>
 ));

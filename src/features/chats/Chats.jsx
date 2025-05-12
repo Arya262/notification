@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
-import { API_BASE } from "../../config/api";
+import { API_BASE, API_ENDPOINTS } from "../../config/api";
 
 import ChatSidebar from "./chatSiderbar";
 import ChatHeader from "./ChatHeader";
@@ -22,23 +22,52 @@ const Chat = () => {
   const userDetailsRef = useRef(null);
   const profileButtonRef = useRef(null);
 
-  const fetchContacts = async () => {
+ const fetchContacts = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE}/conversations?shop_id=1`);
-      const enriched = response.data
-        .map((c) => ({
-          id: c.guest_id,
+      const response = await axios.get(`${API_ENDPOINTS.CHAT.CONVERSATIONS}?shop_id=1`);
+      const enriched = await Promise.all(response.data.map(async (c) => {
+        // Get the last message for each conversation
+        let lastMessage = null;
+        let lastMessageType = null;
+        let lastMessageTime = c.updated_at;
+
+        if (c.conversation_id) {
+          try {
+            const messagesResponse = await axios.get(
+              `${API_ENDPOINTS.CHAT.MESSAGES}?conversation_id=${c.conversation_id}`
+            );
+            if (messagesResponse.data?.length > 0) {
+              const latestMessage = messagesResponse.data[messagesResponse.data.length - 1];
+              lastMessage = latestMessage.content || latestMessage.element_name;
+              lastMessageType = latestMessage.message_type;
+              lastMessageTime = latestMessage.sent_at;
+            }
+          } catch (error) {
+            console.error(`Failed to fetch messages for conversation ${c.conversation_id}`, error);
+          }
+        }
+
+        return {
+          id: c.customer_id,
           conversation_id: c.conversation_id,
           name: `${c.name} ${c.last_name || ""}`.trim(),
           mobile_no: c.mobile_no,
           updated_at: c.updated_at,
           image: c.profile_image,
           active: false,
-        }))
-        .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+          lastMessage,
+          lastMessageType,
+          lastMessageTime
+        };
+      }));
 
-      setContacts(enriched);
+      // Sort contacts by last message time
+      const sortedContacts = enriched.sort((a, b) => 
+        new Date(b.lastMessageTime || b.updated_at) - new Date(a.lastMessageTime || a.updated_at)
+      );
+
+      setContacts(sortedContacts);
     } catch (error) {
       console.error("Failed to fetch contacts", error);
     } finally {
@@ -77,6 +106,7 @@ const Chat = () => {
   }, []);
 
   const handleSelectContact = (contact) => {
+    console.log('Selected contact:', contact);
     setSelectedContact(contact);
     setShowUserDetails(false);
     setContacts((prev) =>
@@ -84,18 +114,39 @@ const Chat = () => {
     );
 
     if (contact.conversation_id) {
+      console.log('Fetching messages for conversation:', contact.conversation_id);
       fetchMessagesForContact(contact.conversation_id);
     } else {
+      console.log('No conversation_id found for contact');
       setMessages([]);
     }
   };
 
   const fetchMessagesForContact = async (conversationId) => {
     try {
+      console.log('Making API request for messages...');
       const response = await axios.get(
-        `${API_BASE}/messages?conversation_id=${conversationId}`
+        `${API_ENDPOINTS.CHAT.MESSAGES}?conversation_id=${conversationId}`
       );
+      console.log('Messages API response:', response.data);
       setMessages(response.data);
+
+      // Update the contact's lastMessageTime and lastMessage with the latest message
+      if (response.data?.length > 0) {
+        const latestMessage = response.data[response.data.length - 1];
+        setContacts(prevContacts => 
+          prevContacts.map(contact => 
+            contact.conversation_id === conversationId 
+              ? { 
+                  ...contact, 
+                  lastMessageTime: latestMessage.sent_at,
+                  lastMessage: latestMessage.content || latestMessage.element_name,
+                  lastMessageType: latestMessage.message_type
+                }
+              : contact
+          )
+        );
+      }
     } catch (error) {
       console.error("Failed to fetch messages", error);
     }
@@ -113,10 +164,12 @@ const Chat = () => {
       conversation_id: selectedContact.conversation_id,
     };
   
+    let messageType = 'text';
     if (typeof input === "string") {
       newMessage.message = input;
     } else if (typeof input === "object" && input.template_name) {
       newMessage.element_name = input.template_name;
+      messageType = 'template';
     } else {
       console.warn("Invalid message format");
       return;
@@ -125,6 +178,21 @@ const Chat = () => {
     try {
       const response = await axios.post(`${API_BASE}/sendmessage`, newMessage);
       console.log("Response from API:", response.data);
+      
+      // Update the contact's lastMessageTime and lastMessage
+      setContacts(prevContacts => 
+        prevContacts.map(contact => 
+          contact.id === selectedContact.id 
+            ? { 
+                ...contact, 
+                lastMessageTime: new Date().toISOString(),
+                lastMessage: typeof input === "string" ? input : input.template_name,
+                lastMessageType: messageType
+              }
+            : contact
+        )
+      );
+
       fetchMessagesForContact(selectedContact.conversation_id);
       fetchContacts();
     } catch (error) {
@@ -138,7 +206,7 @@ const Chat = () => {
   };
 
   return (
-<div className="flex flex-col md:flex-row w-full h-screen border border-gray-300 rounded-2xl bg-white mx-auto max-w-screen-2xl overflow-hidden">
+    <div className="flex flex-col md:flex-row w-full h-screen border border-gray-300 rounded-2xl bg-white mx-auto max-w-screen-2xl overflow-hidden">
       {loading ? (
         <div className="p-6 text-center text-gray-500 w-full md:w-1/3">
           Loading contacts...
@@ -166,9 +234,12 @@ const Chat = () => {
               <>
                 <ChatMessageArea
                   selectedContact={selectedContact}
-                  messages={messages}
+                  messages={messages || []}
                 />
-                <MessageInput onSendMessage={handleSendMessage} />
+                <MessageInput 
+                  onSendMessage={handleSendMessage} 
+                  selectedContact={selectedContact}
+                />
               </>
             ) : (
               <div className="h-full flex items-center justify-center text-gray-400 text-lg">
@@ -193,3 +264,4 @@ const Chat = () => {
 };
 
 export default Chat;
+

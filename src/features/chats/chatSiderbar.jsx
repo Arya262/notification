@@ -11,6 +11,68 @@ const getAvatarColor = (name) => {
   return colors[index % colors.length];
 };
 
+// Function to format time in WhatsApp style
+const formatLastMessageTime = (timestamp) => {
+  if (!timestamp) return '';
+  
+  const date = new Date(timestamp);
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  // If today, show time
+  if (date.toDateString() === now.toDateString()) {
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }).toLowerCase();
+  }
+  
+  // If yesterday, show "Yesterday"
+  if (date.toDateString() === yesterday.toDateString()) {
+    return 'Yesterday';
+  }
+  
+  // If this year, show month and day
+  if (date.getFullYear() === now.getFullYear()) {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+  
+  // If different year, show full date
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+// Function to get message preview based on message type
+const getMessagePreview = (message, type) => {
+  if (!message && !type) return null;
+
+  // If there's a text message, show it
+  if (message && type === 'text') {
+    return message;
+  }
+
+  // For other types, show appropriate preview
+  switch (type) {
+    case 'image':
+      return '📷 Photo';
+    case 'video':
+      return '🎥 Video';
+    case 'document':
+      return '📄 Document';
+    case 'audio':
+      return '🎵 Audio';
+    case 'location':
+      return '📍 Location';
+    case 'contact':
+      return '👤 Contact';
+    case 'template':
+      return '📋 Template';
+    default:
+      return message || null;
+  }
+};
+
 const ChatSidebar = ({
   contacts,
   selectedContact,
@@ -89,16 +151,14 @@ const ChatSidebar = ({
               <div className="flex-1">
                 <div className="flex justify-between items-center">
                   <p className="font-semibold text-black">{contact.name}</p>
-                  <p className="text-sm text-gray-500">
-                    {formatTime(contact.lastMessageTime)}
+                  <p className="text-xs text-gray-500 select-none">
+                    {formatLastMessageTime(contact.lastMessageTime)}
                   </p>
                 </div>
-                {/* Optional Last Message */}
-                {contact.lastMessage && (
-                  <p className="text-sm text-gray-500 truncate mt-0.5">
-                    {contact.lastMessage}
-                  </p>
-                )}
+                {/* Last Message Preview - Always show if available */}
+                <p className="text-sm text-gray-500 truncate mt-0.5">
+                  {getMessagePreview(contact.lastMessage, contact.lastMessageType) || 'No messages yet'}
+                </p>
               </div>
 
               {/* Small delete button beside contact if you want (optional) */}

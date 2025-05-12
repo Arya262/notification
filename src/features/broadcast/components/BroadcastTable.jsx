@@ -36,11 +36,18 @@ const BroadcastTable = ({
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setDropdownOpen(false);
+        toggleMenu(null);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+
+    if (isDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isDropdownOpen, toggleMenu]);
 
   const renderTableBody = () => {
     if (loading) {
@@ -259,6 +266,5 @@ const renderMessageFunnel = (row) => {
     </div>
   );
 };
-
 
 export default BroadcastTable; 

@@ -3,6 +3,7 @@ import ContactTabs from "./ContactTabs";
 import SuccessErrorMessage from "./SuccessErrorMessage";
 import SingleContactForm from "./SingleContactForm";
 import BulkContactForm from "./BulkContactForm";
+import { API_ENDPOINTS } from "../../config/api";
 
 export default function AddContact({ closePopup }) {
   const [tab, setTab] = useState("single");
@@ -69,7 +70,7 @@ export default function AddContact({ closePopup }) {
     if (tab === "single") {
       if (!validatePhoneNumber()) return;
 
-      fetch("http://localhost:3000/addcustomer", {
+      fetch(API_ENDPOINTS.CONTACTS.ADD_SINGLE, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -102,7 +103,7 @@ export default function AddContact({ closePopup }) {
         formData.append("shop_id", "1");
         formData.append("group_name", groupName.trim());
 
-        fetch("http://localhost:3000/addcustomers", {
+        fetch(API_ENDPOINTS.CONTACTS.ADD_MULTIPLE, {
           method: "POST",
           body: formData,
         })

@@ -3,6 +3,7 @@ import searchIcon from "../../assets/search.png";
 import FilterBar from "./components/FilterBar";
 import SearchBar from "./components/SearchBar";
 import BroadcastTable from "./components/BroadcastTable";
+import { API_ENDPOINTS } from "../../config/api";
 
 const BroadcastDashboard = forwardRef(
   (
@@ -27,7 +28,7 @@ const BroadcastDashboard = forwardRef(
     const fetchBroadcasts = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:3000/broadcasts");
+        const response = await fetch(API_ENDPOINTS.BROADCASTS.GET_ALL);
         if (!response.ok) {
           throw new Error("Failed to fetch broadcasts");
         }
@@ -127,7 +128,7 @@ const BroadcastDashboard = forwardRef(
   try {
     const broadcastToDelete = filteredData[idx];
     const response = await fetch(
-      `http://localhost:3000/broadcasts/${broadcastToDelete.id}`,
+      `http://next.tenacioustechies.com.au//broadcasts/${broadcastToDelete.id}`,
       {
         method: "DELETE",
       }
