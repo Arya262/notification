@@ -32,32 +32,43 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
   }, []);
 
   const handleChat = async () => {
-    try {
-      const response = await fetch(
-        API_ENDPOINTS.CONTACTS.GET_CONVERSATION_ID(contact.customer_id)
-      );
-      const data = await response.json();
+  try {
+    // Get the token from localStorage
+    const token = localStorage.getItem('auth_token');
 
-      if (!data || !data.conversation_id) {
-        console.error(
-          "No conversation_id found for contact",
-          contact.customer_id
-        );
-        return;
-      }
-
-      navigate("/chats", {
-        state: {
-          contact: {
-            ...contact,
-            conversation_id: data.conversation_id,
-          },
+    const response = await fetch(
+      API_ENDPOINTS.CONTACTS.GET_CONVERSATION_ID(contact.customer_id), 
+      {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '', // Add Authorization header if token exists
         },
-      });
-    } catch (error) {
-      console.error("Failed to fetch conversation ID", error);
+      }
+    );
+
+    const data = await response.json();
+
+    if (!data || !data.conversation_id) {
+      console.error(
+        "No conversation_id found for contact",
+        contact.customer_id
+      );
+      return;
     }
-  };
+
+    // Navigate with the contact and conversation ID
+    navigate("/chats", {
+      state: {
+        contact: {
+          ...contact,
+          conversation_id: data.conversation_id,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Failed to fetch conversation ID", error);
+  }
+};
+
 
   return (
     <tr

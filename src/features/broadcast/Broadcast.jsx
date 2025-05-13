@@ -61,10 +61,7 @@ const Broadcast = () => {
     setSelectAll(selected === total && total > 0);
   }, [selectedRows, broadcasts.length]);
 
-  const handleDelete = (index) => {
-    setDeleteIndex(index);
-    setShowConfirmModal(true);
-  };
+  
 
   const confirmDelete = () => {
     if (deleteIndex !== null) {

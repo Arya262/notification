@@ -12,27 +12,37 @@ const Templates = () => {
 
  useEffect(() => {
   const fetchTemplates = async () => {
-   setLoading(true);
-   try {
-     const response = await fetch(API_ENDPOINTS.TEMPLATES.GET_ALL + "?shop_id=1");
+  setLoading(true);
+  try {
+    const token = localStorage.getItem("auth_token"); // Get auth token
+
+    const response = await fetch(API_ENDPOINTS.TEMPLATES.GET_ALL + "?shop_id=1", {
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch templates: ${response.status}`);
+    }
+
     const data = await response.json();
+
     if (Array.isArray(data.templates)) {
-     setTemplates(data.templates);
-     localStorage.setItem("templates", JSON.stringify(data.templates)); // optional caching
+      setTemplates(data.templates);
     } else {
-     console.error("Invalid response format:", data);
+      console.error("Invalid response format:", data);
+      setError("Unexpected response format from server.");
     }
-   } catch (err) {
+  } catch (err) {
     console.error("Fetch error:", err);
-    // Try loading from localStorage as a fallback
-    const cachedTemplates = localStorage.getItem("templates");
-    if (cachedTemplates) {
-     setTemplates(JSON.parse(cachedTemplates));
-    }
-   } finally {
+    setError("Failed to load templates. Please try again.");
+  } finally {
     setLoading(false);
-   }
-  };
+  }
+};
+
 
   fetchTemplates();
  }, []);

@@ -66,69 +66,79 @@ export default function AddContact({ closePopup }) {
     return true;
   };
 
-  const handleSubmit = () => {
-    if (tab === "single") {
-      if (!validatePhoneNumber()) return;
+ const handleSubmit = () => {
+  // Get the token from localStorage
+  const token = localStorage.getItem('auth_token');
 
-      fetch(API_ENDPOINTS.CONTACTS.ADD_SINGLE, {
+  if (tab === "single") {
+    if (!validatePhoneNumber()) return;
+
+    fetch(API_ENDPOINTS.CONTACTS.ADD_SINGLE, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        'Authorization': token ? `Bearer ${token}` : '', // Add Authorization header if token exists
+      },
+      body: JSON.stringify({
+        user_country_code: selectedCountry.value,
+        name: name.trim(),
+        mobile_no: phone.split(" ")[1],
+        shop_id: "1",
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setSuccessMessage(data.message || "Contact added successfully!");
+          setErrorMessage("");
+          closePopup();
+        } else {
+          setErrorMessage(data.message || "Failed to add contact.");
+          setSuccessMessage("");
+        }
+      })
+      .catch((err) => {
+        console.error("API error:", err);
+        setErrorMessage("An error occurred.");
+        setSuccessMessage("");
+      });
+  } else {
+    if (file) {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("shop_id", "1");
+      formData.append("group_name", groupName.trim());
+
+      fetch(API_ENDPOINTS.CONTACTS.ADD_MULTIPLE, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_country_code: selectedCountry.value,
-          name: name.trim(),
-          mobile_no: phone.split(" ")[1],
-          shop_id: "1",
-        }),
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '', // Add Authorization header if token exists
+        },
+        body: formData,
       })
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
-            setSuccessMessage(data.message || "Contact added successfully!");
+            setSuccessMessage(data.message || "Contacts imported from file!");
             setErrorMessage("");
             closePopup();
           } else {
-            setErrorMessage(data.message || "Failed to add contact.");
+            setErrorMessage(data.message || "Failed to import from file.");
             setSuccessMessage("");
           }
         })
         .catch((err) => {
-          console.error("API error:", err);
-          setErrorMessage("An error occurred.");
+          console.error("Import from file failed:", err);
+          setErrorMessage("An error occurred while importing from file.");
           setSuccessMessage("");
         });
     } else {
-      if (file) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("shop_id", "1");
-        formData.append("group_name", groupName.trim());
-
-        fetch(API_ENDPOINTS.CONTACTS.ADD_MULTIPLE, {
-          method: "POST",
-          body: formData,
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.success) {
-              setSuccessMessage(data.message || "Contacts imported from file!");
-              setErrorMessage("");
-              closePopup();
-            } else {
-              setErrorMessage(data.message || "Failed to import from file.");
-              setSuccessMessage("");
-            }
-          })
-          .catch((err) => {
-            console.error("Import from file failed:", err);
-            setErrorMessage("An error occurred while importing from file.");
-            setSuccessMessage("");
-          });
-      } else {
-        setErrorMessage("Please provide a CSV file.");
-        setSuccessMessage("");
-      }
+      setErrorMessage("Please provide a CSV file.");
+      setSuccessMessage("");
     }
-  };
+  }
+};
+
 
   return (
     <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl text-gray-500 p-6">

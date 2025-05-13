@@ -23,57 +23,73 @@ const Chat = () => {
   const profileButtonRef = useRef(null);
 
  const fetchContacts = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API_ENDPOINTS.CHAT.CONVERSATIONS}?shop_id=1`);
-      const enriched = await Promise.all(response.data.map(async (c) => {
-        // Get the last message for each conversation
-        let lastMessage = null;
-        let lastMessageType = null;
-        let lastMessageTime = c.updated_at;
+  try {
+    setLoading(true);
 
-        if (c.conversation_id) {
-          try {
-            const messagesResponse = await axios.get(
-              `${API_ENDPOINTS.CHAT.MESSAGES}?conversation_id=${c.conversation_id}`
-            );
-            if (messagesResponse.data?.length > 0) {
-              const latestMessage = messagesResponse.data[messagesResponse.data.length - 1];
-              lastMessage = latestMessage.content || latestMessage.element_name;
-              lastMessageType = latestMessage.message_type;
-              lastMessageTime = latestMessage.sent_at;
+    // Get the token from localStorage
+    const token = localStorage.getItem('auth_token');
+
+    // Make the API request with Authorization header if token exists
+    const response = await axios.get(`${API_ENDPOINTS.CHAT.CONVERSATIONS}?shop_id=1`, {
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '', // Add Authorization header if token exists
+      },
+    });
+
+    const enriched = await Promise.all(response.data.map(async (c) => {
+      // Get the last message for each conversation
+      let lastMessage = null;
+      let lastMessageType = null;
+      let lastMessageTime = c.updated_at;
+
+      if (c.conversation_id) {
+        try {
+          const messagesResponse = await axios.get(
+            `${API_ENDPOINTS.CHAT.MESSAGES}?conversation_id=${c.conversation_id}`,
+            {
+              headers: {
+                'Authorization': token ? `Bearer ${token}` : '', // Add Authorization header for message request
+              },
             }
-          } catch (error) {
-            console.error(`Failed to fetch messages for conversation ${c.conversation_id}`, error);
+          );
+          if (messagesResponse.data?.length > 0) {
+            const latestMessage = messagesResponse.data[messagesResponse.data.length - 1];
+            lastMessage = latestMessage.content || latestMessage.element_name;
+            lastMessageType = latestMessage.message_type;
+            lastMessageTime = latestMessage.sent_at;
           }
+        } catch (error) {
+          console.error(`Failed to fetch messages for conversation ${c.conversation_id}`, error);
         }
+      }
 
-        return {
-          id: c.customer_id,
-          conversation_id: c.conversation_id,
-          name: `${c.name} ${c.last_name || ""}`.trim(),
-          mobile_no: c.mobile_no,
-          updated_at: c.updated_at,
-          image: c.profile_image,
-          active: false,
-          lastMessage,
-          lastMessageType,
-          lastMessageTime
-        };
-      }));
+      return {
+        id: c.customer_id,
+        conversation_id: c.conversation_id,
+        name: `${c.name} ${c.last_name || ""}`.trim(),
+        mobile_no: c.mobile_no,
+        updated_at: c.updated_at,
+        image: c.profile_image,
+        active: false,
+        lastMessage,
+        lastMessageType,
+        lastMessageTime
+      };
+    }));
 
-      // Sort contacts by last message time
-      const sortedContacts = enriched.sort((a, b) => 
-        new Date(b.lastMessageTime || b.updated_at) - new Date(a.lastMessageTime || a.updated_at)
-      );
+    // Sort contacts by last message time
+    const sortedContacts = enriched.sort((a, b) => 
+      new Date(b.lastMessageTime || b.updated_at) - new Date(a.lastMessageTime || a.updated_at)
+    );
 
-      setContacts(sortedContacts);
-    } catch (error) {
-      console.error("Failed to fetch contacts", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setContacts(sortedContacts);
+  } catch (error) {
+    console.error("Failed to fetch contacts", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchContacts();
@@ -123,34 +139,44 @@ const Chat = () => {
   };
 
   const fetchMessagesForContact = async (conversationId) => {
-    try {
-      console.log('Making API request for messages...');
-      const response = await axios.get(
-        `${API_ENDPOINTS.CHAT.MESSAGES}?conversation_id=${conversationId}`
-      );
-      console.log('Messages API response:', response.data);
-      setMessages(response.data);
+  try {
+    console.log('Making API request for messages...');
 
-      // Update the contact's lastMessageTime and lastMessage with the latest message
-      if (response.data?.length > 0) {
-        const latestMessage = response.data[response.data.length - 1];
-        setContacts(prevContacts => 
-          prevContacts.map(contact => 
-            contact.conversation_id === conversationId 
-              ? { 
-                  ...contact, 
-                  lastMessageTime: latestMessage.sent_at,
-                  lastMessage: latestMessage.content || latestMessage.element_name,
-                  lastMessageType: latestMessage.message_type
-                }
-              : contact
-          )
-        );
+    const token = localStorage.getItem('auth_token'); // Get auth token
+
+    const response = await axios.get(
+      `${API_ENDPOINTS.CHAT.MESSAGES}?conversation_id=${conversationId}`,
+      {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+        },
       }
-    } catch (error) {
-      console.error("Failed to fetch messages", error);
+    );
+
+    console.log('Messages API response:', response.data);
+    setMessages(response.data);
+
+    // Update the contact's lastMessageTime and lastMessage
+    if (response.data?.length > 0) {
+      const latestMessage = response.data[response.data.length - 1];
+      setContacts(prevContacts => 
+        prevContacts.map(contact => 
+          contact.conversation_id === conversationId 
+            ? { 
+                ...contact, 
+                lastMessageTime: latestMessage.sent_at,
+                lastMessage: latestMessage.content || latestMessage.element_name,
+                lastMessageType: latestMessage.message_type
+              }
+            : contact
+        )
+      );
     }
-  };
+  } catch (error) {
+    console.error("Failed to fetch messages", error);
+  }
+};
+
 
   const handleSearchChange = (e) => setSearchQuery(e.target.value);
 

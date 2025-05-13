@@ -34,54 +34,68 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
- 
   useEffect(() => {
     if (location.state?.selectedTemplate) {
-      setFormData(prevData => ({
+      setFormData((prevData) => ({
         ...prevData,
-        selectedTemplate: location.state.selectedTemplate
+        selectedTemplate: location.state.selectedTemplate,
       }));
-      
+
       navigate(location.pathname, { replace: true });
     }
   }, [location.state, navigate, location.pathname]);
 
-  const handleTemplateSelect = useCallback((template) => {
-    if (template === formData.selectedTemplate) return;
-    
-    setFormData(prevData => ({
-      ...prevData,
-      selectedTemplate: template
-    }));
-    setIsTemplateOpen(false);
-  }, [formData.selectedTemplate]);
+  const handleTemplateSelect = useCallback(
+    (template) => {
+      if (template === formData.selectedTemplate) return;
+
+      setFormData((prevData) => ({
+        ...prevData,
+        selectedTemplate: template,
+      }));
+      setIsTemplateOpen(false);
+    },
+    [formData.selectedTemplate]
+  );
 
   useEffect(() => {
     let isMounted = true;
-    
+
     const fetchCustomerLists = async () => {
-      if (!isMounted) return;
-      
-      setLoading(true);
+      if (!isMounted) return; // Prevent updating state if the component is unmounted
+
+      setLoading(true); // Set loading state to true
       try {
-        const response = await fetch(API_ENDPOINTS.GROUPS.GET_ALL);
+        // Optional: Add token to headers if needed
+        const token = localStorage.getItem("auth_token");
+        const response = await fetch(API_ENDPOINTS.GROUPS.GET_ALL, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+
+        // Check if the response is OK
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
+
+        // Parse the response data
         const result = await response.json();
+
+        // Validate the response format
         if (isMounted && result.success && Array.isArray(result.data)) {
-          setCustomerLists(result.data);
-          setError(null);
+          setCustomerLists(result.data); // Update state with customer lists
+          setError(null); // Clear any previous error
         } else {
           throw new Error("Invalid data format received from API");
         }
       } catch (err) {
+        // Handle errors (both fetch-related and data-related)
         if (isMounted) {
           setError("Failed to fetch customer lists");
-          setCustomerLists([]);
-          console.error("Error fetching customer lists:", err);
+          setCustomerLists([]); // Reset customer lists to an empty array
+          console.error("Error fetching customer lists:", err); // Log the error for debugging
         }
       } finally {
+        // Reset loading state
         if (isMounted) {
           setLoading(false);
         }
@@ -95,7 +109,6 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
     };
   }, []);
 
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -103,14 +116,12 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
           clearTimeout(timeoutRef.current);
         }
 
-        
         highlightRef.current = { close: true, border: true };
-        setForceUpdate(prev => prev + 1);
-        
-        
+        setForceUpdate((prev) => prev + 1);
+
         timeoutRef.current = setTimeout(() => {
           highlightRef.current = { close: false, border: false };
-          setForceUpdate(prev => prev + 1);
+          setForceUpdate((prev) => prev + 1);
         }, 3000);
       }
     };
@@ -124,7 +135,7 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
     };
   }, []);
 
-    useEffect(() => {
+  useEffect(() => {
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -171,21 +182,31 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
       const updatedFormData = {
         ...formData,
         scheduleDate: selectedDate ? selectedDate.toString() : "",
-        date: formData.schedule === "Yes" && selectedDate ? selectedDate : new Date(),
+        date:
+          formData.schedule === "Yes" && selectedDate
+            ? selectedDate
+            : new Date(),
         status: formData.schedule === "No" ? "Live" : "Scheduled",
         type: "Manual Broadcast",
       };
 
       console.log("Submitting form data with template:", updatedFormData);
 
-      console.log("Using API endpoint:", API_ENDPOINTS.BROADCASTS.GET_CUSTOMERS);
-      const response = await fetch(API_ENDPOINTS.BROADCASTS.GET_CUSTOMERS, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedFormData),
-      });
+      console.log(
+        "Using API endpoint:",
+        API_ENDPOINTS.BROADCASTS.GET_CUSTOMERS
+      );
+     const token = localStorage.getItem('auth_token'); // Get token from localStorage
+
+const response = await fetch(API_ENDPOINTS.BROADCASTS.GET_CUSTOMERS, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": token ? `Bearer ${token}` : "", // Add token if available
+  },
+  body: JSON.stringify(updatedFormData),
+});
+
 
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -196,13 +217,11 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
       if (result.success) {
         setAlertMessage("Broadcast saved successfully!");
         setShowAlert(true);
-        
-     
+
         if (onBroadcastCreated) {
           onBroadcastCreated();
         }
-        
-        
+
         setTimeout(() => {
           setShowAlert(false);
           onClose();
@@ -240,7 +259,7 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
       clearTimeout(timeoutRef.current);
     }
     highlightRef.current = { close: false, border: false };
-    setForceUpdate(prev => prev + 1);
+    setForceUpdate((prev) => prev + 1);
     setShowExitDialog(true);
   };
 
@@ -258,7 +277,7 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
       clearTimeout(timeoutRef.current);
     }
     highlightRef.current = { close: false, border: false };
-    setForceUpdate(prev => prev + 1);
+    setForceUpdate((prev) => prev + 1);
     onClose();
     navigate("/broadcast");
     setShowExitDialog(false);
@@ -269,7 +288,7 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
       clearTimeout(timeoutRef.current);
     }
     highlightRef.current = { close: false, border: false };
-    setForceUpdate(prev => prev + 1);
+    setForceUpdate((prev) => prev + 1);
     setShowExitDialog(false);
   };
 
@@ -279,18 +298,17 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
         <div
           ref={modalRef}
           className={`w-full max-w-[900px] p-4 bg-white rounded-lg shadow-lg border ${
-            highlightRef.current.border ? "border-teal-500" : "border-transparent"
+            highlightRef.current.border
+              ? "border-teal-500"
+              : "border-transparent"
           } transition-all duration-300`}
         >
-          <BroadcastHeader 
-            onClose={handleCloseAndNavigate} 
-            highlightClose={highlightRef.current.close} 
+          <BroadcastHeader
+            onClose={handleCloseAndNavigate}
+            highlightClose={highlightRef.current.close}
           />
-          
-          <AlertDialog 
-            showAlert={showAlert} 
-            message={alertMessage}
-          />
+
+          <AlertDialog showAlert={showAlert} message={alertMessage} />
 
           <BroadcastForm
             formData={formData}

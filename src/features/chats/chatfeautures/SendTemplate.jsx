@@ -11,25 +11,43 @@ const SendTemplate = ({ onSelect, onClose, returnFullTemplate = false }) => {
 
   useEffect(() => {
     const fetchTemplates = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(API_ENDPOINTS.TEMPLATES.GET_ALL + "?shop_id=1");
-        const data = await response.json();
-        if (Array.isArray(data.templates)) {
-          setTemplates(data.templates);
-          setFilteredTemplates(data.templates);
-        } else {
-          console.error("Invalid response format:", data);
-          setError("Unexpected response format from server.");
-        }
-      } catch (err) {
-        console.error("Fetch error:", err);
-        setError("Failed to load templates. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  setLoading(true);
+  setError(null);
+  try {
+    // Get the token from localStorage
+    const token = localStorage.getItem('auth_token');
+    
+    // Make the API request with Authorization header if token exists
+    const response = await fetch(API_ENDPOINTS.TEMPLATES.GET_ALL + "?shop_id=1", {
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '', // Only add Authorization header if token is present
+      },
+    });
+
+    // Check if the response status is OK
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Validate if 'templates' is an array
+    if (Array.isArray(data.templates)) {
+      setTemplates(data.templates);
+      setFilteredTemplates(data.templates);
+    } else {
+      console.error("Invalid response format:", data);
+      setError("Unexpected response format from server.");
+    }
+  } catch (err) {
+    console.error("Fetch error:", err);
+    // Enhanced error message: You can include error details if available
+    setError(`Failed to load templates. Please try again. Error: ${err.message}`);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
     fetchTemplates();
   }, []);

@@ -28,23 +28,42 @@ const BroadcastDashboard = forwardRef(
     const fetchBroadcasts = async () => {
       try {
         setLoading(true);
-        const response = await fetch(API_ENDPOINTS.BROADCASTS.GET_ALL);
-        if (!response.ok) {
-          throw new Error("Failed to fetch broadcasts");
+
+        // Retrieve token from localStorage
+        const token = localStorage.getItem("auth_token");
+
+        if (!token) {
+          throw new Error("No token found. Please log in again.");
         }
+
+        // Make the API call with Authorization header
+        const response = await fetch(API_ENDPOINTS.BROADCASTS.GET_ALL, {
+          headers: {
+            Authorization: `Bearer ${token}`, // Send token in the header
+          },
+        });
+
+        // Handle the response
+        if (!response.ok) {
+          const errorDetails = await response.text();
+          throw new Error(`Failed to fetch broadcasts: ${errorDetails}`);
+        }
+
         const data = await response.json();
         const newBroadcasts = Array.isArray(data.broadcasts)
           ? data.broadcasts
           : [];
         setBroadcasts(newBroadcasts);
+
         if (onBroadcastsUpdate) {
           onBroadcastsUpdate(newBroadcasts);
         }
+
         setError(null);
       } catch (err) {
-        setError(err.message);
+        setError(err.message); // Set error message
       } finally {
-        setLoading(false);
+        setLoading(false); // Set loading to false when done
       }
     };
 

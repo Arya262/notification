@@ -99,28 +99,39 @@ export default function ContactList() {
   const popupRef = useRef(null);
 
   const fetchContacts = async () => {
-    try {
-      const response = await fetch(API_ENDPOINTS.CONTACTS.GET_ALL + "?shop_id=1");
-      const data = await response.json();
-      const transformed = data.map((item) => ({
-        ...item,
-        status: item.is_active ? "Opted-in" : "Opted-Out",
-        customer_id: item.customer_id,
-        date: new Date(item.created_at).toLocaleDateString("en-US", {
-          month: "short",
-          day: "2-digit",
-          year: "numeric",
-        }),
-        number: `${item.country_code || ""} ${item.mobile_no}`,
-        fullName: `${item.name} ${item.last_name || ""}`.trim(),
-      }));
-      setContacts(transformed);
-      setLoading(false);
-    } catch (err) {
-      console.error("Failed to fetch contacts:", err);
-      setLoading(false);
-    }
-  };
+  try {
+    // Get the token from localStorage
+    const token = localStorage.getItem('auth_token');
+
+    const response = await fetch(API_ENDPOINTS.CONTACTS.GET_ALL + "?shop_id=1", {
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '', // Add Authorization header if token exists
+      },
+    });
+
+    const data = await response.json();
+
+    // Transform the data as needed
+    const transformed = data.map((item) => ({
+      ...item,
+      status: item.is_active ? "Opted-in" : "Opted-Out",
+      customer_id: item.customer_id,
+      date: new Date(item.created_at).toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+      }),
+      number: `${item.country_code || ""} ${item.mobile_no}`,
+      fullName: `${item.name} ${item.last_name || ""}`.trim(),
+    }));
+
+    setContacts(transformed);
+    setLoading(false);
+  } catch (err) {
+    console.error("Failed to fetch contacts:", err);
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchContacts();

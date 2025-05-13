@@ -14,28 +14,41 @@ const ExploreTemplates = () => {
   const MAX_LENGTH = 100; // Maximum length for container_meta?.data
 
   useEffect(() => {
-    const fetchTemplates = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(API_ENDPOINTS.TEMPLATES.GET_ALL + "?shop_id=1");
-        const data = await response.json();
-        if (Array.isArray(data.templates)) {
-          setTemplates(data.templates);
-          localStorage.setItem("templates", JSON.stringify(data.templates));
-        } else {
-          setError("Invalid response format");
-        }
-      } catch (err) {
-        setError("Failed to fetch templates");
-        const cachedTemplates = localStorage.getItem("templates");
-        if (cachedTemplates) {
-          setTemplates(JSON.parse(cachedTemplates));
-        }
-      } finally {
-        setLoading(false);
+   const fetchTemplates = async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    // Get the token from localStorage
+    const token = localStorage.getItem('auth_token');
+
+    const response = await fetch(
+      API_ENDPOINTS.TEMPLATES.GET_ALL + "?shop_id=1",
+      {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '', // Add Authorization header if token exists
+        },
       }
-    };
+    );
+
+    const data = await response.json();
+
+    if (Array.isArray(data.templates)) {
+      setTemplates(data.templates);
+      localStorage.setItem("templates", JSON.stringify(data.templates));
+    } else {
+      setError("Invalid response format");
+    }
+  } catch (err) {
+    setError("Failed to fetch templates");
+    const cachedTemplates = localStorage.getItem("templates");
+    if (cachedTemplates) {
+      setTemplates(JSON.parse(cachedTemplates));
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
 
     fetchTemplates();
   }, []);
