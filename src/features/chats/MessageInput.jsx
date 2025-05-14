@@ -47,49 +47,53 @@ const MessageInput = ({ onSendMessage, selectedContact }) => {
 
   return (
     <>
-      <form
-        onSubmit={handleSubmit}
-        className="flex items-center w-full max-w-3xl mx-auto relative"
-      >
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder={
-            isTextDisabled
-              ? "Conversation expired. Please use templates."
-              : "Send Message"
-          }
-          disabled={isTextDisabled}
-          className={`text-sm border border-gray-300 rounded-l-lg px-4 py-2 h-10 flex-1 focus:outline-none focus:ring-1 focus:ring-teal-500 ${
-            isTextDisabled ? "bg-gray-100 cursor-not-allowed" : ""
-          }`}
-        />
-        <button
-          type="submit"
-          className="flex items-center gap-2 h-10 px-4 text-white text-sm rounded-r-lg border border-l-0 bg-teal-500 hover:bg-teal-600 border-teal-500"
+      <div className="border-gray-200 p-3 bg-white">
+        <form
+          onSubmit={handleSubmit}
+          className="flex items-center w-full max-w-3xl mx-auto"
         >
-          <Send size={16} />
-          {message.trim() ? "Send Message" : "Send Template"}
-        </button>
-      </form>
+          <input
+            type="text"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder={
+              isTextDisabled
+                ? "Conversation expired. Please use templates."
+                : "Send Message"
+            }
+            disabled={isTextDisabled}
+            className={`text-sm border border-gray-300 rounded-l-lg px-4 py-2 h-10 flex-1 focus:outline-none focus:ring-1 focus:ring-teal-500 ${
+              isTextDisabled ? "bg-gray-100 cursor-not-allowed" : ""
+            }`}
+          />
+          <button
+            type="submit"
+            className="flex items-center gap-2 h-10 px-4 text-white text-sm rounded-r-lg border border-l-0 bg-teal-500 hover:bg-teal-600 border-teal-500"
+          >
+            <Send className="w-4 h-4" />
+            {message.trim() ? "Send Message" : "Send Template"}
+          </button>
+        </form>
+      </div>
 
       {/* Template Modal */}
       {showTemplates && (
-        <div className="relative mt-4 max-w-3xl mx-auto border border-gray-200 rounded-lg shadow p-4 bg-white">
-          <SendTemplate
-            onSelect={(templateName) => {
-              onSendMessage({ template_name: templateName });
-              setShowTemplates(false);
-            }}
-            returnFullTemplate={false}
-          />
-          <button
-            onClick={() => setShowTemplates(false)}
-            className="absolute top-2 right-2 text-white bg-red-500 rounded-full px-2 py-1 text-xs"
-          >
-            Close
-          </button>
+        <div className="fixed inset-0 flex justify-center items-center z-50">
+          <div className="relative">
+            <SendTemplate
+              onSelect={(templateName) => {
+                onSendMessage({ template_name: templateName });
+                setShowTemplates(false);
+              }}
+              returnFullTemplate={false}
+            />
+            <button
+              onClick={() => setShowTemplates(false)}
+              className="absolute top-2 right-2 text-white bg-red-500 rounded-full px-2 py-1 text-xs"
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
     </>
