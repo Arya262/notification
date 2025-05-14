@@ -205,9 +205,9 @@ const Chat = () => {
       const response = await axios.post(`${API_BASE}/sendmessage`, newMessage);
       console.log("Response from API:", response.data);
       
-      // Update the contact's lastMessageTime and lastMessage
-      setContacts(prevContacts => 
-        prevContacts.map(contact => 
+      // Update the contact's lastMessageTime and lastMessage, then sort contacts
+      setContacts(prevContacts => {
+        const updatedContacts = prevContacts.map(contact => 
           contact.id === selectedContact.id 
             ? { 
                 ...contact, 
@@ -216,11 +216,15 @@ const Chat = () => {
                 lastMessageType: messageType
               }
             : contact
-        )
-      );
+        );
+        
+        // Sort contacts by last message time
+        return updatedContacts.sort((a, b) => 
+          new Date(b.lastMessageTime || b.updated_at) - new Date(a.lastMessageTime || a.updated_at)
+        );
+      });
 
       fetchMessagesForContact(selectedContact.conversation_id);
-      fetchContacts();
     } catch (error) {
       console.error("Error sending message:", error);
     }
@@ -234,8 +238,10 @@ const Chat = () => {
   return (
     <div className="flex flex-col md:flex-row w-full h-screen border border-gray-300 rounded-2xl bg-white mx-auto max-w-screen-2xl overflow-hidden">
       {loading ? (
-        <div className="p-6 text-center text-gray-500 w-full md:w-1/3">
-          Loading contacts...
+        <div className="w-full md:w-1/3 p-6">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-teal-500"></div>
+          </div>
         </div>
       ) : (
         <ChatSidebar

@@ -137,7 +137,7 @@ const ChatSidebar = ({
               tabIndex={0}
               onClick={() => onSelectContact(contact)}
               onKeyDown={(e) => e.key === "Enter" && onSelectContact(contact)}
-              className={`flex items-center px-2 py-1 cursor-pointer rounded-xl transition border focus:outline-none
+              className={`flex items-center px-2 py-1 cursor-pointer rounded-xl transition border focus:outline-none w-full max-w-full
                 ${
                   selectedContact?.id === contact.id
                     ? "border-[#0AA89E] bg-white"
@@ -145,20 +145,24 @@ const ChatSidebar = ({
                 }`}
             >
               {/* Avatar */}
-              {renderAvatar(contact)}
+              <div className="shrink-0">
+                {renderAvatar(contact)}
+              </div>
 
               {/* Contact Details */}
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-center">
-                  <p className="font-semibold text-black">{contact.name}</p>
-                  <p className="text-xs text-gray-500 select-none">
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <div className="flex justify-between items-center space-x-2">
+                  <p className="font-semibold text-black truncate max-w-[160px]">{contact.name}</p>
+                  <p className="text-xs text-gray-500 select-none shrink-0">
                     {formatLastMessageTime(contact.lastMessageTime)}
                   </p>
                 </div>
                 {/* Last Message Preview - Always show if available */}
-                <p className="text-sm text-gray-500 truncate mt-0.5">
-                  {getMessagePreview(contact.lastMessage, contact.lastMessageType) || 'No messages yet'}
-                </p>
+                <div className="w-full overflow-hidden">
+                  <p className="text-sm text-gray-500 truncate mt-0.5">
+                    {getMessagePreview(contact.lastMessage, contact.lastMessageType) || 'No messages yet'}
+                  </p>
+                </div>
               </div>
 
               {/* Small delete button beside contact if you want (optional) */}
