@@ -148,7 +148,7 @@ const ChatSidebar = ({
               {renderAvatar(contact)}
 
               {/* Contact Details */}
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-center">
                   <p className="font-semibold text-black">{contact.name}</p>
                   <p className="text-xs text-gray-500 select-none">

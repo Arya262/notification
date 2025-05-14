@@ -122,8 +122,8 @@ const ExploreTemplates = () => {
                     openForm: true 
                   } 
                 })}
-                className="bg-teal-50 text-black px-6 py-3 font-medium rounded 
-                  border border-gray-300 hover:bg-teal-500 hover:text-white hover:border-teal-500 transition duration-300 ease-in-out"
+className="bg-teal-500 text-black px-6 py-3 font-medium rounded 
+                  border border-teal-500 hover:bg-teal-400 hover:text-white hover:border-teal-400 transition duration-300 ease-in-out"
               >
                 Send Template
               </button>

@@ -25,8 +25,5 @@ export const API_ENDPOINTS = {
   },
   EXTERNAL: {
     COUNTRY_CODES: 'https://countriesnow.space/api/v0.1/countries/codes',
-    PLACEHOLDER_IMAGE: 'https://via.placeholder.com/150',
-    PLACEHOLDER_VIDEO: 'https://via.placeholder.com/300x200.png?text=Video+Preview',
-    PLACEHOLDER_VIDEO_ERROR: 'https://via.placeholder.com/300x200.png?text=Error',
   }
 };

@@ -30,10 +30,9 @@ const ImageMessage = ({ msg, sent }) => {
         onClick={handleImageClick}
       >
         <img
-          src={msg.content}
+          src={msg.media_url}
           alt="Shared image"
           className="max-w-full h-auto rounded-lg"
-          onError={(e) => (e.target.src = API_ENDPOINTS.EXTERNAL.PLACEHOLDER_IMAGE)}
         />
       </div>
 
@@ -58,7 +57,7 @@ const ImageMessage = ({ msg, sent }) => {
           <div className="relative" onClick={(e) => e.stopPropagation()}>
             <img
               src={msg.media_url}
-              alt={msg.content || "Sent image"}
+              alt={msg.media_url || "Sent image"}
               className="max-w-[90%] max-h-[90%] object-contain rounded"
             />
             <button

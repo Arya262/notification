@@ -25,7 +25,6 @@ const BroadcastForm = ({
   const location = useLocation();
 
   useEffect(() => {
-    // Check if we have a pre-selected template from navigation
     if (location.state?.selectedTemplate) {
       onTemplateSelect(location.state.selectedTemplate);
     }
@@ -34,22 +33,18 @@ const BroadcastForm = ({
   const validateForm = () => {
     const newErrors = {};
 
-    // Validate Broadcast Name
     if (!formData.broadcastName.trim()) {
       newErrors.broadcastName = 'Broadcast name is required';
     }
 
-    // Validate Customer List
     if (!formData.customerList || formData.customerList === 'Select Customer List') {
       newErrors.customerList = 'Please select a customer list';
     }
 
-    // Validate Template
     if (!formData.selectedTemplate) {
       newErrors.template = 'Please select a template';
     }
 
-    // Validate Schedule
     if (formData.schedule === 'Yes' && !selectedDate) {
       newErrors.schedule = 'Please select a date and time';
     }
@@ -131,9 +126,9 @@ const BroadcastForm = ({
           </button>
 
           {formData.selectedTemplate && (
-            <div className="w-[600px] h-[200px] p-4 border border-gray-200 rounded-md bg-gray-50 overflow-y-auto">
+            <div className="w-[460px] max-h-[200px] p-4 border border-gray-200 rounded-md bg-gray-50 overflow-y-auto mx-auto absolute right-2 top-[131px]">
               <div className="space-y-2">
-                <p className="text-sm text-gray-600">{formData.selectedTemplate.element_name}</p>
+              <p className="text-sm text-gray-600">{formData.selectedTemplate.element_name}</p>
 
                 {formData.selectedTemplate.container_meta?.header && (
                   <p className="text-sm text-gray-600 p-2">

@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Check, CheckCheck, Play } from "lucide-react";
 import { API_ENDPOINTS } from "../../../config/api";
 
 const VideoMessage = ({ msg, sent }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef(null);
 
-  const handlePlay = (e) => {
+  const handlePlay = () => {
     setIsPlaying(true);
-    e.target.play();
+    if (videoRef.current) {
+      videoRef.current.play();
+    }
   };
 
   return (
@@ -19,12 +22,11 @@ const VideoMessage = ({ msg, sent }) => {
       >
         <div className="relative">
           <video
+            ref={videoRef}
             src={msg.media_url}
             className="w-full h-auto object-cover"
-            poster={msg.thumbnail || API_ENDPOINTS.EXTERNAL.PLACEHOLDER_VIDEO}
             controls={isPlaying}
             onClick={handlePlay}
-            onError={(e) => (e.target.poster = API_ENDPOINTS.EXTERNAL.PLACEHOLDER_VIDEO_ERROR)}
             loading="lazy"
           >
             <p>Your browser does not support the video tag.</p>
@@ -33,7 +35,7 @@ const VideoMessage = ({ msg, sent }) => {
           {!isPlaying && (
             <div
               className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer"
-              onClick={(e) => handlePlay(e)}
+              onClick={handlePlay}
             >
               <Play className="text-white" size={32} />
             </div>

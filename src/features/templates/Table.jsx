@@ -29,12 +29,12 @@ const Table = ({ templates = []  }) => {
     const filteredCounts = useMemo(() => {
         const approved = localTemplates.filter((t) => t.status?.toLowerCase() === "approved").length;
         const pending = localTemplates.filter((t) => t.status?.toLowerCase() === "pending").length;
-        const rejected = localTemplates.filter((t) => t.status?.toLowerCase() === "rejected").length;
+         const failed = localTemplates.filter((t) => t.status?.toLowerCase() === "failed").length;
         return {
             all: localTemplates.length,
             approved,
             pending,
-            rejected,
+            failed,
         };
     }, [localTemplates]);
 
@@ -58,7 +58,7 @@ const Table = ({ templates = []  }) => {
         { label: "All", count: filteredCounts.all },
         { label: "Approved", count: filteredCounts.approved },
         { label: "Pending", count: filteredCounts.pending },
-        { label: "Rejected", count: filteredCounts.rejected },
+        { label: "Failed", count: filteredCounts.failed },,
     ];
 
     const toggleMenu = (index) => {

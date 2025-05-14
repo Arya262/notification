@@ -53,8 +53,8 @@ const Templates = () => {
  const pendingCount = templates.filter(
   (t) => t.status?.toLowerCase() === "pending"
  ).length;
- const rejectedCount = templates.filter(
-  (t) => t.status?.toLowerCase() === "rejected"
+ const failedCount = templates.filter(
+  (t) => t.status?.toLowerCase() === "failed"
  ).length;
 
  const summaryCards = [
@@ -71,8 +71,8 @@ const Templates = () => {
    bgColor: "bg-[#FEE4E2]",
   },
   {
-   label: "Rejected Templates",
-   count: rejectedCount,
+   label: "Failed Templates",
+   count: failedCount,
    image: rejectedIcon,
    bgColor: "bg-[#FECDCA]",
   },
