@@ -19,22 +19,22 @@ const Broadcast = () => {
 
   useEffect(() => {
     if (location.state?.formData) {
-      // After creating a new broadcast, refresh the list
+
       if (broadcastDashboardRef.current) {
         broadcastDashboardRef.current.fetchBroadcasts();
       }
       window.history.replaceState({}, document.title);
     }
     
-    // Automatically open the form if openForm is true
+
     if (location.state?.openForm) {
       setShowPopup(true);
-      // Clear the state after opening the form
+
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
 
-  // Handle Select All checkbox change
+
   const handleSelectAllChange = (event) => {
     const checked = event.target.checked;
     setSelectAll(checked);
@@ -47,7 +47,7 @@ const Broadcast = () => {
     setSelectedRows(newSelected);
   };
 
-  // Handle individual checkbox change
+
   const handleCheckboxChange = (idx, event) => {
     setSelectedRows((prev) => ({
       ...prev,

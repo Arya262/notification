@@ -24,26 +24,24 @@ const BroadcastDashboard = forwardRef(
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Fetch broadcasts from API
     const fetchBroadcasts = async () => {
       try {
         setLoading(true);
 
-        // Retrieve token from localStorage
         const token = localStorage.getItem("auth_token");
 
         if (!token) {
           throw new Error("No token found. Please log in again.");
         }
 
-        // Make the API call with Authorization header
+
         const response = await fetch(API_ENDPOINTS.BROADCASTS.GET_ALL, {
           headers: {
-            Authorization: `Bearer ${token}`, // Send token in the header
+            Authorization: `Bearer ${token}`,
           },
         });
 
-        // Handle the response
+
         if (!response.ok) {
           const errorDetails = await response.text();
           throw new Error(`Failed to fetch broadcasts: ${errorDetails}`);
@@ -61,13 +59,12 @@ const BroadcastDashboard = forwardRef(
 
         setError(null);
       } catch (err) {
-        setError(err.message); // Set error message
+        setError(err.message); 
       } finally {
-        setLoading(false); // Set loading to false when done
+        setLoading(false); 
       }
     };
 
-    // Expose fetchBroadcasts to parent component
     useImperativeHandle(ref, () => ({
       fetchBroadcasts,
     }));
@@ -76,7 +73,6 @@ const BroadcastDashboard = forwardRef(
       fetchBroadcasts();
     }, []);
 
-    // Filter data based on search and active filter
     const filteredData = broadcasts.filter((broadcast) => {
       const name = broadcast.broadcast_name || "";
       const messageType = broadcast.message_type || "";

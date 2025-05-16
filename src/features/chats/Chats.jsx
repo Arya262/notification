@@ -19,9 +19,8 @@ const Chat = () => {
   const [loading, setLoading] = useState(true);
 
   const location = useLocation();
-  const socket = useSocket(); // Get socket instance
+  const socket = useSocket(); 
 
-  // Refs to track clicks outside user details and profile button
   const userDetailsRef = useRef(null);
   const profileButtonRef = useRef(null);
 
@@ -29,22 +28,18 @@ const Chat = () => {
     try {
       setLoading(true);
 
-      // Get the token from localStorage
       const token = localStorage.getItem("auth_token");
-
-      // Make the API request with Authorization header if token exists
       const response = await axios.get(
         `${API_ENDPOINTS.CHAT.CONVERSATIONS}?shop_id=1`,
         {
           headers: {
-            Authorization: token ? `Bearer ${token}` : "", // Add Authorization header if token exists
+            Authorization: token ? `Bearer ${token}` : "", 
           },
         }
       );
 
       const enriched = await Promise.all(
         response.data.map(async (c) => {
-          // Get the last message for each conversation
           let lastMessage = null;
           let lastMessageType = null;
           let lastMessageTime = c.updated_at;
@@ -55,7 +50,7 @@ const Chat = () => {
                 `${API_ENDPOINTS.CHAT.MESSAGES}?conversation_id=${c.conversation_id}`,
                 {
                   headers: {
-                    Authorization: token ? `Bearer ${token}` : "", // Add Authorization header for message request
+                    Authorization: token ? `Bearer ${token}` : "",
                   },
                 }
               );
@@ -89,8 +84,6 @@ const Chat = () => {
           };
         })
       );
-
-      // Sort contacts by last message time
       const sortedContacts = enriched.sort(
         (a, b) =>
           new Date(b.lastMessageTime || b.updated_at) -
@@ -110,32 +103,31 @@ const Chat = () => {
     if (location.state?.contact) {
       handleSelectContact(location.state.contact);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [location.state]);
 
-  // Close user details if click is outside of the user details area or profile button
+  
   useEffect(() => {
     const handleClickOutside = (e) => {
-      // Check if the click is outside the user details or profile button
+
       if (
         userDetailsRef.current &&
         !userDetailsRef.current.contains(e.target) &&
         !profileButtonRef.current.contains(e.target)
       ) {
-        setShowUserDetails(false); // Close user details
+        setShowUserDetails(false); 
       }
     };
 
-    // Add the event listener
+
     document.addEventListener("click", handleClickOutside);
 
-    // Clean up the event listener
     return () => {
       document.removeEventListener("click", handleClickOutside);
     };
   }, []);
 
-  // WebSocket listener for new incoming messages
+
   useEffect(() => {
     if (!socket) return;
 
@@ -206,7 +198,7 @@ const Chat = () => {
     try {
       console.log("Making API request for messages...");
 
-      const token = localStorage.getItem("auth_token"); // Get auth token
+      const token = localStorage.getItem("auth_token"); 
 
       const response = await axios.get(
         `${API_ENDPOINTS.CHAT.MESSAGES}?conversation_id=${conversationId}`,
@@ -220,7 +212,7 @@ const Chat = () => {
       console.log("Messages API response:", response.data);
       setMessages(response.data);
 
-      // Update the contact's lastMessageTime and lastMessage
+
       if (response.data?.length > 0) {
         const latestMessage = response.data[response.data.length - 1];
         setContacts((prevContacts) =>
@@ -269,7 +261,7 @@ const Chat = () => {
       const response = await axios.post(`${API_BASE}/sendmessage`, newMessage);
       console.log("Response from API:", response.data);
 
-      // Update the contact's lastMessageTime and lastMessage, then sort contacts
+
       setContacts((prevContacts) => {
         const updatedContacts = prevContacts.map((contact) =>
           contact.id === selectedContact.id
@@ -282,8 +274,6 @@ const Chat = () => {
               }
             : contact
         );
-
-        // Sort contacts by last message time
         return updatedContacts.sort(
           (a, b) =>
             new Date(b.lastMessageTime || b.updated_at) -

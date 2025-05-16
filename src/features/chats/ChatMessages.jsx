@@ -13,13 +13,13 @@ import { format, isToday, isYesterday } from "date-fns";
 const ChatMessages = ({ selectedContact, messages, isTyping }) => {
   const messagesEndRef = useRef(null);
 
-  // Scroll to bottom when messages or typing changes
+
   useEffect(() => {
     const scrollWithDelay = () => {
       requestAnimationFrame(() => {
         setTimeout(() => {
           scrollToBottom();
-        }, 200); // Give media some time to render
+        }, 200);
       });
     };
     scrollWithDelay();
@@ -51,7 +51,7 @@ const ChatMessages = ({ selectedContact, messages, isTyping }) => {
     const sent = msg.status !== "received";
     const key = msg.message_id || index;
     
-    // Format the time in WhatsApp style
+
     const messageTime = new Date(msg.sent_at);
     const formattedTime = messageTime.toLocaleTimeString('en-US', {
       hour: 'numeric',

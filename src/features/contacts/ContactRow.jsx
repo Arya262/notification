@@ -70,7 +70,7 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
 };
 
 
-  return (
+return (
     <tr
       ref={rowRef}
       className="border-t border-b border-b-[#C3C3C3] hover:bg-gray-50 text-md"

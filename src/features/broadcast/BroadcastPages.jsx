@@ -62,40 +62,40 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
     let isMounted = true;
 
     const fetchCustomerLists = async () => {
-      if (!isMounted) return; // Prevent updating state if the component is unmounted
+      if (!isMounted) return; 
 
-      setLoading(true); // Set loading state to true
+      setLoading(true); 
       try {
-        // Optional: Add token to headers if needed
+
         const token = localStorage.getItem("auth_token");
         const response = await fetch(API_ENDPOINTS.GROUPS.GET_ALL, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
 
-        // Check if the response is OK
+
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
-        // Parse the response data
+
         const result = await response.json();
 
-        // Validate the response format
+
         if (isMounted && result.success && Array.isArray(result.data)) {
-          setCustomerLists(result.data); // Update state with customer lists
-          setError(null); // Clear any previous error
+          setCustomerLists(result.data); 
+          setError(null); 
         } else {
           throw new Error("Invalid data format received from API");
         }
       } catch (err) {
-        // Handle errors (both fetch-related and data-related)
+
         if (isMounted) {
           setError("Failed to fetch customer lists");
-          setCustomerLists([]); // Reset customer lists to an empty array
-          console.error("Error fetching customer lists:", err); // Log the error for debugging
+          setCustomerLists([]);
+          console.error("Error fetching customer lists:", err); 
         }
       } finally {
-        // Reset loading state
+
         if (isMounted) {
           setLoading(false);
         }
@@ -196,13 +196,13 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
         "Using API endpoint:",
         API_ENDPOINTS.BROADCASTS.GET_CUSTOMERS
       );
-     const token = localStorage.getItem('auth_token'); // Get token from localStorage
+     const token = localStorage.getItem('auth_token'); 
 
 const response = await fetch(API_ENDPOINTS.BROADCASTS.GET_CUSTOMERS, {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
-    "Authorization": token ? `Bearer ${token}` : "", // Add token if available
+    "Authorization": token ? `Bearer ${token}` : "", 
   },
   body: JSON.stringify(updatedFormData),
 });

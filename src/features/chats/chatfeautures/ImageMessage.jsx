@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Check, CheckCheck } from "lucide-react";
-import { API_ENDPOINTS } from "../../../config/api";
 
 const ImageMessage = ({ msg, sent }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,8 +30,9 @@ const ImageMessage = ({ msg, sent }) => {
       >
         <img
           src={msg.media_url}
-          alt="Shared image"
-          className="max-w-full h-auto rounded-lg"
+          alt={msg.content || "Sent image"}
+          className="w-full object-cover rounded-2xl"
+          onError={(e) => (e.target.src = "https://via.placeholder.com/150")}
         />
       </div>
 
@@ -57,7 +57,7 @@ const ImageMessage = ({ msg, sent }) => {
           <div className="relative" onClick={(e) => e.stopPropagation()}>
             <img
               src={msg.media_url}
-              alt={msg.media_url || "Sent image"}
+              alt={msg.content || "Sent image"}
               className="max-w-[90%] max-h-[90%] object-contain rounded"
             />
             <button

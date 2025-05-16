@@ -21,8 +21,8 @@ const ChatHeader = forwardRef(({ selectedContact, onProfileClick }, profileButto
       try {
         setDeleting(true);
         console.log("Deleted:", selectedContact.id);
-        // TODO: Replace with your actual DELETE API call here
-        await new Promise((resolve) => setTimeout(resolve, 1500)); // simulate API delay
+
+        await new Promise((resolve) => setTimeout(resolve, 1500));
       } catch (error) {
         console.error("Failed to delete chat", error);
       } finally {
@@ -30,8 +30,6 @@ const ChatHeader = forwardRef(({ selectedContact, onProfileClick }, profileButto
       }
     }
   };
-
-  // Function to render avatar
   const renderAvatar = (contact) => {
     if (contact.image) {
       return (
@@ -58,7 +56,7 @@ const ChatHeader = forwardRef(({ selectedContact, onProfileClick }, profileButto
 
   return (
     <div className="chat-header flex justify-between items-center px-4 py-2 border-b border-gray-200 bg-white">
-      {/* Profile section with forwarded ref */}
+
       <div
         className="flex items-center space-x-3 cursor-pointer"
         onClick={onProfileClick}
@@ -70,7 +68,7 @@ const ChatHeader = forwardRef(({ selectedContact, onProfileClick }, profileButto
         </h3>
       </div>
 
-      {/* Actions */}
+
       <div className="chat-header-actions flex items-center space-x-4">
         <button
           className="notification-btn flex items-center text-sm font-medium text-gray-600 hover:text-blue-600"

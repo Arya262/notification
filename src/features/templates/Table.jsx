@@ -2,8 +2,37 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { HiDotsVertical } from "react-icons/hi";
 import { IoSearch } from "react-icons/io5";
 import ActionMenu from '../broadcast/components/ActionMenu';
+import { useNavigate } from "react-router-dom";
+
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  
+  const date = new Date(dateString);
+  const formattedDate = date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
+  
+  const hasTime = date.getHours() !== 0 || date.getMinutes() !== 0;
+  if (hasTime) {
+    const formattedTime = date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+    return (
+      <div className="flex flex-col">
+        <span>{formattedDate}</span>
+        <span>{formattedTime}</span>
+      </div>
+    );
+  }
+  return <span>{formattedDate}</span>;
+};
 
 const Table = ({ templates = []  }) => {
+    const navigate = useNavigate();
     const [activeFilter, setActiveFilter] = useState("All");
     const [searchTerm, setSearchTerm] = useState("");
     const [showMobileSearch, setShowMobileSearch] = useState(false);
@@ -88,21 +117,21 @@ const Table = ({ templates = []  }) => {
         console.log("Delete template at index:", index);
     };
 
-    return (
+return (
    
         <div className="w-full font-sans rounded-[16px] scrollbar-hide scroll-smooth bg-white shadow-[0px_0.91px_3.66px_0px_#00000042] overflow-hidden">
             {/* Header Filters and Search */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-2 sm:p-3 md:p-4">
-                {/* Title */}
+              
                 <div className="flex-shrink-0 pl-2 pr-3">
                     <p className="font-semibold text-base sm:text-lg md:text-xl text-nowrap">
                         Templates List
                     </p>
                 </div>
 
-                {/* Filters and Search */}
+               
                 <div className="flex items-center gap-2 sm:gap-3 flex-grow w-full">
-                    {/* Filters Slider for Mobile */}
+                  
                     <div className="sm:hidden w-full overflow-x-scroll scrollbar-hide">
                         <div className="flex items-center gap-2 scroll-snap-x-mandatory">
                             {filters.map((f, i) => (
@@ -119,7 +148,7 @@ const Table = ({ templates = []  }) => {
                                     {f.label} ({f.count})
                                 </button>
                             ))}
-                            {/* Search Icon for Mobile */}
+                          
                             <div className="flex items-center">
                                 <button
                                     onClick={() => setShowMobileSearch((prev) => !prev)}
@@ -132,7 +161,7 @@ const Table = ({ templates = []  }) => {
                         </div>
                     </div>
 
-                    {/* Filters for Desktop */}
+               
                     <div className="hidden sm:flex items-center gap-2 flex-shrink-0 overflow-x-auto">
                         {filters.map((f, i) => (
                             <button
@@ -150,7 +179,7 @@ const Table = ({ templates = []  }) => {
                         ))}
                     </div>
 
-                    {/* Search Input for Tablet/Desktop */}
+                
                     <div className="hidden sm:block flex-grow max-w-[400px] relative ml-auto">
                         <IoSearch className="absolute right-2 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
@@ -163,7 +192,7 @@ const Table = ({ templates = []  }) => {
                     </div>
                 </div>
 
-                {/* Mobile Search Input */}
+           
                 {showMobileSearch && (
                     <div className="sm:hidden w-full px-2 mt-2">
                         <div className="relative">
@@ -180,10 +209,10 @@ const Table = ({ templates = []  }) => {
                 )}
             </div>
 
-            {/* Table */}
+          
             <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
                 <table className="min-w-[800px] w-full text-sm sm:text-base text-center ">
-                    <thead className="bg-gray-100 border-b-2 border-gray-200 font-semibold text-gray-700">
+                    <thead className="bg-gray-100 border-b-2 border-gray-200 font-medium text-gray-700">
                         <tr>
                             <th className="py-4 px-4 text-nowrap">Date</th>
                             <th className="py-4 px-4 text-nowrap">Template Name</th>
@@ -207,7 +236,7 @@ const Table = ({ templates = []  }) => {
                                     ref={el => rowRefs.current[index] = el}
                                     className="border-b border-[#C3C3C3] hover:bg-gray-50"
                                 >
-                                    <td className="py-4 px-4">{new Date(template.created_on).toLocaleDateString() || '-'}</td>
+                                    <td className="py-4 px-4">{formatDate(template.created_on)}</td>
                                     <td className="py-4 px-4">{template?.element_name || '-'}</td>
                                     <td className="py-4 px-4">{template?.template_type ? template.template_type.charAt(0).toUpperCase() + template.template_type.slice(1) : '-'}</td>
                                     <td className="py-4 px-4">{template.category ? template.category.charAt(0).toUpperCase() + template.category.slice(1) : '-'}</td>
@@ -224,7 +253,12 @@ const Table = ({ templates = []  }) => {
                                         <div className="flex justify-center items-center gap-2 relative" ref={dropdownRef}>
                                             {/* Send Message Button */}
                                             <button
-                                                onClick={() => console.log("Send message to", template.id)}
+                                                onClick={() => navigate('/broadcast', { 
+                                                    state: { 
+                                                        selectedTemplate: template,
+                                                        openForm: true 
+                                                    } 
+                                                })}
                                                 className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-3 py-2 rounded-full whitespace-nowrap"
                                                 aria-label={`Send message to ${template.element_name}`}
                                             >
@@ -245,14 +279,14 @@ const Table = ({ templates = []  }) => {
                                                 <span className="text-sm font-medium">Send Message</span>
                                             </button>
 
-                                            {/* Three Dots */}
+                                            
                                             <button
                                                 onClick={() => toggleMenu(index)}
                                                 className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
                                                 aria-label="Template options"
                                             >
                                                 <svg
-                                                    className="w-5 h-5 text-gray-600"
+                                                    className="w-5 h-5 text-[#000]"
                                                     fill="none"
                                                     stroke="currentColor"
                                                     viewBox="0 0 24 24"
@@ -266,7 +300,7 @@ const Table = ({ templates = []  }) => {
                                                 </svg>
                                             </button>
 
-                                            {/* Dropdown Menu */}
+                                        
                                             {menuOpen === index && (
                                                 <div
                                                     className={`absolute right-0 ${shouldFlipUp ? "bottom-12" : "top-12"} w-44 bg-white border border-gray-200 rounded-md shadow-lg z-20`}

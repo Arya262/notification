@@ -14,41 +14,40 @@ const ExploreTemplates = () => {
   const MAX_LENGTH = 100; // Maximum length for container_meta?.data
 
   useEffect(() => {
-   const fetchTemplates = async () => {
-  setLoading(true);
-  setError(null);
-  try {
-    // Get the token from localStorage
-    const token = localStorage.getItem('auth_token');
+    const fetchTemplates = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Get the token from localStorage
+        const token = localStorage.getItem("auth_token");
 
-    const response = await fetch(
-      API_ENDPOINTS.TEMPLATES.GET_ALL + "?shop_id=1",
-      {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '', // Add Authorization header if token exists
-        },
+        const response = await fetch(
+          API_ENDPOINTS.TEMPLATES.GET_ALL + "?shop_id=1",
+          {
+            headers: {
+              Authorization: token ? `Bearer ${token}` : "", // Add Authorization header if token exists
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        if (Array.isArray(data.templates)) {
+          setTemplates(data.templates);
+          localStorage.setItem("templates", JSON.stringify(data.templates));
+        } else {
+          setError("Invalid response format");
+        }
+      } catch (err) {
+        setError("Failed to fetch templates");
+        const cachedTemplates = localStorage.getItem("templates");
+        if (cachedTemplates) {
+          setTemplates(JSON.parse(cachedTemplates));
+        }
+      } finally {
+        setLoading(false);
       }
-    );
-
-    const data = await response.json();
-
-    if (Array.isArray(data.templates)) {
-      setTemplates(data.templates);
-      localStorage.setItem("templates", JSON.stringify(data.templates));
-    } else {
-      setError("Invalid response format");
-    }
-  } catch (err) {
-    setError("Failed to fetch templates");
-    const cachedTemplates = localStorage.getItem("templates");
-    if (cachedTemplates) {
-      setTemplates(JSON.parse(cachedTemplates));
-    }
-  } finally {
-    setLoading(false);
-  }
-};
-
+    };
 
     fetchTemplates();
   }, []);
@@ -82,7 +81,9 @@ const ExploreTemplates = () => {
       </div>
 
       {loading ? (
-        <p>Loading templates...</p>
+        <div className="flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-teal-500"></div>
+        </div>
       ) : error ? (
         <p className="text-red-500">{error}</p>
       ) : templates.length === 0 ? (
@@ -109,20 +110,25 @@ const ExploreTemplates = () => {
                 <h3 className="font-semibold text-lg mb-2">
                   {template.element_name}
                 </h3>
-                <p className="text-sm text-gray-500 mb-2">{template.category}</p>
+                <p className="text-sm text-gray-500 mb-2">
+                  {template.category}
+                </p>
                 <p className="text-sm text-gray-700 mb-2">
-                  {normalizeData(template.container_meta?.data)} {/* Normalized data */}
+                  {normalizeData(template.container_meta?.data)}{" "}
+                  {/* Normalized data */}
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => navigate('/broadcast', { 
-                  state: { 
-                    selectedTemplate: template,
-                    openForm: true 
-                  } 
-                })}
-className="bg-teal-500 text-black px-6 py-3 font-medium rounded 
+                onClick={() =>
+                  navigate("/broadcast", {
+                    state: {
+                      selectedTemplate: template,
+                      openForm: true,
+                    },
+                  })
+                }
+                className="bg-teal-500 text-black px-6 py-3 font-medium rounded 
                   border border-teal-500 hover:bg-teal-400 hover:text-white hover:border-teal-400 transition duration-300 ease-in-out"
               >
                 Send Template
@@ -131,7 +137,6 @@ className="bg-teal-500 text-black px-6 py-3 font-medium rounded
           ))}
         </div>
       )}
-
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -142,4 +147,3 @@ className="bg-teal-500 text-black px-6 py-3 font-medium rounded
 };
 
 export default ExploreTemplates;
-

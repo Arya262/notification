@@ -1,5 +1,5 @@
 export const formatFileSize = (bytes) => {
-    if (!bytes || isNaN(bytes)) return "1 KB"; // fallback
+    if (!bytes || isNaN(bytes)) return "1 KB"; 
   
     const kb = bytes / 1024;
     const mb = kb / 1024;

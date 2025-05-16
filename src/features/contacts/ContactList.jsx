@@ -4,6 +4,35 @@ import AddContact from "./Addcontact";
 import vendor from "../../assets/vector.png";
 import { API_ENDPOINTS } from "../../config/api";
 
+
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  
+  const date = new Date(dateString);
+  const formattedDate = date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
+  
+  const hasTime = date.getHours() !== 0 || date.getMinutes() !== 0;
+  if (hasTime) {
+    const formattedTime = date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+    return (
+      <div className="flex flex-col">
+        <span>{formattedDate}</span>
+        <span>{formattedTime}</span>
+      </div>
+    );
+  }
+  return <span>{formattedDate}</span>;
+};
+
+
 const ConfirmationDialog = ({
   showExitDialog,
   hasUnsavedChanges,
@@ -28,7 +57,7 @@ const ConfirmationDialog = ({
 
   if (!showExitDialog) return null;
 
-  return (
+ return (
     <div
       className="fixed inset-0 bg-opacity-5 flex items-center justify-center z-50 transition-opacity duration-300"
       onMouseDown={(e) => e.stopPropagation()}
@@ -116,11 +145,7 @@ export default function ContactList() {
       ...item,
       status: item.is_active ? "Opted-in" : "Opted-Out",
       customer_id: item.customer_id,
-      date: new Date(item.created_at).toLocaleDateString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
-      }),
+       date: formatDate(item.created_at),
       number: `${item.country_code || ""} ${item.mobile_no}`,
       fullName: `${item.name} ${item.last_name || ""}`.trim(),
     }));

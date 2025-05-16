@@ -1,7 +1,6 @@
 import { IoSearchOutline } from "react-icons/io5";
 import { formatTime } from "../../utils/time";
 
-// Function to generate a consistent color based on name
 const getAvatarColor = (name) => {
   const colors = [
     '#f91d06', '#0080ff','#7504ec', '#14d47b', 
@@ -11,7 +10,7 @@ const getAvatarColor = (name) => {
   return colors[index % colors.length];
 };
 
-// Function to format time in WhatsApp style
+
 const formatLastMessageTime = (timestamp) => {
   if (!timestamp) return '';
   
@@ -20,7 +19,7 @@ const formatLastMessageTime = (timestamp) => {
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
   
-  // If today, show time
+
   if (date.toDateString() === now.toDateString()) {
     return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
@@ -29,30 +28,30 @@ const formatLastMessageTime = (timestamp) => {
     }).toLowerCase();
   }
   
-  // If yesterday, show "Yesterday"
+
   if (date.toDateString() === yesterday.toDateString()) {
     return 'Yesterday';
   }
   
-  // If this year, show month and day
+
   if (date.getFullYear() === now.getFullYear()) {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
   
-  // If different year, show full date
+
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
-// Function to get message preview based on message type
+
 const getMessagePreview = (message, type) => {
   if (!message && !type) return null;
 
-  // If there's a text message, show it
+
   if (message && type === 'text') {
     return message;
   }
 
-  // For other types, show appropriate preview
+
   switch (type) {
     case 'image':
       return '📷 Photo';
@@ -79,13 +78,13 @@ const ChatSidebar = ({
   searchQuery,
   onSearchChange,
   onSelectContact,
-  onDeleteContact, // <-- NEW PROP for removing contact after delete
+  onDeleteContact,
 }) => {
   const filteredContacts = contacts.filter((c) =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Function to render avatar
+
   const renderAvatar = (contact) => {
     if (contact.image) {
       return (
@@ -128,7 +127,7 @@ const ChatSidebar = ({
       </div>
 
       {/* Contacts List */}
-      <div className="space-y-2 overflow-y-auto max-h-[70vh] scrollbar-hide">
+      <div className="space-y-2 overflow-y-auto max-h-[65vh] scrollbar-hide">
         {filteredContacts.length > 0 ? (
           filteredContacts.map((contact) => (
             <div
@@ -157,7 +156,7 @@ const ChatSidebar = ({
                     {formatLastMessageTime(contact.lastMessageTime)}
                   </p>
                 </div>
-                {/* Last Message Preview - Always show if available */}
+
                 <div className="w-full overflow-hidden">
                   <p className="text-sm text-gray-500 truncate mt-0.5">
                     {getMessagePreview(contact.lastMessage, contact.lastMessageType) || 'No messages yet'}
