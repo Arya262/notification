@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode'; // ✅ correct import
+
 
 const LoginRedirectHandler = () => {
   const navigate = useNavigate();
@@ -11,11 +11,11 @@ const LoginRedirectHandler = () => {
 
     if (token) {
       try {
-        const decoded = jwtDecode(token);
+       
 
         // Save to localStorage
         localStorage.setItem('auth_token', token);
-        localStorage.setItem('', JSON.stringify(decoded));
+        
 
         // Redirect to dashboard
         navigate('/', { replace: true });

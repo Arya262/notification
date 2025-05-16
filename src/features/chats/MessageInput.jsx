@@ -58,7 +58,7 @@ const MessageInput = ({ onSendMessage, selectedContact }) => {
             onChange={(e) => setMessage(e.target.value)}
             placeholder={
               isTextDisabled
-                ? "Conversation expired. Please use templates."
+                ? "Conversation expired. Please send templates."
                 : "Send Message"
             }
             disabled={isTextDisabled}

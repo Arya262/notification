@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
+import { useSocket } from "../../context/SocketContext";
 import { API_BASE, API_ENDPOINTS } from "../../config/api";
 
 import ChatSidebar from "./chatSiderbar";
@@ -16,87 +17,100 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+
   const location = useLocation();
+  const socket = useSocket(); // Get socket instance
 
   // Refs to track clicks outside user details and profile button
   const userDetailsRef = useRef(null);
   const profileButtonRef = useRef(null);
 
- const fetchContacts = async () => {
-  try {
-    setLoading(true);
+  const fetchContacts = async () => {
+    try {
+      setLoading(true);
 
-    // Get the token from localStorage
-    const token = localStorage.getItem('auth_token');
+      // Get the token from localStorage
+      const token = localStorage.getItem("auth_token");
 
-    // Make the API request with Authorization header if token exists
-    const response = await axios.get(`${API_ENDPOINTS.CHAT.CONVERSATIONS}?shop_id=1`, {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '', // Add Authorization header if token exists
-      },
-    });
-
-    const enriched = await Promise.all(response.data.map(async (c) => {
-      // Get the last message for each conversation
-      let lastMessage = null;
-      let lastMessageType = null;
-      let lastMessageTime = c.updated_at;
-
-      if (c.conversation_id) {
-        try {
-          const messagesResponse = await axios.get(
-            `${API_ENDPOINTS.CHAT.MESSAGES}?conversation_id=${c.conversation_id}`,
-            {
-              headers: {
-                'Authorization': token ? `Bearer ${token}` : '', // Add Authorization header for message request
-              },
-            }
-          );
-          if (messagesResponse.data?.length > 0) {
-            const latestMessage = messagesResponse.data[messagesResponse.data.length - 1];
-            lastMessage = latestMessage.content || latestMessage.element_name;
-            lastMessageType = latestMessage.message_type;
-            lastMessageTime = latestMessage.sent_at;
-          }
-        } catch (error) {
-          console.error(`Failed to fetch messages for conversation ${c.conversation_id}`, error);
+      // Make the API request with Authorization header if token exists
+      const response = await axios.get(
+        `${API_ENDPOINTS.CHAT.CONVERSATIONS}?shop_id=1`,
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "", // Add Authorization header if token exists
+          },
         }
-      }
+      );
 
-      return {
-        id: c.customer_id,
-        conversation_id: c.conversation_id,
-        name: `${c.name} ${c.last_name || ""}`.trim(),
-        mobile_no: c.mobile_no,
-        updated_at: c.updated_at,
-        image: c.profile_image,
-        active: false,
-        lastMessage,
-        lastMessageType,
-        lastMessageTime
-      };
-    }));
+      const enriched = await Promise.all(
+        response.data.map(async (c) => {
+          // Get the last message for each conversation
+          let lastMessage = null;
+          let lastMessageType = null;
+          let lastMessageTime = c.updated_at;
 
-    // Sort contacts by last message time
-    const sortedContacts = enriched.sort((a, b) => 
-      new Date(b.lastMessageTime || b.updated_at) - new Date(a.lastMessageTime || a.updated_at)
-    );
+          if (c.conversation_id) {
+            try {
+              const messagesResponse = await axios.get(
+                `${API_ENDPOINTS.CHAT.MESSAGES}?conversation_id=${c.conversation_id}`,
+                {
+                  headers: {
+                    Authorization: token ? `Bearer ${token}` : "", // Add Authorization header for message request
+                  },
+                }
+              );
+              if (messagesResponse.data?.length > 0) {
+                const latestMessage =
+                  messagesResponse.data[messagesResponse.data.length - 1];
+                lastMessage =
+                  latestMessage.content || latestMessage.element_name;
+                lastMessageType = latestMessage.message_type;
+                lastMessageTime = latestMessage.sent_at;
+              }
+            } catch (error) {
+              console.error(
+                `Failed to fetch messages for conversation ${c.conversation_id}`,
+                error
+              );
+            }
+          }
 
-    setContacts(sortedContacts);
-  } catch (error) {
-    console.error("Failed to fetch contacts", error);
-  } finally {
-    setLoading(false);
-  }
-};
+          return {
+            id: c.customer_id,
+            conversation_id: c.conversation_id,
+            name: `${c.name} ${c.last_name || ""}`.trim(),
+            mobile_no: c.mobile_no,
+            updated_at: c.updated_at,
+            image: c.profile_image,
+            active: false,
+            lastMessage,
+            lastMessageType,
+            lastMessageTime,
+          };
+        })
+      );
 
+      // Sort contacts by last message time
+      const sortedContacts = enriched.sort(
+        (a, b) =>
+          new Date(b.lastMessageTime || b.updated_at) -
+          new Date(a.lastMessageTime || a.updated_at)
+      );
+
+      setContacts(sortedContacts);
+    } catch (error) {
+      console.error("Failed to fetch contacts", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchContacts();
     if (location.state?.contact) {
       handleSelectContact(location.state.contact);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
   // Close user details if click is outside of the user details area or profile button
@@ -121,8 +135,51 @@ const Chat = () => {
     };
   }, []);
 
+  // WebSocket listener for new incoming messages
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("newMessage", (message) => {
+      console.log("New message received:", message);
+
+      if (selectedContact && message.conversation_id === selectedContact.conversation_id) {
+        setMessages((prev) => [...prev, message]);
+      }
+
+      setContacts((prevContacts) => {
+        const contactExists = prevContacts.some(
+          (c) => c.conversation_id === message.conversation_id
+        );
+        if (!contactExists) return prevContacts;
+
+        const updated = prevContacts.map((contact) =>
+          contact.conversation_id === message.conversation_id
+            ? {
+                ...contact,
+                lastMessageTime: message.sent_at || new Date().toISOString(),
+                lastMessage: message.content || message.element_name,
+                lastMessageType: message.message_type,
+              }
+            : contact
+        );
+
+        updated.sort(
+          (a, b) =>
+            new Date(b.lastMessageTime || b.updated_at) -
+            new Date(a.lastMessageTime || a.updated_at)
+        );
+
+        return [...updated];
+      });
+    });
+
+    return () => {
+      socket.off("newMessage");
+    };
+  }, [socket, selectedContact]);
+  
   const handleSelectContact = (contact) => {
-    console.log('Selected contact:', contact);
+    console.log("Selected contact:", contact);
     setSelectedContact(contact);
     setShowUserDetails(false);
     setContacts((prev) =>
@@ -130,53 +187,60 @@ const Chat = () => {
     );
 
     if (contact.conversation_id) {
-      console.log('Fetching messages for conversation:', contact.conversation_id);
+      console.log(
+        "Fetching messages for conversation:",
+        contact.conversation_id
+      );
       fetchMessagesForContact(contact.conversation_id);
+       if (socket) {
+      socket.emit("join_conversation", String(contact.conversation_id));
+      console.log("Joined conversation room:", contact.conversation_id);
+    }
     } else {
-      console.log('No conversation_id found for contact');
+      console.log("No conversation_id found for contact");
       setMessages([]);
     }
   };
 
   const fetchMessagesForContact = async (conversationId) => {
-  try {
-    console.log('Making API request for messages...');
+    try {
+      console.log("Making API request for messages...");
 
-    const token = localStorage.getItem('auth_token'); // Get auth token
+      const token = localStorage.getItem("auth_token"); // Get auth token
 
-    const response = await axios.get(
-      `${API_ENDPOINTS.CHAT.MESSAGES}?conversation_id=${conversationId}`,
-      {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-      }
-    );
-
-    console.log('Messages API response:', response.data);
-    setMessages(response.data);
-
-    // Update the contact's lastMessageTime and lastMessage
-    if (response.data?.length > 0) {
-      const latestMessage = response.data[response.data.length - 1];
-      setContacts(prevContacts => 
-        prevContacts.map(contact => 
-          contact.conversation_id === conversationId 
-            ? { 
-                ...contact, 
-                lastMessageTime: latestMessage.sent_at,
-                lastMessage: latestMessage.content || latestMessage.element_name,
-                lastMessageType: latestMessage.message_type
-              }
-            : contact
-        )
+      const response = await axios.get(
+        `${API_ENDPOINTS.CHAT.MESSAGES}?conversation_id=${conversationId}`,
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        }
       );
-    }
-  } catch (error) {
-    console.error("Failed to fetch messages", error);
-  }
-};
 
+      console.log("Messages API response:", response.data);
+      setMessages(response.data);
+
+      // Update the contact's lastMessageTime and lastMessage
+      if (response.data?.length > 0) {
+        const latestMessage = response.data[response.data.length - 1];
+        setContacts((prevContacts) =>
+          prevContacts.map((contact) =>
+            contact.conversation_id === conversationId
+              ? {
+                  ...contact,
+                  lastMessageTime: latestMessage.sent_at,
+                  lastMessage:
+                    latestMessage.content || latestMessage.element_name,
+                  lastMessageType: latestMessage.message_type,
+                }
+              : contact
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Failed to fetch messages", error);
+    }
+  };
 
   const handleSearchChange = (e) => setSearchQuery(e.target.value);
 
@@ -185,42 +249,45 @@ const Chat = () => {
       console.error("No contact selected");
       return;
     }
-  
+
     const newMessage = {
       conversation_id: selectedContact.conversation_id,
     };
-  
-    let messageType = 'text';
+
+    let messageType = "text";
     if (typeof input === "string") {
       newMessage.message = input;
     } else if (typeof input === "object" && input.template_name) {
       newMessage.element_name = input.template_name;
-      messageType = 'template';
+      messageType = "template";
     } else {
       console.warn("Invalid message format");
       return;
     }
-  
+
     try {
       const response = await axios.post(`${API_BASE}/sendmessage`, newMessage);
       console.log("Response from API:", response.data);
-      
+
       // Update the contact's lastMessageTime and lastMessage, then sort contacts
-      setContacts(prevContacts => {
-        const updatedContacts = prevContacts.map(contact => 
-          contact.id === selectedContact.id 
-            ? { 
-                ...contact, 
+      setContacts((prevContacts) => {
+        const updatedContacts = prevContacts.map((contact) =>
+          contact.id === selectedContact.id
+            ? {
+                ...contact,
                 lastMessageTime: new Date().toISOString(),
-                lastMessage: typeof input === "string" ? input : input.template_name,
-                lastMessageType: messageType
+                lastMessage:
+                  typeof input === "string" ? input : input.template_name,
+                lastMessageType: messageType,
               }
             : contact
         );
-        
+
         // Sort contacts by last message time
-        return updatedContacts.sort((a, b) => 
-          new Date(b.lastMessageTime || b.updated_at) - new Date(a.lastMessageTime || a.updated_at)
+        return updatedContacts.sort(
+          (a, b) =>
+            new Date(b.lastMessageTime || b.updated_at) -
+            new Date(a.lastMessageTime || a.updated_at)
         );
       });
 
@@ -229,10 +296,9 @@ const Chat = () => {
       console.error("Error sending message:", error);
     }
   };
-  
 
   const toggleUserDetails = () => {
-    setShowUserDetails((prev) => !prev); 
+    setShowUserDetails((prev) => !prev);
   };
 
   return (
@@ -268,8 +334,8 @@ const Chat = () => {
                   selectedContact={selectedContact}
                   messages={messages || []}
                 />
-                <MessageInput 
-                  onSendMessage={handleSendMessage} 
+                <MessageInput
+                  onSendMessage={handleSendMessage}
                   selectedContact={selectedContact}
                 />
               </>
@@ -296,4 +362,3 @@ const Chat = () => {
 };
 
 export default Chat;
-

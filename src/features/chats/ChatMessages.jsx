@@ -8,7 +8,6 @@ import AudioMessage from "./chatfeautures/AudioMessage";
 import LocationMessage from "./chatfeautures/LocationMessage";
 import ContactMessage from "./chatfeautures/ContactMessage";
 import DocumentMessage from "./chatfeautures/DocumentMessage";
-import { formatTime } from "../../utils/time";
 import { format, isToday, isYesterday } from "date-fns";
 
 const ChatMessages = ({ selectedContact, messages, isTyping }) => {

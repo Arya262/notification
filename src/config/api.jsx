@@ -1,4 +1,4 @@
-export const API_BASE = import.meta.env.VITE_API_BASE || 'https://next.tenacioustechies.com.au';
+export const API_BASE = import.meta.env.VITE_API_BASEq || 'http://localhost:3000';
 
 export const API_ENDPOINTS = {
   BROADCASTS: {
