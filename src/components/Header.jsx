@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { FaSearch } from "react-icons/fa";
 import { Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { API_ENDPOINTS } from "../config/api";
 
 export default function Header({ isMenuOpen, onToggleSidebar }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -17,12 +19,11 @@ export default function Header({ isMenuOpen, onToggleSidebar }) {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost:3000/logout", {
-        method: "POST",
-        credentials: "include",
+      const response = await axios.post(API_ENDPOINTS.AUTH.LOGOUT, {}, {
+        withCredentials: true
       });
 
-      const data = await response.json();
+      const data = response.data;
 
       if (data.success) {
         alert("Logout successful!");

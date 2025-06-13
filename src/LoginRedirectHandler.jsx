@@ -3,6 +3,8 @@ import { FaEyeSlash, FaEye } from "react-icons/fa";
 import whatsAppLogo from "./assets/whatsappIcon.png";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
+import axios from "axios";
+import { API_BASE, API_ENDPOINTS } from "./config/api";
 
 const LoginPage = () => {
   const { login } = useAuth();
@@ -40,23 +42,22 @@ const LoginPage = () => {
     e.preventDefault();
 
     if (validate()) {
-      fetch("http://localhost:3000/login", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: loginMethod,
-          password: password,
-        }),
+      axios.post(API_ENDPOINTS.AUTH.LOGIN, {
+        email: loginMethod,
+        password: password,
+      }, {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json"
+        }
       })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success) {
-            login(data.user); 
-            console.log("User logged in:", data.user);
+        .then((res) => {
+          if (res.data.success) {
+            login(res.data.user); 
+            console.log("User logged in:", res.data.user);
             navigate("/"); // redirect after login
           } else {
-            alert("Login failed: " + data.error);
+            alert("Login failed: " + res.data.error);
           }
         })
         .catch((error) => {

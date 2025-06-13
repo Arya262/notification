@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import axios from "axios";
+import { API_ENDPOINTS } from "../config/api";
 
 const AuthContext = createContext();
 
@@ -8,9 +10,11 @@ export const AuthProvider = ({ children }) => {
 
   // On mount, check if user is logged in by calling backend
   useEffect(() => {
-    fetch("http://localhost:3000/me", { credentials: "include" })
-      .then((res) => res.json())
-      .then((data) => {
+    axios.get(`${API_ENDPOINTS.AUTH.ME}`, { 
+      withCredentials: true 
+    })
+      .then((response) => {
+        const data = response.data;
         if (data.success) {
           setUser(data.user);
         } else {
@@ -29,9 +33,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    fetch("http://localhost:3000/logout", {
-      method: "POST",
-      credentials: "include",
+    axios.post(API_ENDPOINTS.AUTH.LOGOUT, {}, {
+      withCredentials: true
     }).then(() => setUser(null));
   };
 

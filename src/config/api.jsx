@@ -28,5 +28,7 @@ export const API_ENDPOINTS = {
   },
   AUTH: {
     LOGOUT: `${API_BASE}/logout`,
+    LOGIN: `${API_BASE}/login`,
+    ME: `${API_BASE}/me`,
   },
 };
