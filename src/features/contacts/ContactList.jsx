@@ -132,7 +132,7 @@ export default function ContactList() {
     // Get the token from localStorage
     const token = localStorage.getItem('auth_token');
 
-    const response = await fetch(API_ENDPOINTS.CONTACTS.GET_ALL + "?shop_id=1", {
+    const response = await fetch(API_ENDPOINTS.CONTACTS.GET_ALL + "?customer_id=1001", {
       headers: {
         'Authorization': token ? `Bearer ${token}` : '', // Add Authorization header if token exists
       },
@@ -147,7 +147,7 @@ export default function ContactList() {
       customer_id: item.customer_id,
        date: formatDate(item.created_at),
       number: `${item.country_code || ""} ${item.mobile_no}`,
-      fullName: `${item.name} ${item.last_name || ""}`.trim(),
+      fullName: `${item.first_name} ${item.last_name || ""}`.trim(),
     }));
 
     setContacts(transformed);

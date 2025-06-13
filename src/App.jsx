@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import DashboardLayout from "./layouts/DashboardLayout";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Loader from "./components/Loader";
-import PrivateRoute from './PrivateRoute';
+import PrivateRoute from "./PrivateRoute";
 
 // Lazy load components
 const ContactList = lazy(() => import("./features/contacts/ContactList"));
@@ -14,15 +14,14 @@ const Setting = lazy(() => import("./features/settings/Setting"));
 const Broadcast = lazy(() => import("./features/broadcast/Broadcast"));
 const NotFound = lazy(() => import("./components/NotFound"));
 const DashboardHome = lazy(() => import("./features/dashboard/DashboardHome"));
-const ExploreTemplates = lazy(() =>
-  import("./features/templates/ExploreTemplates")
-);
+const ExploreTemplates = lazy(() => import("./features/templates/ExploreTemplates"));
 const LoginRedirectHandler = lazy(() => import("./LoginRedirectHandler"));
 
 function App() {
   return (
     <Suspense fallback={<Loader />}>
       <Routes>
+        {/* Manual Login Route */}
         <Route
           path="/login"
           element={
@@ -31,10 +30,10 @@ function App() {
             </ErrorBoundary>
           }
         />
-        {/* Protected routes go inside PrivateRoute */}
+
+        {/* Protected Routes */}
         <Route element={<PrivateRoute />}>
           <Route path="/" element={<DashboardLayout />}>
-            {/* Dashboard default */}
             <Route
               index
               element={
@@ -43,8 +42,6 @@ function App() {
                 </ErrorBoundary>
               }
             />
-
-            {/* Child Routes */}
             <Route
               path="contact"
               element={
@@ -101,14 +98,10 @@ function App() {
                 </ErrorBoundary>
               }
             />
-
-            {/* Redirect legacy path */}
             <Route
               path="contacts"
               element={<Navigate to="/contact" replace />}
             />
-
-            {/* 404 Fallback */}
             <Route
               path="*"
               element={
@@ -119,8 +112,9 @@ function App() {
             />
           </Route>
         </Route>
-        {/* Optional: Root-level fallback for unmatched routes outside of layout */}
-        <Route path="*" element={<Navigate to="/" />} />
+
+        {/* Redirect any unknown routes to login */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Suspense>
   );

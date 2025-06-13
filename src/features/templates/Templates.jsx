@@ -16,7 +16,7 @@ const Templates = () => {
   try {
     const token = localStorage.getItem("auth_token"); // Get auth token
 
-    const response = await fetch(API_ENDPOINTS.TEMPLATES.GET_ALL + "?shop_id=1", {
+    const response = await fetch(API_ENDPOINTS.TEMPLATES.GET_ALL + "?customer_id=1", {
       headers: {
         'Authorization': token ? `Bearer ${token}` : '',
         'Content-Type': 'application/json',

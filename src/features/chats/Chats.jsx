@@ -30,7 +30,7 @@ const Chat = () => {
 
       const token = localStorage.getItem("auth_token");
       const response = await axios.get(
-        `${API_ENDPOINTS.CHAT.CONVERSATIONS}?shop_id=1`,
+        `${API_ENDPOINTS.CHAT.CONVERSATIONS}?customer_id=1001`,
         {
           headers: {
             Authorization: token ? `Bearer ${token}` : "", 
@@ -73,7 +73,7 @@ const Chat = () => {
           return {
             id: c.customer_id,
             conversation_id: c.conversation_id,
-            name: `${c.name} ${c.last_name || ""}`.trim(),
+            name: `${c.first_name} ${c.last_name || ""}`.trim(),
             mobile_no: c.mobile_no,
             updated_at: c.updated_at,
             image: c.profile_image,

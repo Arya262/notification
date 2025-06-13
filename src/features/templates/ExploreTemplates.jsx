@@ -22,7 +22,7 @@ const ExploreTemplates = () => {
         const token = localStorage.getItem("auth_token");
 
         const response = await fetch(
-          API_ENDPOINTS.TEMPLATES.GET_ALL + "?shop_id=1",
+          API_ENDPOINTS.TEMPLATES.GET_ALL + "?customer_id=1",
           {
             headers: {
               Authorization: token ? `Bearer ${token}` : "", // Add Authorization header if token exists

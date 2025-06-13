@@ -32,45 +32,43 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange }) {
   }, []);
 
   const handleChat = async () => {
-  try {
-    // Get the token from localStorage
-    const token = localStorage.getItem('auth_token');
+    try {
+      // Get the token from localStorage
+      const token = localStorage.getItem("auth_token");
 
-    const response = await fetch(
-      API_ENDPOINTS.CONTACTS.GET_CONVERSATION_ID(contact.customer_id), 
-      {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '', // Add Authorization header if token exists
-        },
-      }
-    );
-
-    const data = await response.json();
-
-    if (!data || !data.conversation_id) {
-      console.error(
-        "No conversation_id found for contact",
-        contact.customer_id
+      const response = await fetch(
+        API_ENDPOINTS.CONTACTS.GET_CONVERSATION_ID(contact.contact_id),
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "", // Add Authorization header if token exists
+          },
+        }
       );
-      return;
+
+      const data = await response.json();
+
+      if (!data || !data.conversation_id) {
+        console.error(
+          "No conversation_id found for contact",
+          contact.customer_id
+        );
+        return;
+      }
+
+      // Navigate with the contact and conversation ID
+      navigate("/chats", {
+  state: {
+    customer_id: contact.customer_id,
+    conversation_id: data.conversation_id,
+  },
+});
+
+    } catch (error) {
+      console.error("Failed to fetch conversation ID", error);
     }
+  };
 
-    // Navigate with the contact and conversation ID
-    navigate("/chats", {
-      state: {
-        contact: {
-          ...contact,
-          conversation_id: data.conversation_id,
-        },
-      },
-    });
-  } catch (error) {
-    console.error("Failed to fetch conversation ID", error);
-  }
-};
-
-
-return (
+  return (
     <tr
       ref={rowRef}
       className="border-t border-b border-b-[#C3C3C3] hover:bg-gray-50 text-md"
@@ -95,7 +93,7 @@ return (
         {contact.fullName}
       </td>
       <td className="px-2 py-4 text-[12px] sm:text-[16px] text-gray-700">
-        {contact.number}
+        {contact.user_country_code}{contact.number}
       </td>
       <td className="px-2 py-4 text-[12px] sm:text-[16px]">
         <span
@@ -150,7 +148,9 @@ return (
           </button>
           {isDropdownOpen && (
             <div
-              className={`absolute right-0 ${shouldFlipUp ? "bottom-12" : "top-12"} w-44 bg-white border border-gray-200 rounded-md shadow-lg z-20`}
+              className={`absolute right-0 ${
+                shouldFlipUp ? "bottom-12" : "top-12"
+              } w-44 bg-white border border-gray-200 rounded-md shadow-lg z-20`}
             >
               <button
                 onClick={() => console.log("Edit", contact.id)}

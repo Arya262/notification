@@ -18,7 +18,7 @@ const SendTemplate = ({ onSelect, onClose, returnFullTemplate = false }) => {
     const token = localStorage.getItem('auth_token');
     
     // Make the API request with Authorization header if token exists
-    const response = await fetch(API_ENDPOINTS.TEMPLATES.GET_ALL + "?shop_id=1", {
+    const response = await fetch(API_ENDPOINTS.TEMPLATES.GET_ALL + "?customer_id=1", {
       headers: {
         'Authorization': token ? `Bearer ${token}` : '', // Only add Authorization header if token is present
       },

@@ -6,12 +6,24 @@ const SocketContext = createContext(null);
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
 
-  useEffect(() => {
-    const newSocket = io("http://localhost:3000"); // your backend socket URL
-    setSocket(newSocket);
+useEffect(() => {
+  const newSocket = io("http://localhost:3000", {
+    transports: ["websocket"]
+  });
 
-    return () => newSocket.disconnect();
-  }, []);
+  newSocket.on("connect", () => {
+    console.log("Socket connected!", newSocket.id);
+  });
+
+  newSocket.on("connect_error", (err) => {
+    console.error("Socket connect error:", err.message);
+  });
+
+  setSocket(newSocket);
+
+  return () => newSocket.disconnect();
+}, []);
+
 
   return (
     <SocketContext.Provider value={socket}>
@@ -20,4 +32,5 @@ export const SocketProvider = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useSocket = () => useContext(SocketContext);

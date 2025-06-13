@@ -83,7 +83,7 @@ export default function AddContact({ closePopup }) {
         user_country_code: selectedCountry.value,
         name: name.trim(),
         mobile_no: phone.split(" ")[1],
-        shop_id: "1",
+        customer_id: "1",
       }),
     })
       .then((res) => res.json())
@@ -106,7 +106,7 @@ export default function AddContact({ closePopup }) {
     if (file) {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("shop_id", "1");
+      formData.append("customer_id", "1");
       formData.append("group_name", groupName.trim());
 
       fetch(API_ENDPOINTS.CONTACTS.ADD_MULTIPLE, {

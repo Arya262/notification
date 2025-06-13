@@ -1,5 +1,4 @@
 import { IoSearchOutline } from "react-icons/io5";
-import { formatTime } from "../../utils/time";
 
 const getAvatarColor = (name) => {
   const colors = [
@@ -78,7 +77,6 @@ const ChatSidebar = ({
   searchQuery,
   onSearchChange,
   onSelectContact,
-  onDeleteContact,
 }) => {
   const filteredContacts = contacts.filter((c) =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
