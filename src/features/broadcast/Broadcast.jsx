@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import BroadcastStats from "./BroadcastStats";
-import vendor from "../../assets/vector.png";
+import vendor from "../../assets/Vector.png";
 import BroadcastDashboard from "./BroadcastDashboard";
 import BroadcastPages from "./BroadcastPages";
 
