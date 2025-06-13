@@ -40,7 +40,7 @@ const LoginPage = () => {
     e.preventDefault();
 
     if (validate()) {
-      fetch("https://marketing-n08x.onrender.com/login", {
+      fetch("http://localhost:3000/login", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -54,7 +54,7 @@ const LoginPage = () => {
           if (data.success) {
             login(data.user); // store user object, NOT token
             console.log("User logged in:", data.user);
-            navigate("/dashboard"); // redirect after login
+            navigate("/"); // redirect after login
           } else {
             alert("Login failed: " + data.error);
           }

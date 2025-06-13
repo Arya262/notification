@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useAuth } from "../../context/AuthContext";
 import ContactRow from "./ContactRow";
 import AddContact from "./Addcontact";
 import vendor from "../../assets/vector.png";
 import { API_ENDPOINTS } from "../../config/api";
-
 
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
@@ -126,26 +126,27 @@ export default function ContactList() {
   const [isCrossHighlighted, setIsCrossHighlighted] = useState(false);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const popupRef = useRef(null);
+  const { user } = useAuth();
 
-  const fetchContacts = async () => {
+
+ const fetchContacts = async () => {
   try {
-    // Get the token from localStorage
-    const token = localStorage.getItem('auth_token');
-
-    const response = await fetch(API_ENDPOINTS.CONTACTS.GET_ALL + "?customer_id=1001", {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '', // Add Authorization header if token exists
-      },
+    const response = await fetch(`${API_ENDPOINTS.CONTACTS.GET_ALL}?customer_id=${user?.customer_id}`, {
+      method: "GET",
+      credentials: "include", // 👈 Send cookies with the request
     });
+
+    if (!response.ok) {
+      throw new Error("Unauthorized or failed to fetch");
+    }
 
     const data = await response.json();
 
-    // Transform the data as needed
     const transformed = data.map((item) => ({
       ...item,
       status: item.is_active ? "Opted-in" : "Opted-Out",
       customer_id: item.customer_id,
-       date: formatDate(item.created_at),
+      date: formatDate(item.created_at),
       number: `${item.country_code || ""} ${item.mobile_no}`,
       fullName: `${item.first_name} ${item.last_name || ""}`.trim(),
     }));
