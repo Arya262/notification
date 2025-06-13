@@ -40,8 +40,9 @@ const LoginPage = () => {
     e.preventDefault();
 
     if (validate()) {
-      fetch("https://gupshup-dzaj.onrender.com/login", {
+      fetch("https://marketing-n08x.onrender.com/login", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: loginMethod,
@@ -51,9 +52,9 @@ const LoginPage = () => {
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
-            login(data.token);          // ✅ Update React state AND localStorage here
+            login(data.user); // store user object, NOT token
             console.log("User logged in:", data.user);
-            navigate("/");              // redirect after updating context
+            navigate("/dashboard"); // redirect after login
           } else {
             alert("Login failed: " + data.error);
           }

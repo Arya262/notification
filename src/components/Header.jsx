@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { FaSearch } from "react-icons/fa";
 import { Menu, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Header({ isMenuOpen, onToggleSidebar }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -13,6 +15,26 @@ export default function Header({ isMenuOpen, onToggleSidebar }) {
     setSearchTerm("");
   };
 
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert("Logout successful!");
+        navigate("/login");
+      } else {
+        alert("Logout failed.");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      alert("Something went wrong.");
+    }
+  };
   return (
     <header className="flex flex-wrap justify-between items-center px-4 py-3 shadow-md bg-white relative gap-y-2">
       {/* Left Side */}
@@ -61,18 +83,19 @@ export default function Header({ isMenuOpen, onToggleSidebar }) {
         </div>
 
         {/* Buttons */}
-        <a
-          href="#"
+        <button
+          type="button"
           className="bg-[#05a3a3] text-white text-sm px-4 h-10 flex items-center justify-center rounded whitespace-nowrap"
         >
           Upgrade
-        </a>
-        <a
-          href="#"
+        </button>
+        <button
+          type="button"
+          onClick={handleLogout}
           className="bg-[#05a3a3] text-white text-sm px-4 h-10 flex items-center justify-center rounded whitespace-nowrap"
         >
-          Foodchow POS
-        </a>
+          Logout
+        </button>
       </div>
     </header>
   );

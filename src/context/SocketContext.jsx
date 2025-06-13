@@ -6,29 +6,27 @@ const SocketContext = createContext(null);
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
 
-useEffect(() => {
-  const newSocket = io("http://localhost:3000", {
-    transports: ["websocket"]
-  });
+  useEffect(() => {
+    const newSocket = io("https://marketing-n08x.onrender.com", {
+      transports: ["websocket"],
+      withCredentials: true, // ✅ Send cookies (like auth_token)
+    });
 
-  newSocket.on("connect", () => {
-    console.log("Socket connected!", newSocket.id);
-  });
+    newSocket.on("connect", () => {
+      console.log("✅ Socket connected!", newSocket.id);
+    });
 
-  newSocket.on("connect_error", (err) => {
-    console.error("Socket connect error:", err.message);
-  });
+    newSocket.on("connect_error", (err) => {
+      console.error("❌ Socket connect error:", err.message);
+    });
 
-  setSocket(newSocket);
+    setSocket(newSocket);
 
-  return () => newSocket.disconnect();
-}, []);
-
+    return () => newSocket.disconnect();
+  }, []);
 
   return (
-    <SocketContext.Provider value={socket}>
-      {children}
-    </SocketContext.Provider>
+    <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>
   );
 };
 

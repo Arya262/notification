@@ -1,4 +1,4 @@
-export const API_BASE = import.meta.env.VITE_API_BASEz || 'http://localhost:3000';
+export const API_BASE = import.meta.env.VITE_API_BASE || 'https://marketing-n08x.onrender.com';
 
 export const API_ENDPOINTS = {
   BROADCASTS: {

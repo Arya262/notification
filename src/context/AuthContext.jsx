@@ -1,35 +1,45 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(localStorage.getItem('auth_token'));
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  // On mount, check if user is logged in by calling backend
   useEffect(() => {
-    const handleStorageChange = () => {
-      setToken(localStorage.getItem('auth_token'));
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    fetch("https://marketing-n08x.onrender.com/me", { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setUser(null);
+        setLoading(false);
+      });
   }, []);
 
-  const login = (newToken) => {
-    localStorage.setItem('auth_token', newToken);
-    setToken(newToken);
+  const login = (userData) => {
+    setUser(userData);
   };
 
   const logout = () => {
-    localStorage.removeItem('auth_token');
-    setToken(null);
+    fetch("https://marketing-n08x.onrender.com/logout", {
+      method: "POST",
+      credentials: "include",
+    }).then(() => setUser(null));
   };
 
   return (
-    <AuthContext.Provider value={{ token, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);

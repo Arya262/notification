@@ -33,7 +33,7 @@ function App() {
 
         {/* Protected Routes */}
         <Route element={<PrivateRoute />}>
-          <Route path="/" element={<DashboardLayout />}>
+          <Route path="/dashboard" element={<DashboardLayout />}>
             <Route
               index
               element={

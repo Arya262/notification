@@ -1,10 +1,12 @@
-import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from './context/AuthContext'; // ✅ import useAuth
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 
 const PrivateRoute = () => {
-  const { token } = useAuth();
+  const { user, loading } = useAuth();
 
-  if (!token) {
+  if (loading) return <div>Loading...</div>; // or your spinner
+
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
