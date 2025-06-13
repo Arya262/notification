@@ -40,7 +40,7 @@ const LoginPage = () => {
     e.preventDefault();
 
     if (validate()) {
-      fetch("https://marketing-n08x.onrender.com/login", {
+      fetch("http://localhost:3000/login", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -54,7 +54,11 @@ const LoginPage = () => {
           if (data.success) {
             login(data.user); 
             console.log("User logged in:", data.user);
+<<<<<<< HEAD
             navigate("/dashboard"); 
+=======
+            navigate("/"); // redirect after login
+>>>>>>> 52f1ad304b7fd7bbec33006b8bbd74ff0ab3d730
           } else {
             alert("Login failed: " + data.error);
           }

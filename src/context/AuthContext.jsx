@@ -8,7 +8,7 @@ export const AuthProvider = ({ children }) => {
 
   // On mount, check if user is logged in by calling backend
   useEffect(() => {
-    fetch("https://marketing-n08x.onrender.com/me", { credentials: "include" })
+    fetch("http://localhost:3000/me", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    fetch("https://marketing-n08x.onrender.com/logout", {
+    fetch("http://localhost:3000/logout", {
       method: "POST",
       credentials: "include",
     }).then(() => setUser(null));
