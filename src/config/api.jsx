@@ -25,5 +25,8 @@ export const API_ENDPOINTS = {
   },
   EXTERNAL: {
     COUNTRY_CODES: 'https://countriesnow.space/api/v0.1/countries/codes',
-  }
+  },
+  AUTH: {
+    LOGOUT: `${API_BASE}/logout`,
+  },
 };

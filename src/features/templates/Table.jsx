@@ -209,7 +209,7 @@ return (
                 )}
             </div>
 
-          
+
             <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
                 <table className="min-w-[800px] w-full text-sm sm:text-base text-center ">
                     <thead className="bg-gray-100 border-b-2 border-gray-200 font-medium text-gray-700">

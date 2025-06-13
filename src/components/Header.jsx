@@ -85,14 +85,14 @@ export default function Header({ isMenuOpen, onToggleSidebar }) {
         {/* Buttons */}
         <button
           type="button"
-          className="bg-[#05a3a3] text-white text-sm px-4 h-10 flex items-center justify-center rounded whitespace-nowrap"
+          className="bg-[#05a3a3] text-white text-sm px-4 h-10 flex items-center justify-center rounded whitespace-nowrap cursor-pointer"
         >
           Upgrade
         </button>
         <button
           type="button"
           onClick={handleLogout}
-          className="bg-[#05a3a3] text-white text-sm px-4 h-10 flex items-center justify-center rounded whitespace-nowrap"
+          className="bg-[#05a3a3] text-white text-sm px-4 h-10 flex items-center justify-center rounded whitespace-nowrap cursor-pointer"
         >
           Logout
         </button>

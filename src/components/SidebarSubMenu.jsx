@@ -1,28 +1,66 @@
+import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { FileText, List, Compass } from "lucide-react";
+import { FileText, List, Compass, ChevronRight } from "lucide-react";
 
 const SidebarSubMenu = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
   const isTemplatesActive = location.pathname.startsWith("/templates");
 
+  const [expanded, setExpanded] = useState(false);
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
+
+  const handleToggle = () => {
+    if (isMobile) {
+      setExpanded((prev) => !prev);
+    }
+  };
+
   return (
-    <div className="group relative">
+    <div
+      className="group relative"
+      role="menu"
+      aria-expanded={isTemplatesActive}
+    >
       {/* Main Menu Item */}
       <div
+        onClick={handleToggle}
         className={`flex items-center justify-between gap-4 px-4 py-3 rounded-xl font-medium text-base shadow-sm cursor-pointer 
         hover:bg-gray-100 ${isTemplatesActive ? "text-teal-500" : "text-black"}`}
       >
         <div className="flex items-center gap-3 group-hover:text-teal-500">
-          <span className={`w-5 h-5 flex items-center justify-center text-gray-600 group-hover:text-teal-500 ${isTemplatesActive && "text-teal-500"}`}>
+          <span
+            className={`w-5 h-5 flex items-center justify-center text-gray-600 group-hover:text-teal-500 ${
+              isTemplatesActive && "text-teal-500"
+            }`}
+          >
             <FileText size={22} />
           </span>
           <span>Templates</span>
         </div>
-        <span className="text-gray-500 transition-transform duration-300 group-hover:rotate-90">{">"}</span>
+        <ChevronRight
+          className={`text-gray-500 transition-transform duration-300 ${
+            isMobile
+              ? expanded
+                ? "rotate-90"
+                : ""
+              : isTemplatesActive
+              ? "rotate-90"
+              : "group-hover:rotate-90"
+          }`}
+        />
       </div>
 
       {/* Submenu */}
-      <div className="mt-2 bg-white border border-gray-200 rounded-xl shadow-md opacity-0 group-hover:opacity-100 max-h-0 group-hover:max-h-screen overflow-hidden transition-all duration-300">
+      <div
+        className={`mt-2 bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden transition-all duration-300 delay-100
+        ${
+          isMobile
+            ? expanded
+              ? "max-h-screen opacity-100"
+              : "max-h-0 opacity-0"
+            : "opacity-0 group-hover:opacity-100 max-h-0 group-hover:max-h-screen"
+        }`}
+      >
         <NavLink
           to="/templates"
           end
@@ -33,7 +71,7 @@ const SidebarSubMenu = ({ isOpen, setIsOpen }) => {
             }`
           }
         >
-           <span className="w-5 h-5 flex items-center justify-center text-gray-600 group-hover:text-teal-500">
+          <span className="w-5 h-5 flex items-center justify-center text-gray-600 group-hover:text-teal-500">
             <List size={22} />
           </span>
           Template List
@@ -47,7 +85,7 @@ const SidebarSubMenu = ({ isOpen, setIsOpen }) => {
             }`
           }
         >
-           <span className="w-5 h-5 flex items-center justify-center text-gray-600 group-hover:text-teal-500">
+          <span className="w-5 h-5 flex items-center justify-center text-gray-600 group-hover:text-teal-500">
             <Compass size={22} />
           </span>
           Explore Templates

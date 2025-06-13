@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FaEyeSlash, FaEye } from "react-icons/fa";
-import whatsAppLogo from "./images/whatsappIcon.png";
+import whatsAppLogo from "./assets/whatsappIcon.png";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 
@@ -52,9 +52,9 @@ const LoginPage = () => {
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
-            login(data.user); // store user object, NOT token
+            login(data.user); 
             console.log("User logged in:", data.user);
-            navigate("/dashboard"); // redirect after login
+            navigate("/dashboard"); 
           } else {
             alert("Login failed: " + data.error);
           }
@@ -247,7 +247,7 @@ const LoginPage = () => {
               Forgot Password?
             </div>
 
-            <button className="bg-[#0aa89e] h-[48px] sm:h-[58px] w-full flex items-center justify-center border rounded-xl text-white text-sm sm:text-base">
+            <button className="bg-[#0aa89e] h-[48px] sm:h-[58px] w-full flex items-center justify-center border rounded-xl text-white text-sm sm:text-base cursor-pointer">
               LOGIN
             </button>
           </form>
