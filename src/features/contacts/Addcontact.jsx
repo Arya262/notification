@@ -19,6 +19,7 @@ export default function AddContact({ closePopup }) {
   const [isTouched, setIsTouched] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchCountryCodes = async () => {
@@ -70,7 +71,7 @@ export default function AddContact({ closePopup }) {
 
   const handleSubmit = () => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { user } = useAuth();
+    
 
     if (!user) {
       alert("You must be logged in.");

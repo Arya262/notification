@@ -1,7 +1,6 @@
 import { forwardRef, useState } from "react";
 import deleteIcon from "../../assets/delete.png";
 
-// Function to generate a consistent color based on name
 const getAvatarColor = (name) => {
   const colors = [
     '#f91d06', '#0080ff','#7504ec', '#14d47b', 

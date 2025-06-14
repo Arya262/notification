@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { HiDotsVertical } from "react-icons/hi";
 import ActionMenu from './ActionMenu';
+import { useNavigate } from "react-router-dom";
+import DeleteConfirmationDialog from "../../shared/DeleteConfirmationDialog";
 
 const BroadcastTable = ({
   filteredData,
@@ -12,12 +14,18 @@ const BroadcastTable = ({
   toggleMenu,
   handleDelete,
   loading,
-  error
+  error,
+  onDelete,
+  onEdit
 }) => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [shouldFlipUp, setShouldFlipUp] = useState(false);
   const dropdownRef = useRef(null);
   const rowRefs = useRef({});
+  const navigate = useNavigate();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedBroadcast, setSelectedBroadcast] = useState(null);
 
   const toggleDropdown = (idx) => {
     setDropdownOpen((prev) => {
@@ -48,6 +56,39 @@ const BroadcastTable = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isDropdownOpen, toggleMenu]);
+
+  const handleDeleteClick = (broadcast) => {
+    setSelectedBroadcast(broadcast);
+    setShowDeleteDialog(true);
+    setMenuOpen(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedBroadcast) return;
+    
+    try {
+      setIsDeleting(true);
+      await onDelete(selectedBroadcast.id);
+      setShowDeleteDialog(false);
+      setSelectedBroadcast(null);
+    } catch (error) {
+      console.error("Error deleting broadcast:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteDialog(false);
+    setSelectedBroadcast(null);
+  };
+
+  const handleEditClick = (broadcast) => {
+    setMenuOpen(null);
+    if (onEdit) {
+      onEdit(broadcast);
+    }
+  };
 
   const renderTableBody = () => {
     if (loading) {
@@ -123,12 +164,39 @@ const BroadcastTable = ({
         <td className="relative py-4">
           <div ref={dropdownRef} className="flex justify-center">
             <button
+              onClick={() => navigate(`/broadcast/${row.id}`)}
+              className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-3 py-2 rounded-full whitespace-nowrap"
+              aria-label={`View broadcast ${row.broadcast_name}`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
+              </svg>
+              <span className="text-sm font-medium">View</span>
+            </button>
+
+            <button
               onClick={() => toggleDropdown(idx)}
               className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
               aria-label="Broadcast options"
             >
               <svg
-                className="w-5 h-5 text-gray-600"
+                className="w-5 h-5 text-[#000]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -142,18 +210,16 @@ const BroadcastTable = ({
               </svg>
             </button>
             {menuOpen === idx && (
-              <div
-                className={`absolute right-0 ${shouldFlipUp ? "bottom-12" : "top-12"} w-44 bg-white border border-gray-200 rounded-md shadow-lg z-20`}
-              >
+              <div className="absolute right-0 top-12 w-44 bg-white border border-gray-200 rounded-md shadow-lg z-20">
                 <button
-                  onClick={() => console.log("Edit", row.id)}
+                  onClick={() => handleEditClick(row)}
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >
                   Edit
                 </button>
                 <button
-                  onClick={() => handleDelete(idx)}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={() => handleDeleteClick(row)}
+                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                 >
                   Delete
                 </button>
@@ -209,6 +275,14 @@ const BroadcastTable = ({
           </tbody>
         </table>
       </div>
+      <DeleteConfirmationDialog
+        showDialog={showDeleteDialog}
+        title="Delete Broadcast"
+        message={`Are you sure you want to delete ${selectedBroadcast?.broadcast_name}? This action cannot be undone.`}
+        onCancel={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 };

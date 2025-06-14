@@ -4,15 +4,19 @@ import whatsAppLogo from "./assets/whatsappIcon.png";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import axios from "axios";
-import { API_BASE, API_ENDPOINTS } from "./config/api";
+import { API_ENDPOINTS } from "./config/api";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+
   const [loginMethod, setLoginMethod] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const validate = () => {
     const errors = {};
@@ -20,7 +24,7 @@ const LoginPage = () => {
     const mobileRegex = /^[6-9]\d{9}$/;
 
     if (!loginMethod.trim()) {
-      errors.loginMethod = "This field is required.";
+      errors.loginMethod = "Make sure you enter a valid email address (e.g. user@example.com) or a 10-digit mobile number.";
     } else if (
       !emailRegex.test(loginMethod) &&
       !mobileRegex.test(loginMethod)
@@ -29,7 +33,7 @@ const LoginPage = () => {
     }
 
     if (!password.trim()) {
-      errors.password = "Password is required.";
+      errors.password = "Please enter your password to continue.";
     } else if (password.length < 6) {
       errors.password = "Password must be at least 6 characters.";
     }
@@ -38,41 +42,48 @@ const LoginPage = () => {
     return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (validate()) {
-      axios.post(API_ENDPOINTS.AUTH.LOGIN, {
-        email: loginMethod,
-        password: password,
-      }, {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "application/json"
+    if (!validate()) return;
+
+    try {
+      setLoading(true);
+
+      const response = await axios.post(
+        API_ENDPOINTS.AUTH.LOGIN,
+        {
+          email: loginMethod,
+          password: password,
+        },
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" },
         }
-      })
-        .then((res) => {
-          if (res.data.success) {
-            login(res.data.user); 
-            console.log("User logged in:", res.data.user);
-            navigate("/"); // redirect after login
-          } else {
-            alert("Login failed: " + res.data.error);
-          }
-        })
-        .catch((error) => {
-          console.error("Login error:", error);
-          alert("An error occurred during login.");
-        });
+      );
+
+      const { success, user, error } = response.data;
+
+      if (success) {
+        login(user);
+        navigate("/");
+      } else {
+        alert(error || "Login failed.");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      alert("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-t from-[#adede9] via-[#def7f6] via-[#d4f5f3] to-white p-4">
-      <div className="w-full max-w-[648px] flex flex-col bg-white rounded-xl overflow-hidden shadow-lg">
+      <div className="w-full max-w-[648px] bg-white rounded-xl overflow-hidden shadow-lg flex flex-col">
         {/* Header */}
         <div className="relative h-[250px] sm:h-[300px] md:h-[352px] w-full bg-[#ceeeec] overflow-hidden">
-          <div className="flex flex-col sm:flex-row items-center justify-between px-4 sm:px-10 ">
+          <div className="flex flex-col sm:flex-row items-center justify-between px-4 sm:px-10">
             <div className="w-full sm:w-[360px] mb-4 sm:mb-[296px] mt-6 sm:mt-[50px]">
               <img
                 className="h-[45px] w-[128px]"
@@ -91,7 +102,7 @@ const LoginPage = () => {
                   src={whatsAppLogo}
                   alt="Social Icon"
                 />
-
+                {/* Add SVG as-is */}
                 <svg
                   className="absolute inset-0 w-full h-full "
                   viewBox="0 0 170 160"
@@ -165,12 +176,11 @@ const LoginPage = () => {
             </div>
           </div>
 
-          {/* Bottom Wave SVG */}
+          {/* Bottom Wave */}
           <svg
-            className="absolute inset-x-0 bottom-0 w-full h-[80px] sm:h-[110px] "
+            className="absolute inset-x-0 bottom-0 w-full h-[80px] sm:h-[110px]"
             viewBox="0 0 1440 450"
             preserveAspectRatio="none"
-            // xmlns="http://www.w3.org/2000/svg"
           >
             <path
               fill="#ffffff"
@@ -181,25 +191,20 @@ const LoginPage = () => {
 
         {/* Login Form */}
         <div className="px-6 pb-6 md:px-10 md:pb-10 font-semibold">
-          <form
-            onSubmit={handleSubmit}
-            className="flex flex-col space-y-4 sm:space-y-5"
-          >
+          <form onSubmit={handleSubmit} className="flex flex-col space-y-5">
             <p className="font-bold font-poppins text-2xl sm:text-[30px]">
               Login
             </p>
 
-            {/* Email / Mobile */}
+            {/* Email/Mobile */}
             <div className="flex flex-col text-black">
-              <label className="mb-1 sm:mb-2 mt-1 sm:mt-2 text-sm sm:text-[16px]">
+              <label className="text-sm sm:text-[16px] mb-2">
                 Email / Mobile No
               </label>
               <input
-                className={`w-full h-[44px] sm:h-[50px] border text-sm sm:text-[16px] rounded-md px-3 sm:px-4 ${
+                className={`w-full h-[50px] rounded-md px-4 text-sm sm:text-[16px] ${
                   errors.loginMethod ? "border-red-500" : "border-[#a2a2a2]"
-                }`}
-                name="loginMethod"
-                type="text"
+                } border`}
                 value={loginMethod}
                 onChange={(e) => setLoginMethod(e.target.value)}
                 placeholder="Enter Email / Mobile No"
@@ -213,15 +218,12 @@ const LoginPage = () => {
 
             {/* Password */}
             <div className="flex flex-col relative text-black">
-              <label className="mb-1 sm:mb-2 mt-1 sm:mt-2 text-sm sm:text-[16px]">
-                Password
-              </label>
-              <div className="relative w-full">
+              <label className="text-sm sm:text-[16px] mb-2">Password</label>
+              <div className="relative">
                 <input
-                  className={`w-full h-[44px] sm:h-[50px] border rounded-md px-3 sm:px-4 ${
+                  className={`w-full h-[50px] rounded-md px-4 border ${
                     errors.password ? "border-red-500" : "border-[#a2a2a2]"
                   }`}
-                  name="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -229,14 +231,10 @@ const LoginPage = () => {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-600 focus:outline-none"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-600"
                 >
-                  {showPassword ? (
-                    <FaEyeSlash className="w-4 h-4 sm:w-5 sm:h-5" />
-                  ) : (
-                    <FaEye className="w-4 h-4 sm:w-5 sm:h-5" />
-                  )}
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
               </div>
               {errors.password && (
@@ -244,12 +242,46 @@ const LoginPage = () => {
               )}
             </div>
 
+            {/* Forgot Password */}
             <div className="flex justify-end text-xs sm:text-sm">
-              Forgot Password?
+              <span className="text-blue-600 hover:underline cursor-pointer">
+                Forgot Password?
+              </span>
             </div>
 
-            <button className="bg-[#0aa89e] h-[48px] sm:h-[58px] w-full flex items-center justify-center border rounded-xl text-white text-sm sm:text-base cursor-pointer">
-              LOGIN
+            {/* Login Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-[#0aa89e] h-[58px] w-full flex items-center justify-center border rounded-xl text-white text-base hover:opacity-90 transition"
+            >
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8H4z"
+                    />
+                  </svg>
+                  Logging in...
+                </div>
+              ) : (
+                "LOGIN"
+              )}
             </button>
           </form>
         </div>

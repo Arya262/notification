@@ -1,4 +1,4 @@
-export const API_BASE = import.meta.env.VITE_API_BASE || '';
+export const API_BASE = import.meta.env.VITE_API_BASEz || 'http://localhost:3000';
 
 export const API_ENDPOINTS = {
   BROADCASTS: {
@@ -11,6 +11,7 @@ export const API_ENDPOINTS = {
     ADD_MULTIPLE: `${API_BASE}/addcustomers`,
     GET_ALL: `${API_BASE}/contacts`,
     GET_CONVERSATION_ID: (customerId) => `${API_BASE}/conversationid?contact_id=${customerId}`,
+    DELETE: `${API_BASE}/contacts/delete`,
   },
   CHAT: {
     CONVERSATIONS: `${API_BASE}/conversations`,

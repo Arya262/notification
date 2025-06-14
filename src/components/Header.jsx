@@ -37,7 +37,7 @@ export default function Header({ isMenuOpen, onToggleSidebar }) {
     }
   };
   return (
-    <header className="flex flex-wrap justify-between items-center px-4 py-3 shadow-md bg-white relative gap-y-2">
+    <header className="flex flex-wrap justify-between items-center px-4 py-4  shadow-md bg-white relative gap-y-2">
       {/* Left Side */}
       <div className="flex items-center gap-2">
         <button
