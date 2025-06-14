@@ -117,7 +117,7 @@ export default function Setting() {
       >
         <MiniMap />
         <Controls />
-        <Background />
+        
       </ReactFlow>
     </div>
   );

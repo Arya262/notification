@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaEyeSlash, FaEye } from "react-icons/fa";
 import whatsAppLogo from "./assets/whatsappIcon.png";
 import { useNavigate } from "react-router-dom";
@@ -17,35 +17,81 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [touched, setTouched] = useState({});
 
-  const validate = () => {
-    const errors = {};
+  const validateField = (name, value) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const mobileRegex = /^[6-9]\d{9}$/;
 
-    if (!loginMethod.trim()) {
-      errors.loginMethod = "Make sure you enter a valid email address (e.g. user@example.com) or a 10-digit mobile number.";
-    } else if (
-      !emailRegex.test(loginMethod) &&
-      !mobileRegex.test(loginMethod)
-    ) {
-      errors.loginMethod = "Enter a valid email or 10-digit mobile number.";
+    switch (name) {
+      case 'loginMethod':
+        if (!value.trim()) {
+          return "Make sure you enter a valid email address (e.g. user@example.com) or a 10-digit mobile number.";
+        }
+        if (!emailRegex.test(value) && !mobileRegex.test(value)) {
+          return "Please enter a valid email address or 10-digit mobile number starting with 6-9.";
+        }
+        return "";
+      case 'password':
+        if (!value.trim()) {
+          return "Please enter your password to continue.";
+        }
+        if (value.length < 6) {
+          return "Your password must be at least 6 characters long.";
+        }
+        return "";
+      default:
+        return "";
     }
+  };
 
-    if (!password.trim()) {
-      errors.password = "Please enter your password to continue.";
-    } else if (password.length < 6) {
-      errors.password = "Password must be at least 6 characters.";
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    const error = validateField(name, value);
+    setErrors(prev => ({ ...prev, [name]: error }));
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name === 'loginMethod') {
+      setLoginMethod(value);
+    } else if (name === 'password') {
+      setPassword(value);
     }
+    
+    if (touched[name]) {
+      const error = validateField(name, value);
+      setErrors(prev => ({ ...prev, [name]: error }));
+    }
+  };
 
-    setErrors(errors);
-    return Object.keys(errors).length === 0;
+  const validate = () => {
+    const newErrors = {
+      loginMethod: validateField('loginMethod', loginMethod),
+      password: validateField('password', password)
+    };
+    setErrors(newErrors);
+    return !Object.values(newErrors).some(error => error);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validate()) return;
+    // Mark all fields as touched
+    setTouched({
+      loginMethod: true,
+      password: true
+    });
+
+    if (!validate()) {
+      // Focus the first field with an error
+      const firstErrorField = Object.keys(errors).find(key => errors[key]);
+      if (firstErrorField) {
+        document.getElementsByName(firstErrorField)[0]?.focus();
+      }
+      return;
+    }
 
     try {
       setLoading(true);
@@ -68,11 +114,27 @@ const LoginPage = () => {
         login(user);
         navigate("/");
       } else {
-        alert(error || "Login failed.");
+        toast.error(error || "We couldn't log you in. Please check your email/mobile and password.", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "light",
+        });
       }
     } catch (err) {
       console.error("Login error:", err);
-      alert("An unexpected error occurred. Please try again.");
+      toast.error("An unexpected error occurred. Please try again later.", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "light",
+      });
     } finally {
       setLoading(false);
     }
@@ -80,6 +142,18 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-t from-[#adede9] via-[#def7f6] via-[#d4f5f3] to-white p-4">
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <div className="w-full max-w-[648px] bg-white rounded-xl overflow-hidden shadow-lg flex flex-col">
         {/* Header */}
         <div className="relative h-[250px] sm:h-[300px] md:h-[352px] w-full bg-[#ceeeec] overflow-hidden">
@@ -202,11 +276,13 @@ const LoginPage = () => {
                 Email / Mobile No
               </label>
               <input
+                name="loginMethod"
                 className={`w-full h-[50px] rounded-md px-4 text-sm sm:text-[16px] ${
                   errors.loginMethod ? "border-red-500" : "border-[#a2a2a2]"
                 } border`}
                 value={loginMethod}
-                onChange={(e) => setLoginMethod(e.target.value)}
+                onChange={handleChange}
+                onBlur={handleBlur}
                 placeholder="Enter Email / Mobile No"
               />
               {errors.loginMethod && (
@@ -221,12 +297,14 @@ const LoginPage = () => {
               <label className="text-sm sm:text-[16px] mb-2">Password</label>
               <div className="relative">
                 <input
+                  name="password"
                   className={`w-full h-[50px] rounded-md px-4 border ${
                     errors.password ? "border-red-500" : "border-[#a2a2a2]"
                   }`}
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
                   placeholder="Enter Password"
                 />
                 <button
