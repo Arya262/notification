@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Modal from "./Modal";
-import vendor from "../../assets/vector.png";
+import vendor from "../../assets/Vector.png";
 import { useNavigate } from "react-router-dom";
 import { API_ENDPOINTS } from "../../config/api";
 
@@ -25,7 +25,7 @@ const ExploreTemplates = () => {
           API_ENDPOINTS.TEMPLATES.GET_ALL + "?customer_id=1",
           {
             headers: {
-              Authorization: token ? `Bearer ${token}` : "", // Add Authorization header if token exists
+              Authorization: token ? `Bearer ${token}` : "", 
             },
           }
         );
@@ -52,10 +52,10 @@ const ExploreTemplates = () => {
     fetchTemplates();
   }, []);
 
-  // Function to normalize container_meta?.data
+
   const normalizeData = (data) => {
-    if (!data) return "No metadata available"; // Fallback if no data exists
-    // Truncate if longer than max length, and pad with dots if shorter
+    if (!data) return "No metadata available"; 
+    
     return data.length > MAX_LENGTH
       ? data.slice(0, MAX_LENGTH) + "..."
       : data.padEnd(MAX_LENGTH, ".");

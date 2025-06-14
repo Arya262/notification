@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import SidebarSubMenu from "./SidebarSubMenu";
 
-const Sidebar = ({ isOpen, setIsOpen }) => {
+const Sidebar = ({ isOpen, setIsOpen, className = "" }) => {
   const sidebarRef = useRef(null);
   const location = useLocation();
 
@@ -36,7 +36,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         isOpen &&
         sidebarRef.current &&
         !sidebarRef.current.contains(event.target) &&
-        !event.target.closest("button") &&
+        !event.target?.closest("button") &&
         window.innerWidth < 1024
       ) {
         setIsOpen(false);
@@ -65,11 +65,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         ${isOpen ? "translate-x-0" : "-translate-x-full"} 
         mt-14 md:mt-2 lg:mt-0
         lg:relative lg:translate-x-0 lg:top-auto lg:left-auto lg:h-auto
-        shadow-[0px_4px_4px_0px_#00000040] lg:sticky`}
+        shadow-[0px_4px_4px_0px_#00000040] lg:sticky ${className}`}
     >
-      {/* Scrollable inner container */}
       <div className="h-full overflow-y-auto p-4">
-        <div className="flex flex-col gap-4 mt-6">
+        <div className="flex flex-col gap-4 ">
           {menuItems.map((item) =>
             item.submenu ? (
               <SidebarSubMenu
@@ -91,16 +90,20 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   }`
                 }
               >
-                <span
-                  className={`w-5 h-5 flex items-center justify-center ${
-                    location.pathname === item.path
-                      ? "text-white"
-                      : "text-gray-600 group-hover:text-teal-500"
-                  }`}
-                >
-                  {item.icon}
-                </span>
-                <span>{item.name}</span>
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className={`w-5 h-5 flex items-center justify-center ${
+                        isActive
+                          ? "text-white"
+                          : "text-gray-600 group-hover:text-teal-500"
+                      }`}
+                    >
+                      {item.icon}
+                    </span>
+                    <span>{item.name}</span>
+                  </>
+                )}
               </NavLink>
             )
           )}
