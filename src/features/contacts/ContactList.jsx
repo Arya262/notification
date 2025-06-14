@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import ContactRow from "./ContactRow";
 import AddContact from "./Addcontact";
-import vendor from "../../assets/vector.png";
+import vendor from "../../assets/Vector.png";
 import { API_ENDPOINTS } from "../../config/api";
 
 const formatDate = (dateString) => {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Modal from "./Modal";
-import vendor from "../../assets/vector.png";
+import vendor from "../../assets/Vector.png";
 import { useNavigate } from "react-router-dom";
 import { API_ENDPOINTS } from "../../config/api";
 
