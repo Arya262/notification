@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 import Modal from "./Modal";
 import vendor from "../../assets/Vector.png";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +11,7 @@ const ExploreTemplates = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState(null);
-
+  const { user } = useAuth();
   const MAX_LENGTH = 100; // Maximum length for container_meta?.data
 
   useEffect(() => {
@@ -18,15 +19,13 @@ const ExploreTemplates = () => {
       setLoading(true);
       setError(null);
       try {
-        // Get the token from localStorage
-        const token = localStorage.getItem("auth_token");
-
         const response = await fetch(
-          API_ENDPOINTS.TEMPLATES.GET_ALL + "?customer_id=1",
+          `${API_ENDPOINTS.TEMPLATES.GET_ALL}?customer_id=${user?.customer_id}`,
           {
             headers: {
-              Authorization: token ? `Bearer ${token}` : "", 
+              "Content-Type": "application/json",
             },
+            credentials: "include",
           }
         );
 

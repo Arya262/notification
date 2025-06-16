@@ -342,6 +342,7 @@ export default function ContactList() {
 
   const handleDeleteSelected = async () => {
     const selectedIds = Object.entries(selectedRows)
+      // eslint-disable-next-line no-unused-vars
       .filter(([_, isSelected]) => isSelected)
       .map(([idx]) => filteredContacts[idx].id);
 
