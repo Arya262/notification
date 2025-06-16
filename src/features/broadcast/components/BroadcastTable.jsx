@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from "react";
 import { HiDotsVertical } from "react-icons/hi";
-import ActionMenu from './ActionMenu';
+import ActionMenu from "./ActionMenu";
 import { useNavigate } from "react-router-dom";
 import DeleteConfirmationDialog from "../../shared/DeleteConfirmationDialog";
 
@@ -16,7 +16,7 @@ const BroadcastTable = ({
   loading,
   error,
   onDelete,
-  onEdit
+  onEdit,
 }) => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [shouldFlipUp, setShouldFlipUp] = useState(false);
@@ -60,12 +60,12 @@ const BroadcastTable = ({
   const handleDeleteClick = (broadcast) => {
     setSelectedBroadcast(broadcast);
     setShowDeleteDialog(true);
-    setMenuOpen(null);
+    menuOpen(null);
   };
 
   const handleDeleteConfirm = async () => {
     if (!selectedBroadcast) return;
-    
+
     try {
       setIsDeleting(true);
       await onDelete(selectedBroadcast.id);
@@ -84,7 +84,7 @@ const BroadcastTable = ({
   };
 
   const handleEditClick = (broadcast) => {
-    setMenuOpen(null);
+    menuOpen(null);
     if (onEdit) {
       onEdit(broadcast);
     }
@@ -124,111 +124,84 @@ const BroadcastTable = ({
     }
 
     return filteredData
-  .filter((row) => row.status !== "Stopped" && row.status !== "Paused")
-  .map((row, idx) => (
-      <tr 
-        key={idx} 
-        ref={el => rowRefs.current[idx] = el}
-        className="border-t border-b border-b-[#C3C3C3] hover:bg-gray-50 text-md"
-      >
-        <td className="px-2 py-4 sm:px-4">
-          <div className="flex items-center justify-center h-full">
-            <input
-              type="checkbox"
-              className="form-checkbox w-4 h-4"
-              checked={selectedRows[idx] || false}
-              onChange={(e) => handleCheckboxChange(idx, e)}
-            />
-          </div>
-        </td>
-        <td className="px-2 py-4 sm:px-4 sm:py-4 whitespace-nowrap text-[12px] sm:text-[16px] text-gray-700">
-          {formatDate(row.created_at)}
-        </td>
-        <td className="px-2 py-4 text-[12px] sm:text-[16px] text-gray-700">
-          {row.broadcast_name}
-        </td>
-        <td className="px-2 py-4 text-[12px] sm:text-[16px] text-gray-700">
-          {row.message_type}
-        </td>
-        <td className="px-2 py-4 text-[12px] sm:text-[16px] text-gray-700">
-          {row.schedule.toLowerCase() === "yes"
-            ? formatDate(row.schedule_date)
-            : "No"}
-        </td>
-        <td className="px-2 py-4 text-[12px] sm:text-[16px] text-green-600">
-          {row.status}
-        </td>
-        <td className="px-2 py-4 text-[12px] justify-end sm:text-[16px] w-auto font-semibold text-gray-700">
-          {renderMessageFunnel(row)}
-        </td>
-        <td className="relative py-4">
-          <div ref={dropdownRef} className="flex justify-center">
-            <button
-              onClick={() => navigate(`/broadcast/${row.id}`)}
-              className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-3 py-2 rounded-full whitespace-nowrap"
-              aria-label={`View broadcast ${row.broadcast_name}`}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
+      .filter((row) => row.status !== "Stopped" && row.status !== "Paused")
+      .map((row, idx) => (
+        <tr
+          key={idx}
+          ref={(el) => (rowRefs.current[idx] = el)}
+          className="border-t border-b border-b-[#C3C3C3] hover:bg-gray-50 text-md"
+        >
+          <td className="px-2 py-4 sm:px-4">
+            <div className="flex items-center justify-center h-full">
+              <input
+                type="checkbox"
+                className="form-checkbox w-4 h-4"
+                checked={selectedRows[idx] || false}
+                onChange={(e) => handleCheckboxChange(idx, e)}
+              />
+            </div>
+          </td>
+          <td className="px-2 py-4 sm:px-4 sm:py-4 whitespace-nowrap text-[12px] sm:text-[16px] text-gray-700">
+            {formatDate(row.created_at)}
+          </td>
+          <td className="px-2 py-4 text-[12px] sm:text-[16px] text-gray-700">
+            {row.broadcast_name}
+          </td>
+          <td className="px-2 py-4 text-[12px] sm:text-[16px] text-gray-700">
+            {row.message_type}
+          </td>
+          <td className="px-2 py-4 text-[12px] sm:text-[16px] text-gray-700">
+            {row.schedule.toLowerCase() === "yes"
+              ? formatDate(row.schedule_date)
+              : "No"}
+          </td>
+          <td className="px-2 py-4 text-[12px] sm:text-[16px] text-green-600">
+            {row.status}
+          </td>
+          <td className="px-2 py-4 text-[12px] justify-end sm:text-[16px] w-auto font-semibold text-gray-700">
+            {renderMessageFunnel(row)}
+          </td>
+          <td className="relative py-4">
+            <div ref={dropdownRef} className="flex justify-center">
+              <button
+                onClick={() => toggleDropdown(idx)}
+                className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
+                aria-label="Broadcast options"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                />
-              </svg>
-              <span className="text-sm font-medium">View</span>
-            </button>
-
-            <button
-              onClick={() => toggleDropdown(idx)}
-              className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
-              aria-label="Broadcast options"
-            >
-              <svg
-                className="w-5 h-5 text-[#000]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 5v.01M12 12v.01M12 19v.01"
-                />
-              </svg>
-            </button>
-            {menuOpen === idx && (
-              <div className="absolute right-0 top-12 w-44 bg-white border border-gray-200 rounded-md shadow-lg z-20">
-                <button
-                  onClick={() => handleEditClick(row)}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                <svg
+                  className="w-5 h-5 text-[#000]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
                 >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteClick(row)}
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                >
-                  Delete
-                </button>
-              </div>
-            )}
-          </div>
-        </td>
-      </tr>
-    ));
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 5v.01M12 12v.01M12 19v.01"
+                  />
+                </svg>
+              </button>
+              {menuOpen === idx && (
+                <div className="absolute right-0 top-12 w-44 bg-white border border-gray-200 rounded-md shadow-lg z-20">
+                  <button
+                    onClick={() => handleEditClick(row)}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClick(row)}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          </td>
+        </tr>
+      ));
   };
 
   return (
@@ -289,14 +262,14 @@ const BroadcastTable = ({
 
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
-  
+
   const date = new Date(dateString);
   const formattedDate = date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "2-digit",
   });
-  
+
   const hasTime = date.getHours() !== 0 || date.getMinutes() !== 0;
   if (hasTime) {
     const formattedTime = date.toLocaleTimeString("en-US", {
@@ -341,4 +314,4 @@ const renderMessageFunnel = (row) => {
   );
 };
 
-export default BroadcastTable; 
+export default BroadcastTable;

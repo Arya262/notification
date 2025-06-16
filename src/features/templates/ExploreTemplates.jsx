@@ -33,16 +33,13 @@ const ExploreTemplates = () => {
 
         if (Array.isArray(data.templates)) {
           setTemplates(data.templates);
-          localStorage.setItem("templates", JSON.stringify(data.templates));
+         
         } else {
           setError("Invalid response format");
         }
       } catch (err) {
         setError("Failed to fetch templates");
-        const cachedTemplates = localStorage.getItem("templates");
-        if (cachedTemplates) {
-          setTemplates(JSON.parse(cachedTemplates));
-        }
+        
       } finally {
         setLoading(false);
       }
@@ -63,7 +60,7 @@ const ExploreTemplates = () => {
   const handleAddTemplate = (newTemplate) => {
     const updatedTemplates = [...templates, newTemplate];
     setTemplates(updatedTemplates);
-    localStorage.setItem("templates", JSON.stringify(updatedTemplates));
+    
   };
 
   return (

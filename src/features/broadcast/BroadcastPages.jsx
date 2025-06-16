@@ -6,6 +6,7 @@ import BroadcastForm from "./components/BroadcastForm";
 import AlertDialog from "./components/AlertDialog";
 import ConfirmationDialog from "./components/ConfirmationDialog";
 import { API_ENDPOINTS } from "../../config/api";
+import { useAuth } from "../../context/AuthContext";
 
 const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
   const location = useLocation();
@@ -24,6 +25,7 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
     selectedTemplate: location.state?.selectedTemplate || null,
   });
 
+  const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
@@ -62,40 +64,39 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
     let isMounted = true;
 
     const fetchCustomerLists = async () => {
-      if (!isMounted) return; 
+      if (!isMounted) return;
 
-      setLoading(true); 
+      setLoading(true);
       try {
-
-        const token = localStorage.getItem("auth_token");
-        const response = await fetch(API_ENDPOINTS.GROUPS.GET_ALL, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-
+        const response = await fetch(
+          `${API_ENDPOINTS.GROUPS.GET_ALL}?customer_id=${user?.customer_id}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+          }
+        );
 
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
-
         const result = await response.json();
 
-
         if (isMounted && result.success && Array.isArray(result.data)) {
-          setCustomerLists(result.data); 
-          setError(null); 
+          setCustomerLists(result.data);
+          setError(null);
         } else {
           throw new Error("Invalid data format received from API");
         }
       } catch (err) {
-
         if (isMounted) {
           setError("Failed to fetch customer lists");
           setCustomerLists([]);
-          console.error("Error fetching customer lists:", err); 
+          console.error("Error fetching customer lists:", err);
         }
       } finally {
-
         if (isMounted) {
           setLoading(false);
         }
@@ -180,6 +181,7 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
 
     try {
       const updatedFormData = {
+        customer_id: user?.customer_id,
         ...formData,
         scheduleDate: selectedDate ? selectedDate.toString() : "",
         date:
@@ -196,17 +198,15 @@ const BroadcastPages = ({ onClose, showCustomAlert, onBroadcastCreated }) => {
         "Using API endpoint:",
         API_ENDPOINTS.BROADCASTS.GET_CUSTOMERS
       );
-     const token = localStorage.getItem('auth_token'); 
 
-const response = await fetch(API_ENDPOINTS.BROADCASTS.GET_CUSTOMERS, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "Authorization": token ? `Bearer ${token}` : "", 
-  },
-  body: JSON.stringify(updatedFormData),
-});
-
+      const response = await fetch(API_ENDPOINTS.BROADCASTS.GET_CUSTOMERS, {
+        method: "POST",
+         headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+        body: JSON.stringify(updatedFormData),
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);

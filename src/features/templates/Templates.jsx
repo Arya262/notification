@@ -82,13 +82,13 @@ const Templates = () => {
 
   const handleEdit = (updatedTemplates) => {
     setTemplates(updatedTemplates);
-    localStorage.setItem("templates", JSON.stringify(updatedTemplates));
+   
   };
 
   const handleDelete = (id) => {
     const newTemplates = templates.filter((template) => template.id !== id);
     setTemplates(newTemplates);
-    localStorage.setItem("templates", JSON.stringify(newTemplates));
+    
   };
 
   return (

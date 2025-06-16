@@ -2,70 +2,76 @@ import { IoSearchOutline } from "react-icons/io5";
 
 const getAvatarColor = (name) => {
   const colors = [
-    '#f91d06', '#0080ff','#7504ec', '#14d47b', 
-    '#ff6d10', '#d413e2', '#9B59B6', '#2196f3'
+    "#f91d06",
+    "#0080ff",
+    "#7504ec",
+    "#14d47b",
+    "#ff6d10",
+    "#d413e2",
+    "#9B59B6",
+    "#2196f3",
   ];
-  const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const index = name
+    .split("")
+    .reduce((acc, char) => acc + char.charCodeAt(0), 0);
   return colors[index % colors.length];
 };
 
-
 const formatLastMessageTime = (timestamp) => {
-  if (!timestamp) return '';
-  
+  if (!timestamp) return "";
+
   const date = new Date(timestamp);
   const now = new Date();
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
-  
 
   if (date.toDateString() === now.toDateString()) {
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    }).toLowerCase();
+    return date
+      .toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })
+      .toLowerCase();
   }
-  
 
   if (date.toDateString() === yesterday.toDateString()) {
-    return 'Yesterday';
+    return "Yesterday";
   }
-  
 
   if (date.getFullYear() === now.getFullYear()) {
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   }
-  
 
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 };
-
 
 const getMessagePreview = (message, type) => {
   if (!message && !type) return null;
 
-
-  if (message && type === 'text') {
+  if (message && type === "text") {
     return message;
   }
 
-
   switch (type) {
-    case 'image':
-      return '📷 Photo';
-    case 'video':
-      return '🎥 Video';
-    case 'document':
-      return '📄 Document';
-    case 'audio':
-      return '🎵 Audio';
-    case 'location':
-      return '📍 Location';
-    case 'contact':
-      return '👤 Contact';
-    case 'template':
-      return '📋 Template';
+    case "image":
+      return "📷 Photo";
+    case "video":
+      return "🎥 Video";
+    case "document":
+      return "📄 Document";
+    case "audio":
+      return "🎵 Audio";
+    case "location":
+      return "📍 Location";
+    case "contact":
+      return "👤 Contact";
+    case "template":
+      return "📋 Template";
     default:
       return message || null;
   }
@@ -82,7 +88,6 @@ const ChatSidebar = ({
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-
   const renderAvatar = (contact) => {
     if (contact.image) {
       return (
@@ -93,12 +98,12 @@ const ChatSidebar = ({
         />
       );
     }
-    
+
     const firstLetter = contact.name.charAt(0).toUpperCase();
     const bgColor = getAvatarColor(contact.name);
-    
+
     return (
-      <div 
+      <div
         className="w-10 h-10 rounded-full mr-4 flex items-center justify-center text-white font-semibold"
         style={{ backgroundColor: bgColor }}
       >
@@ -127,9 +132,9 @@ const ChatSidebar = ({
       {/* Contacts List */}
       <div className="space-y-2 overflow-y-auto max-h-[65vh] scrollbar-hide">
         {filteredContacts.length > 0 ? (
-          filteredContacts.map((contact) => (
+          filteredContacts.map((contact, index) => (
             <div
-              key={contact.id}
+              key={contact.id ?? `contact-${index}`}
               role="button"
               tabIndex={0}
               onClick={() => onSelectContact(contact)}
@@ -142,14 +147,14 @@ const ChatSidebar = ({
                 }`}
             >
               {/* Avatar */}
-              <div className="shrink-0">
-                {renderAvatar(contact)}
-              </div>
+              <div className="shrink-0">{renderAvatar(contact)}</div>
 
               {/* Contact Details */}
               <div className="flex-1 min-w-0 overflow-hidden">
                 <div className="flex justify-between items-center space-x-2">
-                  <p className="font-semibold text-black truncate max-w-[160px]">{contact.name}</p>
+                  <p className="font-semibold text-black truncate max-w-[160px]">
+                    {contact.name}
+                  </p>
                   <p className="text-xs text-gray-500 select-none shrink-0">
                     {formatLastMessageTime(contact.lastMessageTime)}
                   </p>
@@ -157,7 +162,10 @@ const ChatSidebar = ({
 
                 <div className="w-full overflow-hidden">
                   <p className="text-sm text-gray-500 truncate mt-0.5">
-                    {getMessagePreview(contact.lastMessage, contact.lastMessageType) || 'No messages yet'}
+                    {getMessagePreview(
+                      contact.lastMessage,
+                      contact.lastMessageType
+                    ) || "No messages yet"}
                   </p>
                 </div>
               </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useAuth } from "../../context/AuthContext";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 import { useSocket } from "../../context/SocketContext";
@@ -19,39 +20,50 @@ const Chat = () => {
   const [loading, setLoading] = useState(true);
 
   const location = useLocation();
-  const socket = useSocket(); 
+  const socket = useSocket();
 
   const userDetailsRef = useRef(null);
   const profileButtonRef = useRef(null);
+  const { user } = useAuth();
 
   const fetchContacts = async () => {
     try {
       setLoading(true);
 
-      const token = localStorage.getItem("auth_token");
-      const response = await axios.get(
-        `${API_ENDPOINTS.CHAT.CONVERSATIONS}?customer_id=1001`,
+      // const token = localStorage.getItem("auth_token");
+      // const response = await axios.get(
+      //   `${API_ENDPOINTS.CHAT.CONVERSATIONS}?customer_id=3161`,
+      //   {
+
+      //   }
+      // );
+
+      const response = await fetch(
+        `${API_ENDPOINTS.CHAT.CONVERSATIONS}?customer_id=${user?.customer_id}`,
         {
           headers: {
-            Authorization: token ? `Bearer ${token}` : "", 
+            "Content-Type": "application/json",
           },
+          credentials: "include",
         }
       );
-
+      const data = await response.json();
+      console.log(data);
       const enriched = await Promise.all(
-        response.data.map(async (c) => {
+        data.map(async (c) => {
           let lastMessage = null;
           let lastMessageType = null;
           let lastMessageTime = c.updated_at;
 
           if (c.conversation_id) {
             try {
-              const messagesResponse = await axios.get(
+              const messagesResponse = await fetch(
                 `${API_ENDPOINTS.CHAT.MESSAGES}?conversation_id=${c.conversation_id}`,
                 {
                   headers: {
-                    Authorization: token ? `Bearer ${token}` : "",
+                    "Content-Type": "application/json",
                   },
+                  credentials: "include",
                 }
               );
               if (messagesResponse.data?.length > 0) {
@@ -103,22 +115,19 @@ const Chat = () => {
     if (location.state?.contact) {
       handleSelectContact(location.state.contact);
     }
-   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
-  
   useEffect(() => {
     const handleClickOutside = (e) => {
-
       if (
         userDetailsRef.current &&
         !userDetailsRef.current.contains(e.target) &&
         !profileButtonRef.current.contains(e.target)
       ) {
-        setShowUserDetails(false); 
+        setShowUserDetails(false);
       }
     };
-
 
     document.addEventListener("click", handleClickOutside);
 
@@ -127,14 +136,16 @@ const Chat = () => {
     };
   }, []);
 
-
   useEffect(() => {
     if (!socket) return;
 
     socket.on("newMessage", (message) => {
       console.log("New message received:", message);
 
-      if (selectedContact && message.conversation_id === selectedContact.conversation_id) {
+      if (
+        selectedContact &&
+        message.conversation_id === selectedContact.conversation_id
+      ) {
         setMessages((prev) => [...prev, message]);
       }
 
@@ -169,7 +180,7 @@ const Chat = () => {
       socket.off("newMessage");
     };
   }, [socket, selectedContact]);
-  
+
   const handleSelectContact = (contact) => {
     console.log("Selected contact:", contact);
     setSelectedContact(contact);
@@ -184,10 +195,10 @@ const Chat = () => {
         contact.conversation_id
       );
       fetchMessagesForContact(contact.conversation_id);
-       if (socket) {
-      socket.emit("join_conversation", String(contact.conversation_id));
-      console.log("Joined conversation room:", contact.conversation_id);
-    }
+      if (socket) {
+        socket.emit("join_conversation", String(contact.conversation_id));
+        console.log("Joined conversation room:", contact.conversation_id);
+      }
     } else {
       console.log("No conversation_id found for contact");
       setMessages([]);
@@ -198,20 +209,18 @@ const Chat = () => {
     try {
       console.log("Making API request for messages...");
 
-      const token = localStorage.getItem("auth_token"); 
-
       const response = await axios.get(
         `${API_ENDPOINTS.CHAT.MESSAGES}?conversation_id=${conversationId}`,
         {
           headers: {
-            Authorization: token ? `Bearer ${token}` : "",
+            "Content-Type": "application/json",
           },
+          credentials: "include",
         }
       );
 
       console.log("Messages API response:", response.data);
       setMessages(response.data);
-
 
       if (response.data?.length > 0) {
         const latestMessage = response.data[response.data.length - 1];
@@ -260,7 +269,6 @@ const Chat = () => {
     try {
       const response = await axios.post(`${API_BASE}/sendmessage`, newMessage);
       console.log("Response from API:", response.data);
-
 
       setContacts((prevContacts) => {
         const updatedContacts = prevContacts.map((contact) =>

@@ -1,4 +1,5 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useAuth } from "../../context/AuthContext";
 import searchIcon from "../../assets/search.png";
 import FilterBar from "./components/FilterBar";
 import SearchBar from "./components/SearchBar";
@@ -23,25 +24,20 @@ const BroadcastDashboard = forwardRef(
     const [broadcasts, setBroadcasts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const { user } = useAuth();
 
     const fetchBroadcasts = async () => {
       try {
         setLoading(true);
-
-        const token = localStorage.getItem("auth_token");
-
-        if (!token) {
-          throw new Error("No token found. Please log in again.");
-        }
-
-
-        const response = await fetch(API_ENDPOINTS.BROADCASTS.GET_ALL, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-
+        const response = await fetch(
+          `${API_ENDPOINTS.BROADCASTS.GET_ALL}?customer_id=${user?.customer_id}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+          }
+        );
         if (!response.ok) {
           const errorDetails = await response.text();
           throw new Error(`Failed to fetch broadcasts: ${errorDetails}`);
@@ -59,9 +55,9 @@ const BroadcastDashboard = forwardRef(
 
         setError(null);
       } catch (err) {
-        setError(err.message); 
+        setError(err.message);
       } finally {
-        setLoading(false); 
+        setLoading(false);
       }
     };
 

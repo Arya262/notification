@@ -9,7 +9,7 @@ const SingleDeleteConfirmationDialog = ({
   contactName,
   onCancel,
   onConfirm,
-  isDeleting
+  isDeleting,
 }) => {
   const dialogRef = useRef(null);
 
@@ -58,12 +58,16 @@ const SingleDeleteConfirmationDialog = ({
               d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             ></path>
           </svg>
-          <h3 id="single-delete-dialog-title" className="text-lg font-semibold text-gray-800">
+          <h3
+            id="single-delete-dialog-title"
+            className="text-lg font-semibold text-gray-800"
+          >
             Delete Confirmation
           </h3>
         </div>
         <p id="single-delete-dialog-message" className="text-gray-600 mb-6">
-          Are you sure you want to delete {contactName}? This action cannot be undone.
+          Are you sure you want to delete {contactName}? This action cannot be
+          undone.
         </p>
         <div className="flex justify-end gap-3">
           <button
@@ -83,7 +87,7 @@ const SingleDeleteConfirmationDialog = ({
             {isDeleting ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             ) : (
-              'Delete'
+              "Delete"
             )}
           </button>
         </div>
@@ -92,7 +96,13 @@ const SingleDeleteConfirmationDialog = ({
   );
 };
 
-export default function ContactRow({ contact, isChecked, onCheckboxChange, onDelete, onEdit }) {
+export default function ContactRow({
+  contact,
+  isChecked,
+  onCheckboxChange,
+  onDelete,
+  onEdit,
+}) {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [shouldFlipUp, setShouldFlipUp] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -128,15 +138,13 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange, onDel
 
   const handleChat = async () => {
     try {
-      // Get the token from localStorage
-      const token = localStorage.getItem("auth_token");
-
       const response = await fetch(
         API_ENDPOINTS.CONTACTS.GET_CONVERSATION_ID(contact.contact_id),
         {
           headers: {
-            Authorization: token ? `Bearer ${token}` : "", // Add Authorization header if token exists
+            "Content-Type": "application/json",
           },
+          credentials: "include",
         }
       );
 
@@ -152,12 +160,11 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange, onDel
 
       // Navigate with the contact and conversation ID
       navigate("/chats", {
-  state: {
-    customer_id: contact.customer_id,
-    conversation_id: data.conversation_id,
-  },
-});
-
+        state: {
+          customer_id: contact.customer_id,
+          conversation_id: data.conversation_id,
+        },
+      });
     } catch (error) {
       console.error("Failed to fetch conversation ID", error);
     }
@@ -245,7 +252,8 @@ export default function ContactRow({ contact, isChecked, onCheckboxChange, onDel
           {contact.fullName}
         </td>
         <td className="px-2 py-4 text-[12px] sm:text-[16px] text-gray-700">
-          {contact.user_country_code}{contact.number}
+          {contact.user_country_code}
+          {contact.number}
         </td>
         <td className="px-2 py-4 text-[12px] sm:text-[16px]">
           <span

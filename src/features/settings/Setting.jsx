@@ -9,6 +9,8 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import TemplateNode from './TemplateNode';
+import { useAuth } from '../../context/AuthContext';
+import { API_ENDPOINTS } from '../../config/api';
 
 const nodeTypes = {
   templateNode: TemplateNode,
@@ -19,34 +21,53 @@ export default function Setting() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNodeId, setSelectedNodeId] = useState(null);
+  const { user } = useAuth();
 
-  // Initialize templates and nodes from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem("templates");
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      setTemplates(parsed);
+    const fetchTemplates = async () => {
+      try {
+        const response = await fetch(
+          `${API_ENDPOINTS.TEMPLATES.GET_ALL}?customer_id=${user?.customer_id}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+          }
+        );
 
-      const newNodes = parsed.map((template, index) => ({
-        id: `${index + 1}`,
-        type: 'templateNode',
-        position: {
-          x: 100 + (index % 3) * 250,
-          y: 100 + Math.floor(index / 3) * 250,
-        },
-        data: {
-          label: template.element_name,
-          image: template.image_url,
-          category: template.category,
-          meta: (template.container_meta?.data || '').slice(0, 50) + '...',
-          selected: false,
-        },
-      }));
+        const data = await response.json();
 
-      setNodes(newNodes);
-    }
-  }, [setNodes]);
+        if (Array.isArray(data.templates)) {
+          setTemplates(data.templates);
 
+          const newNodes = data.templates.map((template, index) => ({
+            id: `${index + 1}`,
+            type: 'templateNode',
+            position: {
+              x: 100 + (index % 3) * 250,
+              y: 100 + Math.floor(index / 3) * 250,
+            },
+            data: {
+              label: template.element_name,
+              image: template.image_url,
+              category: template.category,
+              meta: (template.container_meta?.data || '').slice(0, 50) + '...',
+              selected: false,
+            },
+          }));
+
+          setNodes(newNodes);
+        } else {
+          console.error('Invalid template response format');
+        }
+      } catch (err) {
+        console.error('Failed to fetch templates:', err);
+      }
+    };
+
+    fetchTemplates();
+  }, [user?.customer_id, setNodes]);
   // Highlight selected node
   useEffect(() => {
     setNodes((nds) =>

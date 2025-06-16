@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useAuth } from "../../../context/AuthContext";
 import { debounce } from "lodash";
 import { API_ENDPOINTS } from "../../../config/api";
 
@@ -8,49 +9,52 @@ const SendTemplate = ({ onSelect, onClose, returnFullTemplate = false }) => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchTemplates = async () => {
-  setLoading(true);
-  setError(null);
-  try {
-    // Get the token from localStorage
-    const token = localStorage.getItem('auth_token');
-    
-    // Make the API request with Authorization header if token exists
-    const response = await fetch(API_ENDPOINTS.TEMPLATES.GET_ALL + "?customer_id=1", {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '', // Only add Authorization header if token is present
-      },
-    });
+      setLoading(true);
+      setError(null);
+      try {
+        
+        const response = await fetch(
+                `${API_ENDPOINTS.TEMPLATES.GET_ALL}?customer_id=${user?.customer_id}`,
+                {
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  credentials: "include",
+                }
+              );
 
-    // Check if the response status is OK
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
+        // Check if the response status is OK
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
 
-    const data = await response.json();
+        const data = await response.json();
 
-    // Validate if 'templates' is an array
-    if (Array.isArray(data.templates)) {
-      setTemplates(data.templates);
-      setFilteredTemplates(data.templates);
-    } else {
-      console.error("Invalid response format:", data);
-      setError("Unexpected response format from server.");
-    }
-  } catch (err) {
-    console.error("Fetch error:", err);
-    // Enhanced error message: You can include error details if available
-    setError(`Failed to load templates. Please try again. Error: ${err.message}`);
-  } finally {
-    setLoading(false);
-  }
-};
-
+        // Validate if 'templates' is an array
+        if (Array.isArray(data.templates)) {
+          setTemplates(data.templates);
+          setFilteredTemplates(data.templates);
+        } else {
+          console.error("Invalid response format:", data);
+          setError("Unexpected response format from server.");
+        }
+      } catch (err) {
+        console.error("Fetch error:", err);
+        // Enhanced error message: You can include error details if available
+        setError(
+          `Failed to load templates. Please try again. Error: ${err.message}`
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchTemplates();
-  }, []);
+  }, [user?.customer_id]);
 
   // Debounced filter templates on search
   useEffect(() => {
@@ -94,7 +98,9 @@ const SendTemplate = ({ onSelect, onClose, returnFullTemplate = false }) => {
         Choose a Template
       </h2>
 
-      {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
+      {error && (
+        <p className="text-red-500 text-sm text-center mb-4">{error}</p>
+      )}
 
       <input
         type="text"
@@ -107,7 +113,10 @@ const SendTemplate = ({ onSelect, onClose, returnFullTemplate = false }) => {
       {loading ? (
         <div className="space-y-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="animate-pulse bg-gray-100 h-10 rounded"></div>
+            <div
+              key={i}
+              className="animate-pulse bg-gray-100 h-10 rounded"
+            ></div>
           ))}
         </div>
       ) : (
@@ -137,16 +146,20 @@ const SendTemplate = ({ onSelect, onClose, returnFullTemplate = false }) => {
                       onClick={() => handleTemplateClick(template)}
                     >
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <span className={`${
-                          template.status?.toLowerCase() === 'approved' 
-                            ? 'bg-green-100 text-green-700' 
-                            : 'bg-yellow-100 text-yellow-700'
-                        } text-xs font-medium px-2 py-1 rounded`}>
+                        <span
+                          className={`${
+                            template.status?.toLowerCase() === "approved"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          } text-xs font-medium px-2 py-1 rounded`}
+                        >
                           {template.status || "N/A"}
                         </span>
                         <div className="text-xs text-gray-500 mt-1">
                           {template.created_on
-                            ? new Date(Number(template.created_on)).toLocaleDateString("en-US", {
+                            ? new Date(
+                                Number(template.created_on)
+                              ).toLocaleDateString("en-US", {
                                 year: "numeric",
                                 month: "short",
                                 day: "numeric",
@@ -156,8 +169,12 @@ const SendTemplate = ({ onSelect, onClose, returnFullTemplate = false }) => {
                             : "Unknown"}
                         </div>
                       </td>
-                      <td className="px-4 py-4">{template.element_name || "Unnamed"}</td>
-                      <td className="px-4 py-4">{template.template_type || "Unknown"}</td>
+                      <td className="px-4 py-4">
+                        {template.element_name || "Unnamed"}
+                      </td>
+                      <td className="px-4 py-4">
+                        {template.template_type || "Unknown"}
+                      </td>
                       <td className="px-4 py-4 text-center">
                         <button
                           onClick={(e) => {
@@ -180,6 +197,5 @@ const SendTemplate = ({ onSelect, onClose, returnFullTemplate = false }) => {
     </div>
   );
 };
-
 
 export default SendTemplate;
