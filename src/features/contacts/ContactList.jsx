@@ -7,14 +7,14 @@ import { API_ENDPOINTS } from "../../config/api";
 
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
-  
+
   const date = new Date(dateString);
   const formattedDate = date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "2-digit",
   });
-  
+
   const hasTime = date.getHours() !== 0 || date.getMinutes() !== 0;
   if (hasTime) {
     const formattedTime = date.toLocaleTimeString("en-US", {
@@ -31,7 +31,6 @@ const formatDate = (dateString) => {
   }
   return <span>{formattedDate}</span>;
 };
-
 
 const ConfirmationDialog = ({
   showExitDialog,
@@ -57,7 +56,7 @@ const ConfirmationDialog = ({
 
   if (!showExitDialog) return null;
 
- return (
+  return (
     <div
       className="fixed inset-0 bg-opacity-5 flex items-center justify-center z-50 transition-opacity duration-300"
       onMouseDown={(e) => e.stopPropagation()}
@@ -121,7 +120,7 @@ const DeleteConfirmationDialog = ({
   selectedCount,
   cancelDelete,
   confirmDelete,
-  isDeleting
+  isDeleting,
 }) => {
   const dialogRef = useRef(null);
 
@@ -170,12 +169,16 @@ const DeleteConfirmationDialog = ({
               d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             ></path>
           </svg>
-          <h3 id="delete-dialog-title" className="text-lg font-semibold text-gray-800">
+          <h3
+            id="delete-dialog-title"
+            className="text-lg font-semibold text-gray-800"
+          >
             Delete Confirmation
           </h3>
         </div>
         <p id="delete-dialog-message" className="text-gray-600 mb-6">
-          Are you sure you want to delete {selectedCount} selected contact{selectedCount > 1 ? 's' : ''}? This action cannot be undone.
+          Are you sure you want to delete {selectedCount} selected contact
+          {selectedCount > 1 ? "s" : ""}? This action cannot be undone.
         </p>
         <div className="flex justify-end gap-3">
           <button
@@ -195,7 +198,7 @@ const DeleteConfirmationDialog = ({
             {isDeleting ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             ) : (
-              'Delete'
+              "Delete"
             )}
           </button>
         </div>
@@ -219,36 +222,39 @@ export default function ContactList() {
   const popupRef = useRef(null);
   const { user } = useAuth();
 
+  const fetchContacts = async () => {
+    try {
+      const response = await fetch(
+        `${API_ENDPOINTS.CONTACTS.GET_ALL}?customer_id=${user?.customer_id}`,
+        {
+          method: "GET",
+          credentials: "include", // 👈 Send cookies with the request
+        }
+      );
 
- const fetchContacts = async () => {
-  try {
-    const response = await fetch(`${API_ENDPOINTS.CONTACTS.GET_ALL}?customer_id=${user?.customer_id}`, {
-      method: "GET",
-      credentials: "include", // 👈 Send cookies with the request
-    });
+      if (!response.ok) {
+        throw new Error("Unauthorized or failed to fetch");
+      }
 
-    if (!response.ok) {
-      throw new Error("Unauthorized or failed to fetch");
+      const data = await response.json();
+
+      const transformed = data.map((item) => ({
+        ...item,
+        status: item.is_active ? "Opted-in" : "Opted-Out",
+        contact_id: item.contact_id,
+        customer_id: item.customer_id,
+        date: formatDate(item.created_at),
+        number: `${item.country_code || ""} ${item.mobile_no}`,
+        fullName: `${item.first_name} ${item.last_name || ""}`.trim(),
+      }));
+
+      setContacts(transformed);
+      setLoading(false);
+    } catch (err) {
+      console.error("Failed to fetch contacts:", err);
+      setLoading(false);
     }
-
-    const data = await response.json();
-
-    const transformed = data.map((item) => ({
-      ...item,
-      status: item.is_active ? "Opted-in" : "Opted-Out",
-      customer_id: item.customer_id,
-      date: formatDate(item.created_at),
-      number: `${item.country_code || ""} ${item.mobile_no}`,
-      fullName: `${item.first_name} ${item.last_name || ""}`.trim(),
-    }));
-
-    setContacts(transformed);
-    setLoading(false);
-  } catch (err) {
-    console.error("Failed to fetch contacts:", err);
-    setLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     fetchContacts();
@@ -342,31 +348,33 @@ export default function ContactList() {
 
   const handleDeleteSelected = async () => {
     const selectedIds = Object.entries(selectedRows)
-      // eslint-disable-next-line no-unused-vars
-      .filter(([_, isSelected]) => isSelected)
-      .map(([idx]) => filteredContacts[idx].id);
-
-    if (selectedIds.length === 0) return;
+  .filter(([_, isSelected]) => isSelected)
+  .map(([idx]) => {
+    const contact = filteredContacts[idx];
+    console.log(`Index: ${idx}, Contact:`, contact);
+    return contact?.contact_id;
+  });
+console.log("Final selected contact_ids:", selectedIds);
 
     try {
       setIsDeleting(true);
       setError(null);
 
       const response = await fetch(`${API_ENDPOINTS.CONTACTS.DELETE}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
-          ids: selectedIds,
-          customer_id: user?.customer_id 
+        body: JSON.stringify({
+          contact_ids: selectedIds,
+          customer_id: user?.customer_id,
         }),
-        credentials: 'include',
+        credentials: "include",
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete contacts');
+        throw new Error(errorData.message || "Failed to delete contacts");
       }
 
       // Refresh the contacts list
@@ -375,40 +383,48 @@ export default function ContactList() {
       setSelectedRows({});
       setSelectAll(false);
     } catch (error) {
-      console.error('Error deleting contacts:', error);
-      setError(error.message || 'Failed to delete contacts. Please try again.');
+      console.error("Error deleting contacts:", error);
+      setError(error.message || "Failed to delete contacts. Please try again.");
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const handleSingleContactDelete = async (contactId) => {
+  const handleSingleContactDelete = async (contact_id) => {
     try {
       setIsDeleting(true);
       setError(null);
 
+      const payload = {
+        contact_ids: [contact_id],
+        customer_id: user?.customer_id,
+      };
+
+      console.log("Sending DELETE request to:", API_ENDPOINTS.CONTACTS.DELETE);
+      console.log("Request payload:", payload);
+
       const response = await fetch(`${API_ENDPOINTS.CONTACTS.DELETE}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
-          ids: [contactId],
-          customer_id: user?.customer_id 
-        }),
-        credentials: 'include',
+        credentials: "include",
+        body: JSON.stringify(payload),
       });
 
+      const data = await response.json();
+      console.log("Response status:", response.status);
+      console.log("Response data:", data);
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete contact');
+        throw new Error(errorData.message || "Failed to delete contact");
       }
 
       // Refresh the contacts list
       await fetchContacts();
     } catch (error) {
-      console.error('Error deleting contact:', error);
-      setError(error.message || 'Failed to delete contact. Please try again.');
+      console.error("Error deleting contact:", error);
+      setError(error.message || "Failed to delete contact. Please try again.");
     } finally {
       setIsDeleting(false);
     }
@@ -424,7 +440,7 @@ export default function ContactList() {
       {error && (
         <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
           {error}
-          <button 
+          <button
             onClick={() => setError(null)}
             className="float-right font-bold"
           >

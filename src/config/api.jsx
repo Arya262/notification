@@ -11,7 +11,8 @@ export const API_ENDPOINTS = {
     ADD_MULTIPLE: `${API_BASE}/addcustomers`,
     GET_ALL: `${API_BASE}/contacts`,
     GET_CONVERSATION_ID: (customerId) => `${API_BASE}/conversationid?contact_id=${customerId}`,
-    DELETE: `${API_BASE}/contacts/delete`,
+    DELETE: `${API_BASE}/deletecontact`,
+    UPDATE: `${API_BASE}/updatecontact`
   },
   CHAT: {
     CONVERSATIONS: `${API_BASE}/conversations`,

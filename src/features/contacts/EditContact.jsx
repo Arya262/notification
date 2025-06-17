@@ -42,7 +42,9 @@ export default function EditContact({ contact, closePopup, onSuccess }) {
         setCountryCodes(sorted);
         // Set the selected country based on contact's country code
         if (contact?.country_code) {
-          const matchingCountry = sorted.find(c => c.value === contact.country_code);
+          const matchingCountry = sorted.find(
+            (c) => c.value === contact.country_code
+          );
           if (matchingCountry) {
             setSelectedCountry(matchingCountry);
           }
@@ -80,20 +82,24 @@ export default function EditContact({ contact, closePopup, onSuccess }) {
 
     if (!validatePhoneNumber()) return;
 
+    const requestBody = {
+      contact_id: contact.contact_id,
+      customer_id: user.customer_id,
+      country_code: selectedCountry.value,
+      first_name: name.trim(),
+      mobile_no: phone.split(" ")[1],
+    };
+
+    console.log("📤 Sending update request:", requestBody);
+
     try {
-      const response = await fetch(API_ENDPOINTS.CONTACTS.UPDATE(contact.id), {
+      const response = await fetch(API_ENDPOINTS.CONTACTS.UPDATE, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({
-          country_code: selectedCountry.value,
-          first_name: name.trim(),
-          mobile_no: phone.split(" ")[1],
-          customer_id: user.customer_id,
-          is_active: optStatus === "Opted In" ? 1 : 0,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
@@ -149,4 +155,4 @@ export default function EditContact({ contact, closePopup, onSuccess }) {
       </button>
     </div>
   );
-} 
+}
