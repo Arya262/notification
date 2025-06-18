@@ -86,4 +86,4 @@ export default function SingleDeleteDialog({
       </div>
     </div>
   );
-} 
+}
