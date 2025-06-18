@@ -3,7 +3,7 @@ import OptStatusRadio from './OptStatusRadio';
 import NameInput from './NameInput';
 
 export default function SingleContactForm(props) {
-  const { name, setName } = props; // Assuming props includes name and setName
+  const { name, setName } = props; 
 
   return (
     <>

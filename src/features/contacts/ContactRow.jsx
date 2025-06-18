@@ -267,7 +267,7 @@ export default function ContactRow({
           <div ref={dropdownRef} className="flex justify-center">
             <button
               onClick={handleChat}
-              className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-3 py-2 rounded-full whitespace-nowrap mr-2"
+              className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-3 py-2 rounded-full whitespace-nowrap mr-2 cursor-pointer"
               aria-label={`Send message to ${contact.fullName}`}
             >
               <svg

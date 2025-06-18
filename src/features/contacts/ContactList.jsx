@@ -228,7 +228,7 @@ export default function ContactList() {
         `${API_ENDPOINTS.CONTACTS.GET_ALL}?customer_id=${user?.customer_id}`,
         {
           method: "GET",
-          credentials: "include", // 👈 Send cookies with the request
+          credentials: "include",
         }
       );
 
@@ -483,20 +483,18 @@ console.log("Final selected contact_ids:", selectedIds);
           <table className="w-full text-sm text-center overflow-hidden table-auto">
             <thead className="bg-[#F4F4F4] border-b-2 shadow-sm border-gray-300">
               <tr>
-                {!Object.values(selectedRows).some(Boolean) && (
-                  <th className="px-2 py-3 sm:px-6">
-                    <div className="flex items-center justify-center h-full">
-                      <input
-                        type="checkbox"
-                        className="form-checkbox w-4 h-4"
-                        checked={selectAll}
-                        onChange={handleSelectAllChange}
-                      />
-                    </div>
-                  </th>
-                )}
+                <th className="px-2 py-3 sm:px-6">
+                  <div className="flex items-center justify-center h-full">
+                    <input
+                      type="checkbox"
+                      className="form-checkbox w-4 h-4"
+                      checked={selectAll}
+                      onChange={handleSelectAllChange}
+                    />
+                  </div>
+                </th>
                 {Object.values(selectedRows).some(Boolean) && (
-                  <th colSpan="7" className="px-2 py-3 sm:px-6">
+                  <th colSpan="6" className="px-2 py-3 sm:px-6">
                     <div className="flex justify-center">
                       <button
                         onClick={handleDeleteClick}
