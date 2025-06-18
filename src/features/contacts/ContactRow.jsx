@@ -179,7 +179,7 @@ export default function ContactRow({
   const handleDeleteConfirm = async () => {
     try {
       setIsDeleting(true);
-      await onDelete(contact.id);
+      await onDelete(contact.contact_id);
     } catch (error) {
       console.error("Error deleting contact:", error);
     } finally {
