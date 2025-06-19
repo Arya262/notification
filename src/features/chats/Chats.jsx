@@ -18,6 +18,7 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [hasProcessedLocationState, setHasProcessedLocationState] = useState(false);
 
   const location = useLocation();
   const socket = useSocket();
@@ -107,7 +108,7 @@ const Chat = () => {
     if (location.state?.contact) {
       handleSelectContact(location.state.contact);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
   useEffect(() => {

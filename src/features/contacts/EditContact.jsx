@@ -15,10 +15,10 @@ export default function EditContact({ contact, closePopup, onSuccess }) {
   const [isTouched, setIsTouched] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
-    // Initialize form with contact data
     if (contact) {
       setName(contact.first_name || "");
       setPhone(`${contact.country_code || ""} ${contact.mobile_no || ""}`);
@@ -29,9 +29,7 @@ export default function EditContact({ contact, closePopup, onSuccess }) {
   useEffect(() => {
     const fetchCountryCodes = async () => {
       try {
-        const res = await fetch(
-          "https://countriesnow.space/api/v0.1/countries/codes"
-        );
+        const res = await fetch("https://countriesnow.space/api/v0.1/countries/codes");
         const data = await res.json();
         const sorted = data.data
           ?.map((c) => ({
@@ -40,11 +38,9 @@ export default function EditContact({ contact, closePopup, onSuccess }) {
           }))
           .sort((a, b) => a.label.localeCompare(b.label));
         setCountryCodes(sorted);
-        // Set the selected country based on contact's country code
+
         if (contact?.country_code) {
-          const matchingCountry = sorted.find(
-            (c) => c.value === contact.country_code
-          );
+          const matchingCountry = sorted.find((c) => c.value === contact.country_code);
           if (matchingCountry) {
             setSelectedCountry(matchingCountry);
           }
@@ -75,12 +71,18 @@ export default function EditContact({ contact, closePopup, onSuccess }) {
   };
 
   const handleSubmit = async () => {
+    setLoading(true);
+
     if (!user) {
       setErrorMessage("You must be logged in.");
+      setLoading(false);
       return;
     }
 
-    if (!validatePhoneNumber()) return;
+    if (!validatePhoneNumber()) {
+      setLoading(false);
+      return;
+    }
 
     const requestBody = {
       contact_id: contact.contact_id,
@@ -107,9 +109,7 @@ export default function EditContact({ contact, closePopup, onSuccess }) {
       if (data.success) {
         setSuccessMessage(data.message || "Contact updated successfully!");
         setErrorMessage("");
-        if (onSuccess) {
-          onSuccess();
-        }
+        if (onSuccess) onSuccess();
         closePopup();
       } else {
         setErrorMessage(data.message || "Failed to update contact.");
@@ -119,18 +119,21 @@ export default function EditContact({ contact, closePopup, onSuccess }) {
       console.error("API error:", err);
       setErrorMessage("An error occurred while updating the contact.");
       setSuccessMessage("");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl text-gray-500 p-6">
-      <h2 className="text-xl font-semibold mb-2 text-black">Edit Contact</h2>
+      <h2 className="text-xl font-semibold mb-2 text-black text-left">Update Contact</h2>
       <SuccessErrorMessage
         successMessage={successMessage}
         errorMessage={errorMessage}
       />
-      <p className="text-sm text-gray-600 mb-4">
-        Update the contact's information below.
+      <p className="text-sm text-gray-600 mb-4 text-left">
+        Keep your contact records up to date by modifying details, tags, and
+        phone numbers as needed.
       </p>
       <SingleContactForm
         phone={phone}
@@ -149,9 +152,12 @@ export default function EditContact({ contact, closePopup, onSuccess }) {
       />
       <button
         onClick={handleSubmit}
-        className="mt-4 bg-teal-600 text-white px-4 py-2 rounded mx-auto block"
+        disabled={loading}
+        className={`mt-4 px-4 py-2 rounded mx-auto block cursor-pointer ${
+          loading ? "bg-gray-400 cursor-not-allowed text-white" : "bg-teal-600 text-white"
+        }`}
       >
-        Update Contact
+        {loading ? "Updating..." : "Update"}
       </button>
     </div>
   );

@@ -85,10 +85,10 @@ const Templates = () => {
    
   };
 
-  const handleDelete = (id) => {
-    const newTemplates = templates.filter((template) => template.id !== id);
+  const handleDelete = (ids) => {
+    const idArray = Array.isArray(ids) ? ids : [ids];
+    const newTemplates = templates.filter((template) => !idArray.includes(template.id));
     setTemplates(newTemplates);
-    
   };
 
   return (

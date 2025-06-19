@@ -4,6 +4,10 @@ import ContactRow from "./ContactRow";
 import AddContact from "./Addcontact";
 import vendor from "../../assets/Vector.png";
 import { API_ENDPOINTS } from "../../config/api";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import EditContact from "./EditContact";
+import SingleDeleteDialog from "./SingleDeleteDialog";
 
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
@@ -97,14 +101,14 @@ const ConfirmationDialog = ({
         <div className="flex justify-end gap-3">
           <button
             onClick={cancelExit}
-            className="px-3 py-2 w-[70px] bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="px-3 py-2 w-[70px] bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
             aria-label="Cancel"
           >
             Cancel
           </button>
           <button
             onClick={confirmExit}
-            className="px-3 py-2 w-[70px] bg-teal-500 text-white rounded-md hover:bg-teal-500 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="px-3 py-2 w-[70px] bg-teal-500 text-white rounded-md hover:bg-teal-500 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
             aria-label="Confirm"
           >
             OK
@@ -221,6 +225,8 @@ export default function ContactList() {
   const [error, setError] = useState(null);
   const popupRef = useRef(null);
   const { user } = useAuth();
+  const [editContact, setEditContact] = useState(null);
+  const [deleteContact, setDeleteContact] = useState(null);
 
   const fetchContacts = async () => {
     try {
@@ -382,9 +388,32 @@ console.log("Final selected contact_ids:", selectedIds);
       // Reset selection
       setSelectedRows({});
       setSelectAll(false);
+
+      // Show success toast
+      const deletedCount = selectedIds.length;
+      toast.success(`${deletedCount} contact${deletedCount > 1 ? 's' : ''} deleted successfully!`, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "light",
+      });
     } catch (error) {
       console.error("Error deleting contacts:", error);
       setError(error.message || "Failed to delete contacts. Please try again.");
+      
+      // Show error toast
+      toast.error(error.message || "Failed to delete contacts. Please try again.", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "light",
+      });
     } finally {
       setIsDeleting(false);
     }
@@ -394,15 +423,10 @@ console.log("Final selected contact_ids:", selectedIds);
     try {
       setIsDeleting(true);
       setError(null);
-
       const payload = {
         contact_ids: [contact_id],
         customer_id: user?.customer_id,
       };
-
-      console.log("Sending DELETE request to:", API_ENDPOINTS.CONTACTS.DELETE);
-      console.log("Request payload:", payload);
-
       const response = await fetch(`${API_ENDPOINTS.CONTACTS.DELETE}`, {
         method: "DELETE",
         headers: {
@@ -411,22 +435,35 @@ console.log("Final selected contact_ids:", selectedIds);
         credentials: "include",
         body: JSON.stringify(payload),
       });
-
       const data = await response.json();
-      console.log("Response status:", response.status);
-      console.log("Response data:", data);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to delete contact");
       }
-
-      // Refresh the contacts list
       await fetchContacts();
+      toast.success("Contact deleted successfully!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "light",
+      });
     } catch (error) {
-      console.error("Error deleting contact:", error);
       setError(error.message || "Failed to delete contact. Please try again.");
+      toast.error(error.message || "Failed to delete contact. Please try again.", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "light",
+      });
     } finally {
       setIsDeleting(false);
+      setDeleteContact(null);
     }
   };
 
@@ -456,7 +493,7 @@ console.log("Final selected contact_ids:", selectedIds);
               <button
                 key={btn}
                 onClick={() => setFilter(btn)}
-                className={`px-4 py-2 min-h-[40px] rounded-md text-sm font-medium transition 
+                className={`px-4 py-2 min-h-[40px] rounded-md text-sm font-medium transition cursor-pointer 
                   ${
                     filter === btn
                       ? "bg-[#05a3a3] text-white"
@@ -552,8 +589,8 @@ console.log("Final selected contact_ids:", selectedIds);
                     contact={contact}
                     isChecked={!!selectedRows[idx]}
                     onCheckboxChange={(e) => handleCheckboxChange(idx, e)}
-                    onDelete={handleSingleContactDelete}
-                    onEdit={handleContactEdit}
+                    onEditClick={setEditContact}
+                    onDeleteClick={setDeleteContact}
                   />
                 ))
               )}
@@ -580,7 +617,7 @@ console.log("Final selected contact_ids:", selectedIds);
           >
             <button
               onClick={handleCloseAndNavigate}
-              className={`absolute top-2 right-4 text-gray-600 hover:text-black text-3xl font-bold w-8 h-8 flex items-center justify-center pb-2 rounded-full transition-colors ${
+              className={`absolute top-2 right-4 text-gray-600 hover:text-black text-3xl font-bold w-8 h-8 flex items-center justify-center pb-2 rounded-full transition-colors cursor-pointer ${
                 isCrossHighlighted
                   ? "bg-red-500 text-white hover:text-white"
                   : "bg-gray-100"
@@ -605,6 +642,44 @@ console.log("Final selected contact_ids:", selectedIds);
         cancelExit={cancelExit}
         confirmExit={confirmExit}
       />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+      {editContact && (
+        <div className="fixed inset-0 bg-white/40 flex items-center justify-center z-50 transition-all duration-300">
+          <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto relative sm:animate-slideUp border border-gray-300 transition-all duration-300">
+            <button
+              onClick={() => setEditContact(null)}
+              className="absolute top-2 right-4 text-gray-600 hover:text-black text-3xl font-bold w-8 h-8 flex items-center justify-center pb-2 rounded-full transition-colors bg-gray-100"
+            >
+              ×
+            </button>
+            <EditContact
+              contact={editContact}
+              closePopup={() => setEditContact(null)}
+              onSuccess={handleContactEdit}
+            />
+          </div>
+        </div>
+      )}
+      {deleteContact && (
+        <SingleDeleteDialog
+          showDialog={!!deleteContact}
+          contactName={deleteContact.fullName}
+          onCancel={() => setDeleteContact(null)}
+          onConfirm={() => handleSingleContactDelete(deleteContact.contact_id)}
+          isDeleting={isDeleting}
+        />
+      )}
     </div>
   );
 }

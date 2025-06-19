@@ -16,10 +16,13 @@ export default function AddContact({ closePopup }) {
   const [countryCodes, setCountryCodes] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [phoneError, setPhoneError] = useState("");
+  const [groupNameError, setGroupNameError] = useState("");
   const [isTouched, setIsTouched] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
+  const [fieldMapping, setFieldMapping] = useState({});
 
   useEffect(() => {
     const fetchCountryCodes = async () => {
@@ -69,79 +72,117 @@ export default function AddContact({ closePopup }) {
     return true;
   };
 
-  const handleSubmit = () => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    
+  const validateGroupName = () => {
+    if (tab === "bulk" && !groupName.trim()) {
+      setGroupNameError("Group name is required for bulk upload.");
+      return false;
+    }
+    if (tab === "bulk" && groupName.trim().length < 2) {
+      setGroupNameError("Group name must be at least 2 characters long.");
+      return false;
+    }
+    if (tab === "bulk" && groupName.trim().length > 50) {
+      setGroupNameError("Group name must be less than 50 characters.");
+      return false;
+    }
+    setGroupNameError("");
+    return true;
+  };
+
+  const clearBulkData = () => {
+    setFile(null);
+    setGroupName("");
+    setGroupNameError("");
+  };
+
+  const handleTabChange = (newTab) => {
+    if (newTab === "single" && tab === "bulk") {
+      clearBulkData();
+    }
+    setTab(newTab);
+  };
+
+  const handleSubmit = async () => {
+    // Validate based on current tab
+    if (tab === "single") {
+      if (!validatePhoneNumber()) return;
+    } else if (tab === "bulk") {
+      if (!validateGroupName()) return;
+      if (!file) {
+        setErrorMessage("Please provide a CSV file.");
+        setSuccessMessage("");
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
 
     if (!user) {
       alert("You must be logged in.");
+      setIsSubmitting(false);
       return;
     }
 
-    if (tab === "single") {
-      if (!validatePhoneNumber()) return;
-
-      fetch(API_ENDPOINTS.CONTACTS.ADD_SINGLE, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // ✅ include cookies
-        body: JSON.stringify({
-          country_code: selectedCountry.value,
-          first_name: name.trim(), // ✅ fixed typo
-          mobile_no: phone.split(" ")[1],
-          customer_id: user.customer_id, // ✅ dynamic ID
-        }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success) {
-            setSuccessMessage(data.message || "Contact added successfully!");
-            setErrorMessage("");
-            closePopup();
-          } else {
-            setErrorMessage(data.message || "Failed to add contact.");
-            setSuccessMessage("");
-          }
-        })
-        .catch((err) => {
-          console.error("API error:", err);
-          setErrorMessage("An error occurred.");
-          setSuccessMessage("");
-        });
-    } else {
-      if (file) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("customer_id", user.customer_id); // ✅ dynamic ID
-        formData.append("group_name", groupName.trim());
-
-        fetch(API_ENDPOINTS.CONTACTS.ADD_MULTIPLE, {
+    try {
+      if (tab === "single") {
+        const response = await fetch(API_ENDPOINTS.CONTACTS.ADD_SINGLE, {
           method: "POST",
-          credentials: "include", // ✅ required
-          body: formData,
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.success) {
-              setSuccessMessage(data.message || "Contacts imported from file!");
-              setErrorMessage("");
-              closePopup();
-            } else {
-              setErrorMessage(data.message || "Failed to import from file.");
-              setSuccessMessage("");
-            }
-          })
-          .catch((err) => {
-            console.error("Import from file failed:", err);
-            setErrorMessage("An error occurred while importing from file.");
-            setSuccessMessage("");
-          });
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            country_code: selectedCountry.value,
+            first_name: name.trim(),
+            mobile_no: phone.split(" ")[1],
+            customer_id: user.customer_id,
+          }),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          setSuccessMessage(data.message || "Contact added successfully!");
+          setErrorMessage("");
+          closePopup();
+        } else {
+          setErrorMessage(data.message || "Failed to add contact.");
+          setSuccessMessage("");
+        }
       } else {
-        setErrorMessage("Please provide a CSV file.");
-        setSuccessMessage("");
+const formData = new FormData();
+formData.append("file", file);
+formData.append("customer_id", user.customer_id);
+formData.append("group_name", groupName.trim());
+formData.append("field_mapping", JSON.stringify(fieldMapping)); // 👈 include this
+
+// 🔍 Log FormData before sending
+console.log("📤 Submitting FormData:");
+for (let [key, value] of formData.entries()) {
+  console.log(`${key}:`, value);
+}
+
+        const response = await fetch(API_ENDPOINTS.CONTACTS.ADD_MULTIPLE, {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          setSuccessMessage(data.message || "Contacts imported from file!");
+          setErrorMessage("");
+          closePopup();
+        } else {
+          setErrorMessage(data.message || "Failed to import from file.");
+          setSuccessMessage("");
+        }
       }
+    } catch (error) {
+      console.error("API error:", error);
+      setErrorMessage("An error occurred.");
+      setSuccessMessage("");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -158,7 +199,7 @@ export default function AddContact({ closePopup }) {
           Learn more
         </a>
       </p>
-      <ContactTabs tab={tab} setTab={setTab} />
+      <ContactTabs tab={tab} setTab={handleTabChange} />
       {tab === "single" && (
         <SingleContactForm
           phone={phone}
@@ -182,13 +223,24 @@ export default function AddContact({ closePopup }) {
           setFile={setFile}
           groupName={groupName}
           setGroupName={setGroupName}
+          groupNameError={groupNameError}
+           fieldMapping={fieldMapping}
+  setFieldMapping={setFieldMapping}
         />
       )}
       <button
         onClick={handleSubmit}
-        className="mt-4 bg-teal-600 text-white px-4 py-2 rounded mx-auto block"
+        disabled={isSubmitting}
+        className="mt-4 bg-teal-600 text-white px-4 py-2 rounded mx-auto block cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
       >
-        Add Contact
+        {isSubmitting ? (
+          <>
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>Adding...</span>
+          </>
+        ) : (
+          "Add Contact"
+        )}
       </button>
     </div>
   );

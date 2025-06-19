@@ -19,6 +19,18 @@ export default function Header({ isMenuOpen, onToggleSidebar }) {
     setSearchTerm("");
   };
 
+  const notify = (type, message) => {
+    toast[type](message, {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      theme: "light",
+    });
+  };
+
   const handleLogout = async () => {
     try {
       const response = await axios.post(API_ENDPOINTS.AUTH.LOGOUT, {}, {
@@ -28,62 +40,27 @@ export default function Header({ isMenuOpen, onToggleSidebar }) {
       const data = response.data;
 
       if (data.success) {
-        toast.success("Successfully logged out!", {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          theme: "light",
-        });
+        notify("success", "Successfully logged out!");
         navigate("/login");
       } else {
-        toast.error("Logout failed. Please try again.", {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          theme: "light",
-        });
+        notify("error", "Logout failed. Please try again.");
       }
     } catch (error) {
       console.error("Logout error:", error);
-      toast.error("Something went wrong. Please try again later.", {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        theme: "light",
-      });
+      notify("error", "Something went wrong. Please try again later.");
     }
   };
 
   return (
     <>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
-      <header className="flex flex-wrap justify-between items-center px-4 py-4  shadow-md bg-white relative gap-y-2">
+      <ToastContainer />
+      <header className="sticky top-0 z-50 flex flex-wrap justify-between items-center px-4 py-4 shadow-md bg-white relative gap-y-2">
         {/* Left Side */}
         <div className="flex items-center gap-2">
           <button
             onClick={onToggleSidebar}
             className="lg:hidden p-2 rounded-md hover:bg-gray-100"
-            aria-label="Toggle Menu"
+            aria-label="Toggle Sidebar"
           >
             {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
@@ -109,6 +86,7 @@ export default function Header({ isMenuOpen, onToggleSidebar }) {
             <input
               type="text"
               placeholder="Search"
+              aria-label="Search"
               value={searchTerm}
               onChange={handleSearchChange}
               className="pl-10 pr-8 py-2 w-full rounded-full bg-[#f0f2f5] text-sm placeholder-gray-500 outline-none focus:ring-2 focus:ring-[#05a3a3]"
@@ -117,6 +95,7 @@ export default function Header({ isMenuOpen, onToggleSidebar }) {
               <button
                 onClick={handleClearSearch}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 focus:outline-none"
+                aria-label="Clear search"
               >
                 &times;
               </button>
@@ -126,14 +105,16 @@ export default function Header({ isMenuOpen, onToggleSidebar }) {
           {/* Buttons */}
           <button
             type="button"
-            className="bg-[#05a3a3] text-white text-sm px-4 h-10 flex items-center justify-center rounded whitespace-nowrap cursor-pointer"
+            aria-label="Upgrade account"
+            className="bg-[#05a3a3] hover:bg-[#048080] text-white text-sm px-4 h-10 flex items-center justify-center rounded whitespace-nowrap cursor-pointer transition-colors"
           >
             Upgrade
           </button>
           <button
             type="button"
             onClick={handleLogout}
-            className="bg-[#05a3a3] text-white text-sm px-4 h-10 flex items-center justify-center rounded whitespace-nowrap cursor-pointer"
+            aria-label="Logout"
+            className="bg-[#05a3a3] hover:bg-[#048080] text-white text-sm px-4 h-10 flex items-center justify-center rounded whitespace-nowrap cursor-pointer transition-colors"
           >
             Logout
           </button>
