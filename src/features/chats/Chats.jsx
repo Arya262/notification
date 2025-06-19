@@ -18,6 +18,7 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [hasProcessedLocationState, setHasProcessedLocationState] = useState(false);
 
   const location = useLocation();
   const socket = useSocket();
@@ -112,11 +113,33 @@ const Chat = () => {
 
   useEffect(() => {
     fetchContacts();
-    if (location.state?.contact) {
-      handleSelectContact(location.state.contact);
+  }, []);
+
+  // Handle contact selection from navigation state after contacts are loaded
+  useEffect(() => {
+    if (location.state?.contact && contacts.length > 0 && !hasProcessedLocationState) {
+      // Check if the contact already exists in the contacts list
+      const existingContact = contacts.find(
+        (c) => c.conversation_id === location.state.contact.conversation_id
+      );
+      
+      if (existingContact) {
+        // Use the existing contact from the list (which has more complete data)
+        handleSelectContact(existingContact);
+      } else {
+        // Use the contact from navigation state
+        handleSelectContact(location.state.contact);
+      }
+      
+      // Mark that we've processed the location state
+      setHasProcessedLocationState(true);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.state]);
+  }, [location.state, contacts, hasProcessedLocationState]);
+
+  // Reset the flag when location changes (user navigates to a different route)
+  useEffect(() => {
+    setHasProcessedLocationState(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {

@@ -68,7 +68,7 @@ const ExploreTemplates = () => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Explore Templates</h2>
         <button
-          className="bg-teal-500 hover:bg-teal-600 text-white flex items-center gap-2 px-4 py-2 rounded"
+          className="bg-teal-500 text-white flex items-center gap-2 px-4 py-2 rounded cursor-pointer"
           onClick={() => setIsModalOpen(true)}
         >
           <img src={vendor} alt="plus sign" className="w-5 h-5" />
@@ -125,7 +125,7 @@ const ExploreTemplates = () => {
                   })
                 }
                 className="bg-teal-500 text-black px-6 py-3 font-medium rounded 
-                  border border-teal-500 hover:bg-teal-400 hover:text-white hover:border-teal-400 transition duration-300 ease-in-out"
+                  border border-teal-500 hover:bg-teal-400 hover:text-white hover:border-teal-400 transition duration-300 ease-in-out cursor-pointer"
               >
                 Send Template
               </button>

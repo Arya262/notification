@@ -1,17 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CloudUpload } from "lucide-react";
 
-const EXPECTED_FIELDS = ["Name", "Mobile", "Opt-In", "Tags"];
+const EXPECTED_FIELDS = ["Name", "Mobile", "Country", "Tags"];
 
 export default function BulkContactForm({
   setFile,
   file,
   groupName,
   setGroupName,
+  groupNameError,
+    fieldMapping,
+  setFieldMapping,
 }) {
   const [csvHeaders, setCsvHeaders] = useState([]);
-  const [fieldMapping, setFieldMapping] = useState({});
+  // const [fieldMapping, setFieldMapping] = useState({});
   const [isDragging, setIsDragging] = useState(false);
+
+  // Clear internal state when file is cleared from parent
+  useEffect(() => {
+    if (!file) {
+      setCsvHeaders([]);
+      setFieldMapping({});
+    }
+  }, [file]);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -20,12 +31,15 @@ export default function BulkContactForm({
       return;
     }
 
+    console.log("📁 Selected file:", selectedFile);
     setFile(selectedFile);
 
     const reader = new FileReader();
     reader.onload = (event) => {
       let text = event.target.result;
       if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+
+      console.log("📄 Raw CSV text:", text);
 
       const lines = text.split(/\r?\n/);
       const headersLine = lines[0];
@@ -46,7 +60,20 @@ export default function BulkContactForm({
         return;
       }
 
+      console.log("🧠 Parsed headers:", headers);
       setCsvHeaders(headers);
+
+      const dataRows = lines.slice(1).filter((line) => line.trim() !== "");
+      const csvData = dataRows.map((line) => {
+        const values = line.split(",");
+        const rowObj = {};
+        headers.forEach((header, i) => {
+          rowObj[header] = values[i] || "";
+        });
+        return rowObj;
+      });
+
+      console.log("📊 First 5 rows preview:", csvData.slice(0, 5));
 
       const defaultMapping = {};
       EXPECTED_FIELDS.forEach((field) => {
@@ -55,6 +82,8 @@ export default function BulkContactForm({
         );
         if (match) defaultMapping[field] = match;
       });
+
+      console.log("🗺️ Auto-mapped fields:", defaultMapping);
       setFieldMapping(defaultMapping);
     };
 
@@ -62,6 +91,7 @@ export default function BulkContactForm({
   };
 
   const handleMappingChange = (expectedField, selectedColumn) => {
+    console.log(`📝 Field mapping changed: ${expectedField} → ${selectedColumn}`);
     setFieldMapping((prev) => ({
       ...prev,
       [expectedField]: selectedColumn,
@@ -80,8 +110,13 @@ export default function BulkContactForm({
           placeholder="Enter group name"
           value={groupName}
           onChange={(e) => setGroupName(e.target.value)}
-          className="w-full border border-gray-300 p-2 rounded-md text-gray-700"
+          className={`w-full border p-2 rounded-md text-gray-700 ${
+            groupNameError ? "border-red-500" : "border-gray-300"
+          }`}
         />
+        {groupNameError && (
+          <p className="text-red-500 text-sm mt-1">{groupNameError}</p>
+        )}
       </div>
 
       {/* File Upload with drag & drop */}

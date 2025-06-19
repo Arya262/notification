@@ -1,7 +1,7 @@
 export default function NameInput({ name, setName }) {
   return (
     <div className="mb-6">
-      <label className="block text-sm font-medium mb-2 text-gray-700">Name</label>
+      <label className="block text-sm font-medium mb-2 text-gray-700 text-start">Name</label>
       <input
         type="text"
         placeholder="Enter name"

@@ -1,7 +1,7 @@
 export default function OptStatusRadio({ optStatus, setOptStatus }) {
   return (
     <div className="mb-6">
-      <label className="block text-sm font-medium mb-2 text-gray-700">Opt Status</label>
+      <label className="block text-sm font-medium mb-2 text-gray-700 text-start">Opt Status</label>
       <div className="flex space-x-6">
         {['Opted In', 'Opted Out'].map((status) => (
           <label key={status} className="inline-flex items-center">

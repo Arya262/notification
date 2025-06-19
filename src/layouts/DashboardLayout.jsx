@@ -23,14 +23,6 @@ const DashboardLayout = () => {
           className="overflow-y-auto"
         />
 
-        {/* Mobile backdrop */}
-        {/* {isMenuOpen && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-30 z-30 lg:hidden"
-            onClick={() => setIsMenuOpen(false)}
-          />
-        )} */}
-
         <main
           className={`flex-1 p-2.5 bg-white ${
             isChatRoute ? "overflow-hidden" : "overflow-y-auto"

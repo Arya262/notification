@@ -18,7 +18,7 @@ export default function PhoneInput({
 
   return (
     <div className="mb-6">
-      <label className="block text-sm font-medium mb-2 text-gray-700">Phone Number</label>
+      <label className="block text-sm font-medium mb-2 text-gray-700 text-start">Phone Number</label>
       <div className="flex">
         <Select
           value={selectedCountry}
@@ -74,7 +74,7 @@ export default function PhoneInput({
         />
       </div>
       {phoneError && <p className="text-xs text-red-500 mt-1">{phoneError}</p>}
-      <p className="text-xs text-gray-500 mt-1">
+      <p className="text-xs text-gray-500 mt-1 text-start">
         Provide the contact's mobile number, making sure to include the correct country code (e.g., +1, +91).
       </p>
     </div>

@@ -56,58 +56,76 @@ const Sidebar = ({ isOpen, setIsOpen, className = "" }) => {
     }
   }, [location.pathname]);
 
+  const handleNavClick = () => {
+    if (window.innerWidth < 1024) {
+      setIsOpen(false);
+    }
+  };
+
   return (
     <div
       ref={sidebarRef}
       role="navigation"
       aria-label="Main sidebar"
-      className={`fixed top-16 left-0 h-screen w-64 bg-white z-40 transition-transform duration-300 ease-in-out
-        ${isOpen ? "translate-x-0" : "-translate-x-full"} 
-        mt-14 md:mt-2 lg:mt-0
-        lg:relative lg:translate-x-0 lg:top-auto lg:left-auto lg:h-auto
-        shadow-[0px_4px_4px_0px_#00000040] lg:sticky ${className}`}
+      tabIndex={-1}
+      className={`
+        fixed top-0 left-0 z-50
+        w-64 h-screen
+        bg-[#0E1A2F] text-white
+        flex flex-col
+        transition-transform duration-300 ease-in-out
+        ${isOpen ? "translate-x-0" : "-translate-x-full"}
+        lg:relative lg:translate-x-0 lg:top-0 lg:h-auto
+        lg:bg-white lg:text-black
+        shadow-lg lg:shadow-none
+        ${className}
+      `}
     >
-      <div className="h-full overflow-y-auto p-4">
-        <div className="flex flex-col gap-4 ">
-          {menuItems.map((item) =>
-            item.submenu ? (
-              <SidebarSubMenu
-                key={item.name}
-                isOpen={isOpen}
-                setIsOpen={setIsOpen}
-              />
-            ) : (
-              <NavLink
-                key={item.name}
-                to={item.path}
-                onClick={() => window.innerWidth < 1024 && setIsOpen(false)}
-                className={({ isActive }) =>
-                  `group flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-base shadow-sm transition-all duration-200 
-                  ${
-                    isActive
-                      ? "bg-teal-500 text-white"
-                      : "bg-white text-black hover:bg-gray-100"
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <span
-                      className={`w-5 h-5 flex items-center justify-center ${
-                        isActive
-                          ? "text-white"
-                          : "text-gray-600 group-hover:text-teal-500"
-                      }`}
-                    >
-                      {item.icon}
-                    </span>
-                    <span>{item.name}</span>
-                  </>
-                )}
-              </NavLink>
-            )
-          )}
-        </div>
+      {/* Logo/Header (non-scrollable) */}
+      <div className="px-4 py-5 border-b border-white/10 lg:hidden shrink-0">
+        <img src="/logo.png" alt="Logo" className="h-8" />
+      </div>
+
+      {/* Scrollable content area only */}
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+        {menuItems.map((item) =>
+          item.submenu ? (
+            <SidebarSubMenu
+              key={item.name}
+              isOpen={isOpen}
+              setIsOpen={setIsOpen}
+            />
+          ) : (
+            <NavLink
+              key={item.name}
+              to={item.path}
+              onClick={handleNavClick}
+              className={({ isActive }) =>
+                `group flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-base shadow-sm transition-all duration-200 
+                ${
+                  isActive
+                    ? "bg-teal-500 text-white"
+                    : "bg-white text-black hover:bg-gray-100"
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <span
+                    className={`w-5 h-5 flex items-center justify-center ${
+                      isActive
+                        ? "text-white"
+                        : "text-gray-600 group-hover:text-teal-500"
+                    }`}
+                  >
+                    {item.icon}
+                  </span>
+                  <span>{item.name}</span>
+                </>
+              )}
+            </NavLink>
+          )
+        )}
       </div>
     </div>
   );

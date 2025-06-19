@@ -1,20 +1,17 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { HiDotsVertical } from "react-icons/hi";
 import { IoSearch } from "react-icons/io5";
-import ActionMenu from "../broadcast/components/ActionMenu";
 import { useNavigate } from "react-router-dom";
 import DeleteConfirmationDialog from "../shared/DeleteConfirmationDialog";
 
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
-
   const date = new Date(dateString);
   const formattedDate = date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "2-digit",
   });
-
   const hasTime = date.getHours() !== 0 || date.getMinutes() !== 0;
   if (hasTime) {
     const formattedTime = date.toLocaleTimeString("en-US", {
@@ -39,11 +36,13 @@ const Table = ({ templates = [], onDelete, onEdit }) => {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [localTemplates, setLocalTemplates] = useState([]);
   const [menuOpen, setMenuOpen] = useState(null);
-  const [shouldFlipUp, setShouldFlipUp] = useState(false);
+  const [shouldFlipUp, setShouldFlipUp] = useState({});
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const dropdownRef = useRef(null);
+  const [selectedRows, setSelectedRows] = useState({});
+  const [selectAll, setSelectAll] = useState(false);
+  const dropdownRefs = useRef({});
   const rowRefs = useRef({});
 
   useEffect(() => {
@@ -68,6 +67,13 @@ const Table = ({ templates = [], onDelete, onEdit }) => {
     };
   }, [localTemplates]);
 
+  const filters = [
+    { label: "All", count: filteredCounts.all },
+    { label: "Approved", count: filteredCounts.approved },
+    { label: "Pending", count: filteredCounts.pending },
+    { label: "Failed", count: filteredCounts.failed },
+  ];
+
   const statusFilteredTemplates = useMemo(() => {
     if (activeFilter === "All") return localTemplates;
     return localTemplates.filter(
@@ -84,22 +90,75 @@ const Table = ({ templates = [], onDelete, onEdit }) => {
     );
   }, [statusFilteredTemplates, searchTerm]);
 
-  const filters = [
-    { label: "All", count: filteredCounts.all },
-    { label: "Approved", count: filteredCounts.approved },
-    { label: "Pending", count: filteredCounts.pending },
-    { label: "Failed", count: filteredCounts.failed },
-  ];
+  // Selection logic
+  useEffect(() => {
+    const total = displayedTemplates.length;
+    const selected = Object.values(selectedRows).filter(Boolean).length;
+    setSelectAll(selected === total && total > 0);
+  }, [selectedRows, displayedTemplates.length]);
+
+  const handleSelectAllChange = (event) => {
+    const checked = event.target.checked;
+    setSelectAll(checked);
+    const newSelected = {};
+    if (checked) {
+      displayedTemplates.forEach((_, idx) => {
+        newSelected[idx] = true;
+      });
+    }
+    setSelectedRows(newSelected);
+  };
+
+  const handleCheckboxChange = (idx, event) => {
+    setSelectedRows((prev) => ({
+      ...prev,
+      [idx]: event.target.checked,
+    }));
+  };
+
+  const handleDeleteSelected = async () => {
+    const selectedIds = Object.entries(selectedRows)
+      .filter(([_, isSelected]) => isSelected)
+      .map(([idx]) => displayedTemplates[idx]?.id)
+      .filter(Boolean);
+    if (selectedIds.length === 0) return;
+    setIsDeleting(true);
+    try {
+      await onDelete(selectedIds);
+      setSelectedRows({});
+      setSelectAll(false);
+    } catch (e) {
+      // handle error
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const toggleMenu = (index) => {
-    setMenuOpen(menuOpen === index ? null : index);
+    if (menuOpen === index) {
+      setMenuOpen(null);
+      return;
+    }
+    setMenuOpen(index);
+    // Calculate if dropdown should flip up
+    const rowEl = rowRefs.current[index];
+    const dropdownEl = dropdownRefs.current[index];
+    if (rowEl) {
+      const rect = rowEl.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      // Estimate dropdown height (or use actual if available)
+      const dropdownHeight = dropdownEl ? dropdownEl.offsetHeight : 120;
+      const spaceBelow = windowHeight - rect.bottom;
+      setShouldFlipUp((prev) => ({ ...prev, [index]: spaceBelow < dropdownHeight }));
+    }
   };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setMenuOpen(null);
-      }
+      // Check all dropdown refs
+      const refs = Object.values(dropdownRefs.current);
+      if (refs.some(ref => ref && ref.contains(event.target))) return;
+      setMenuOpen(null);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -113,14 +172,15 @@ const Table = ({ templates = [], onDelete, onEdit }) => {
 
   const handleDeleteConfirm = async () => {
     if (!selectedTemplate) return;
-
     try {
       setIsDeleting(true);
+      console.log('Deleting template:', selectedTemplate);
+      console.log('Deleting template id:', selectedTemplate.id);
       await onDelete(selectedTemplate.id);
       setShowDeleteDialog(false);
       setSelectedTemplate(null);
     } catch (error) {
-      console.error("Error deleting template:", error);
+      // handle error
     } finally {
       setIsDeleting(false);
     }
@@ -148,7 +208,6 @@ const Table = ({ templates = [], onDelete, onEdit }) => {
               Templates List
             </p>
           </div>
-
           <div className="flex items-center gap-2 sm:gap-3 flex-grow w-full">
             <div className="sm:hidden w-full overflow-x-scroll scrollbar-hide">
               <div className="flex items-center gap-2 scroll-snap-x-mandatory">
@@ -156,17 +215,12 @@ const Table = ({ templates = [], onDelete, onEdit }) => {
                   <button
                     key={i}
                     className={`px-4 py-2 min-h-[40px] rounded-md text-sm font-medium transition 
-                                            ${
-                                              activeFilter === f.label
-                                                ? "bg-[#05a3a3] text-white"
-                                                : "text-gray-700 hover:text-[#05a3a3]"
-                                            }`}
+                      ${activeFilter === f.label ? "bg-[#05a3a3] text-white" : "text-gray-700 hover:text-[#05a3a3]"}`}
                     onClick={() => setActiveFilter(f.label)}
                   >
                     {f.label} ({f.count})
                   </button>
                 ))}
-
                 <div className="flex items-center">
                   <button
                     onClick={() => setShowMobileSearch((prev) => !prev)}
@@ -178,24 +232,18 @@ const Table = ({ templates = [], onDelete, onEdit }) => {
                 </div>
               </div>
             </div>
-
             <div className="hidden sm:flex items-center gap-2 flex-shrink-0 overflow-x-auto">
               {filters.map((f, i) => (
                 <button
                   key={i}
                   className={`px-4 py-2 min-h-[40px] rounded-md text-sm font-medium transition 
-                                        ${
-                                          activeFilter === f.label
-                                            ? "bg-[#05a3a3] text-white"
-                                            : "text-gray-700 hover:text-[#05a3a3]"
-                                        }`}
+                    ${activeFilter === f.label ? "bg-[#05a3a3] text-white" : "text-gray-700 hover:text-[#05a3a3]"}`}
                   onClick={() => setActiveFilter(f.label)}
                 >
                   {f.label} ({f.count})
                 </button>
               ))}
             </div>
-
             <div className="hidden sm:block flex-grow max-w-[400px] relative ml-auto">
               <IoSearch className="absolute right-2 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -207,7 +255,6 @@ const Table = ({ templates = [], onDelete, onEdit }) => {
               />
             </div>
           </div>
-
           {showMobileSearch && (
             <div className="sm:hidden w-full px-2 mt-2">
               <div className="relative">
@@ -223,148 +270,180 @@ const Table = ({ templates = [], onDelete, onEdit }) => {
             </div>
           )}
         </div>
-
-        <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-          <table className="min-w-[800px] w-full text-sm sm:text-base text-center ">
-            <thead className="bg-gray-100 border-b-2 border-gray-200 font-medium text-gray-700">
-              <tr>
-                <th className="py-4 px-4 text-nowrap">Date</th>
-                <th className="py-4 px-4 text-nowrap">Template Name</th>
-                <th className="py-4 px-4 text-nowrap">Type</th>
-                <th className="py-4 px-4 text-nowrap">Message Type</th>
-                <th className="py-4 px-4 text-nowrap">Status</th>
-                <th className="py-4 px-4 text-nowrap">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {displayedTemplates.length === 0 ? (
+        <div className="overflow-x-auto">
+          <div className="min-w-[900px] bg-white rounded-2xl shadow-[0px_-0.91px_3.66px_0px_#00000042] overflow-hidden">
+            <table className="w-full text-sm text-center overflow-hidden table-auto">
+              <thead className="bg-[#F4F4F4] border-b-2 shadow-sm border-gray-300">
                 <tr>
-                  <td colSpan="6" className="text-center py-4 text-gray-500">
-                    No templates found.
-                  </td>
-                </tr>
-              ) : (
-                displayedTemplates.map((template, index) => (
-                  <tr
-                    key={template.id || index}
-                    ref={(el) => (rowRefs.current[index] = el)}
-                    className="border-b border-[#C3C3C3] hover:bg-gray-50"
-                  >
-                    <td className="py-4 px-4">
-                      {formatDate(template.created_on)}
-                    </td>
-                    <td className="py-4 px-4">
-                      {template?.element_name || "-"}
-                    </td>
-                    <td className="py-4 px-4">
-                      {template?.template_type
-                        ? template.template_type.charAt(0).toUpperCase() +
-                          template.template_type.slice(1)
-                        : "-"}
-                    </td>
-                    <td className="py-4 px-4">
-                      {template.category
-                        ? template.category.charAt(0).toUpperCase() +
-                          template.category.slice(1)
-                        : "-"}
-                    </td>
-                    <td className="py-4 px-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          template.status?.toLowerCase() === "approved"
-                            ? "bg-green-100 text-green-800"
-                            : template.status?.toLowerCase() === "pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {template.status}
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <div
-                        className="flex justify-center items-center gap-2 relative"
-                        ref={dropdownRef}
-                      >
-                        {/* Send Message Button */}
+                  <th className="px-2 py-3 sm:px-6">
+                    <div className="flex items-center justify-center h-full">
+                      <input
+                        type="checkbox"
+                        className="form-checkbox w-4 h-4"
+                        checked={selectAll}
+                        onChange={handleSelectAllChange}
+                      />
+                    </div>
+                  </th>
+                  {Object.values(selectedRows).some(Boolean) && (
+                    <th colSpan="6" className="px-2 py-3 sm:px-6">
+                      <div className="flex justify-center">
                         <button
-                          onClick={() =>
-                            navigate("/broadcast", {
-                              state: {
-                                selectedTemplate: template,
-                                openForm: true,
-                              },
-                            })
-                          }
-                          className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-3 py-2 rounded-full whitespace-nowrap"
-                          aria-label={`Send message to ${template.element_name}`}
+                          onClick={handleDeleteSelected}
+                          disabled={isDeleting}
+                          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
                         >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-4 h-4 transform rotate-45"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M5 12h14M12 5l7 7-7 7"
-                            />
-                          </svg>
-                          <span className="text-sm font-medium">
-                            Send Message
-                          </span>
+                          Delete Selected
                         </button>
-
-                        <button
-                          onClick={() => toggleMenu(index)}
-                          className="p-2 rounded-full hover:bg-gray-100 focus:outline-none"
-                          aria-label="Template options"
-                        >
-                          <svg
-                            className="w-5 h-5 text-[#000]"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            strokeWidth={2}
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M12 5v.01M12 12v.01M12 19v.01"
-                            />
-                          </svg>
-                        </button>
-
-                        {menuOpen === index && (
-                          <div
-                            className={`absolute right-0 ${
-                              shouldFlipUp ? "bottom-12" : "top-12"
-                            } w-44 bg-white border border-gray-200 rounded-md shadow-lg z-20`}
-                          >
-                            <button
-                              onClick={() => handleEditClick(template)}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteClick(template)}
-                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        )}
                       </div>
+                    </th>
+                  )}
+                  {!Object.values(selectedRows).some(Boolean) && (
+                    <>
+                      <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
+                        Created Date
+                      </th>
+                      <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
+                        Status
+                      </th>
+                      <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
+                        Template Name
+                      </th>
+                      <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
+                        Type
+                      </th>
+                      <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
+                        Message Type
+                      </th>
+                      <th className="px-2 py-3 sm:px-6 text-center text-[12px] sm:text-[16px] font-semibold font-sans text-gray-700">
+                        Action
+                      </th>
+                    </>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="max-h-[calc(100vh-300px)] overflow-y-auto">
+                {displayedTemplates.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="text-center py-4 text-gray-500">
+                      No templates found.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  displayedTemplates.map((template, idx) => (
+                    <tr
+                      key={template.id || idx}
+                      ref={(el) => (rowRefs.current[idx] = el)}
+                      className="border-t border-b border-b-[#C3C3C3] hover:bg-gray-50 text-md"
+                    >
+                      <td className="px-2 py-4 sm:px-4">
+                        <div className="flex items-center justify-center h-full">
+                          <input
+                            type="checkbox"
+                            className="form-checkbox w-4 h-4"
+                            checked={!!selectedRows[idx]}
+                            onChange={(e) => handleCheckboxChange(idx, e)}
+                          />
+                        </div>
+                      </td>
+                      <td className="px-2 py-4 sm:px-4 sm:py-4 whitespace-nowrap text-[12px] sm:text-[16px] text-gray-700">
+                        {formatDate(template.created_on)}
+                      </td>
+                      <td className="px-2 py-4 text-[12px] sm:text-[16px] text-green-600">
+                        {template.status}
+                      </td>
+                      <td className="px-2 py-4 text-[12px] sm:text-[16px] text-gray-700">
+                        {template.element_name || "-"}
+                      </td>
+                      <td className="px-2 py-4 text-[12px] sm:text-[16px] text-gray-700">
+                        {template.template_type
+                          ? template.template_type.charAt(0).toUpperCase() +
+                            template.template_type.slice(1)
+                          : "-"}
+                      </td>
+                      <td className="px-2 py-4 text-[12px] sm:text-[16px] text-gray-700">
+                        {template.category
+                          ? template.category.charAt(0).toUpperCase() +
+                            template.category.slice(1)
+                          : "-"}
+                      </td>
+                      <td className="relative py-4">
+                        <div ref={el => (dropdownRefs.current[idx] = el)} className="flex justify-center">
+                          <button
+                            onClick={() =>
+                              navigate("/broadcast", {
+                                state: {
+                                  selectedTemplate: template,
+                                  openForm: true,
+                                },
+                              })
+                            }
+                            className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-3 py-2 rounded-full whitespace-nowrap mr-2 cursor-pointer"
+                            aria-label={`Send message to ${template.element_name}`}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="w-4 h-4 transform rotate-45"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M5 12h14M12 5l7 7-7 7"
+                              />
+                            </svg>
+                            <span className="text-sm font-medium">Send Message</span>
+                          </button>
+                          <button
+                            onClick={() => toggleMenu(idx)}
+                            className="p-2 rounded-full hover:bg-gray-100 focus:outline-none cursor-pointer"
+                            aria-label="Template options"
+                          >
+                            <svg
+                              className="w-5 h-5 text-gray-600"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 5v.01M12 12v.01M12 19v.01"
+                              />
+                            </svg>
+                          </button>
+                          {menuOpen === idx && (
+                            <div
+                              className={`absolute right-0 ${
+                                shouldFlipUp[idx] ? "bottom-12" : "top-12"
+                              } w-44 bg-white border border-gray-200 rounded-md shadow-lg z-20`}
+                            >
+                              <button
+                                onClick={() => handleEditClick(template)}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              >
+                                Edit Template
+                              </button>
+                              <button
+                                onClick={() => handleDeleteClick(template)}
+                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
       <DeleteConfirmationDialog
