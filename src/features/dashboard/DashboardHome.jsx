@@ -1,10 +1,11 @@
 import React from "react";
 import { motion } from "framer-motion";
 import "./DashboardHome.css";
+import MessagingAnalytics from "./charts.jsx"
 import vendor from "../../assets/Vector.png";
 
 const DashboardHome = () => {
-  return (
+  return (<div>
     <div className="dashboard-home">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Dashboard Overview</h2>
@@ -57,6 +58,8 @@ const DashboardHome = () => {
           <p>Premium</p>
         </motion.div>
       </div>
+    </div>
+    <MessagingAnalytics/>
     </div>
   );
 };
