@@ -30,14 +30,6 @@ const Chat = () => {
     try {
       setLoading(true);
 
-      // const token = localStorage.getItem("auth_token");
-      // const response = await axios.get(
-      //   `${API_ENDPOINTS.CHAT.CONVERSATIONS}?customer_id=3161`,
-      //   {
-
-      //   }
-      // );
-
       const response = await fetch(
         `${API_ENDPOINTS.CHAT.CONVERSATIONS}?customer_id=${user?.customer_id}`,
         {
@@ -115,7 +107,7 @@ const Chat = () => {
     if (location.state?.contact) {
       handleSelectContact(location.state.contact);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
   useEffect(() => {
