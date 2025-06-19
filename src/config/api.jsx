@@ -33,4 +33,7 @@ export const API_ENDPOINTS = {
     LOGIN: `${API_BASE}/login`,
     ME: `${API_BASE}/me`,
   },
+  CREDIT: {
+    GRAPH: `${API_BASE}/creditUsage`,
+  }
 };
