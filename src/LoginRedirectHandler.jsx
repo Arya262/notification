@@ -24,7 +24,7 @@ const LoginPage = () => {
     const mobileRegex = /^[6-9]\d{9}$/;
 
     switch (name) {
-      case 'loginMethod':
+      case "loginMethod":
         if (!value.trim()) {
           return "Make sure you enter a valid email address (e.g. user@example.com) or a 10-digit mobile number.";
         }
@@ -32,7 +32,7 @@ const LoginPage = () => {
           return "Please enter a valid email address or 10-digit mobile number starting with 6-9.";
         }
         return "";
-      case 'password':
+      case "password":
         if (!value.trim()) {
           return "Please enter your password to continue.";
         }
@@ -47,32 +47,32 @@ const LoginPage = () => {
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
-    setTouched(prev => ({ ...prev, [name]: true }));
+    setTouched((prev) => ({ ...prev, [name]: true }));
     const error = validateField(name, value);
-    setErrors(prev => ({ ...prev, [name]: error }));
+    setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'loginMethod') {
+    if (name === "loginMethod") {
       setLoginMethod(value);
-    } else if (name === 'password') {
+    } else if (name === "password") {
       setPassword(value);
     }
-    
+
     if (touched[name]) {
       const error = validateField(name, value);
-      setErrors(prev => ({ ...prev, [name]: error }));
+      setErrors((prev) => ({ ...prev, [name]: error }));
     }
   };
 
   const validate = () => {
     const newErrors = {
-      loginMethod: validateField('loginMethod', loginMethod),
-      password: validateField('password', password)
+      loginMethod: validateField("loginMethod", loginMethod),
+      password: validateField("password", password),
     };
     setErrors(newErrors);
-    return !Object.values(newErrors).some(error => error);
+    return !Object.values(newErrors).some((error) => error);
   };
 
   const handleSubmit = async (e) => {
@@ -81,12 +81,12 @@ const LoginPage = () => {
     // Mark all fields as touched
     setTouched({
       loginMethod: true,
-      password: true
+      password: true,
     });
 
     if (!validate()) {
       // Focus the first field with an error
-      const firstErrorField = Object.keys(errors).find(key => errors[key]);
+      const firstErrorField = Object.keys(errors).find((key) => errors[key]);
       if (firstErrorField) {
         document.getElementsByName(firstErrorField)[0]?.focus();
       }
@@ -112,17 +112,23 @@ const LoginPage = () => {
 
       if (success) {
         login(user);
-        navigate("/");
+        setTimeout(() => {
+          navigate("/", { replace: true });
+        }, 200);
       } else {
-        toast.error(error || "We couldn't log you in. Please check your email/mobile and password.", {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          theme: "light",
-        });
+        toast.error(
+          error ||
+            "We couldn't log you in. Please check your email/mobile and password.",
+          {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            theme: "light",
+          }
+        );
       }
     } catch (err) {
       console.error("Login error:", err);
