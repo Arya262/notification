@@ -1,170 +1,247 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
 } from "recharts";
+import {
+  parseISO, startOfMonth, endOfMonth,
+  startOfWeek, endOfWeek
+} from "date-fns";
 import { useAuth } from "../../context/AuthContext";
 import { API_ENDPOINTS } from "../../config/api";
 
-const COLORS = ['#00C49F', '#FF8042'];
+// Utility: Get date range for filter
+function getDateRange(filter, options) {
+  switch (filter) {
+    case "Monthly":
+      const [year, month] = options.month.split("-").map(Number);
+      return [new Date(year, month - 1, 1), endOfMonth(new Date(year, month - 1, 1))];
+    case "Weekly":
+      return [startOfWeek(new Date(options.week), { weekStartsOn: 1 }), endOfWeek(new Date(options.week), { weekStartsOn: 1 })];
+    case "Yearly":
+      return [new Date(`${options.year}-01-01`), new Date(`${options.year}-12-31`)];
+    case "Custom":
+      return [parseISO(options.start), parseISO(options.end)];
+    default:
+      return [null, null];
+  }
+}
+
+const MESSAGE_COLORS = ['#00C49F', '#FFBB28'];
+const COST_COLORS = ['#8884d8', '#82ca9d'];
+const FILTER_OPTIONS = ["Weekly", "Monthly", "Yearly", "Custom"];
 
 export default function MessagingAnalytics() {
   const { user } = useAuth();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchChartData = async () => {
-    try {
-      const response = await fetch(
-        `${API_ENDPOINTS.CREDIT.GRAPH}?customer_id=${user?.customer_id}`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
-
-      if (!response.ok) throw new Error("Failed to fetch usage data");
-
-      const result = await response.json();
-
-      const formatted = result.map((item) => ({
-        usage_date: new Date(item.usage_date).toISOString().split("T")[0],
-        messages_sent: parseInt(item.messages_sent || 0),
-        messages_received: parseInt(item.messages_received || 0),
-        total_messages: parseInt(item.messages_sent || 0) + parseInt(item.messages_received || 0),
-        total_cost: parseFloat(item.total_cost || 0),
-        gupshup_fees: parseFloat(item.gupshup_fees || 0),
-        meta_fees: parseFloat(item.meta_fees || 0),
-      }));
-
-      setData(formatted);
-      console.log(formatted);
-    } catch (err) {
-      console.error("Error loading chart data:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [filter, setFilter] = useState("Monthly");
+  const [selectedMonth, setSelectedMonth] = useState("2025-06");
+  const [selectedWeekStart, setSelectedWeekStart] = useState("");
+  const [selectedYear, setSelectedYear] = useState("2025");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
 
   useEffect(() => {
-    if (user?.customer_id) {
-      fetchChartData();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    const fetchChartData = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(
+          `${API_ENDPOINTS.CREDIT.GRAPH}?customer_id=${user?.customer_id}`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+        if (!res.ok) throw new Error("Failed to fetch usage data");
+
+        const result = await res.json();
+        const formatted = result.map(item => ({
+          customer_id: item.customer_id,
+          usage_date: new Date(item.usage_date).toISOString().split("T")[0],
+          messages_sent: parseInt(item.messages_sent || 0),
+          messages_received: parseInt(item.messages_received || 0),
+          gupshup_fees: parseFloat(item.gupshup_fees || 0),
+          meta_fees: parseFloat(item.meta_fees || 0),
+        }));
+
+        const deduplicated = Array.from(
+          new Map(formatted.map(item => [`${item.customer_id}_${item.usage_date}`, item])).values()
+        );
+
+        setData(deduplicated);
+      } catch (error) {
+        console.error("Error loading chart data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user?.customer_id) fetchChartData();
   }, [user?.customer_id]);
 
-  if (loading) return <p className="p-4 text-gray-600">Loading charts...</p>;
-  if (!data.length) return <p className="p-4 text-gray-600">No data available.</p>;
+  const YEAR_OPTIONS = useMemo(() => {
+    const years = data.map(d => new Date(d.usage_date).getFullYear());
+    return Array.from(new Set(years)).sort((a, b) => b - a).map(String);
+  }, [data]);
 
-  // Pie chart data
-  const totalSent = data.reduce((sum, d) => sum + d.messages_sent, 0);
-  const totalReceived = data.reduce((sum, d) => sum + d.messages_received, 0);
-  const totalGupshup = data.reduce((sum, d) => sum + d.gupshup_fees, 0);
-  const totalMeta = data.reduce((sum, d) => sum + d.meta_fees, 0);
+  const filteredData = useMemo(() => {
+    const [start, end] = getDateRange(filter, {
+      month: selectedMonth,
+      week: selectedWeekStart,
+      year: selectedYear,
+      start: customStart,
+      end: customEnd
+    });
+
+    return data
+      .filter(item => {
+        const date = parseISO(item.usage_date);
+        return (!isNaN(date) && (!start || !end || (date >= start && date <= end)));
+      })
+      .map(d => ({
+        ...d,
+        total_messages: d.messages_sent + d.messages_received
+      }))
+      .sort((a, b) => new Date(a.usage_date) - new Date(b.usage_date));
+  }, [data, filter, selectedMonth, selectedWeekStart, selectedYear, customStart, customEnd]);
+
+  const totalSent = filteredData.reduce((sum, d) => sum + d.messages_sent, 0);
+  const totalReceived = filteredData.reduce((sum, d) => sum + d.messages_received, 0);
+  const totalGupshup = filteredData.reduce((sum, d) => sum + d.gupshup_fees, 0);
+  const totalMeta = filteredData.reduce((sum, d) => sum + d.meta_fees, 0);
 
   const messagePieData = [
     { name: "Sent", value: totalSent },
-    { name: "Received", value: totalReceived },
+    { name: "Received", value: totalReceived }
   ];
-
   const costPieData = [
     { name: "Gupshup Fees", value: totalGupshup },
-    { name: "Meta Fees", value: totalMeta },
+    { name: "Meta Fees", value: totalMeta }
   ];
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-60">
+        <span className="animate-spin rounded-full h-8 w-8 border-4 border-t-transparent border-blue-500"></span>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-6 space-y-10">
+      {/* Filter Controls */}
+      <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
+        <select value={filter} onChange={e => setFilter(e.target.value)} className="border px-3 py-2 rounded">
+          {FILTER_OPTIONS.map(opt => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
+        </select>
 
-      {/* Line Chart: Total Messages */}
-      <div>
-        <h2 className="text-xl font-bold mb-4">Total Messaging Volume</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="usage_date" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line type="monotone" dataKey="total_messages" stroke="#8884d8" name="Total Messages" />
-          </LineChart>
-        </ResponsiveContainer>
+        {filter === "Yearly" && (
+          <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)} className="border px-3 py-2 rounded">
+            {YEAR_OPTIONS.map(yr => (
+              <option key={yr} value={yr}>{yr}</option>
+            ))}
+          </select>
+        )}
+
+        {filter === "Monthly" && (
+          <input
+            type="month"
+            value={selectedMonth}
+            onChange={e => setSelectedMonth(e.target.value)}
+            className="border px-3 py-2 rounded"
+          />
+        )}
+
+        {filter === "Weekly" && (
+          <input
+            type="date"
+            value={selectedWeekStart}
+            onChange={e => setSelectedWeekStart(e.target.value)}
+            className="border px-3 py-2 rounded"
+          />
+        )}
+
+        {filter === "Custom" && (
+          <>
+            <input
+              type="date"
+              value={customStart}
+              onChange={(e) => setCustomStart(e.target.value)}
+              className="border px-3 py-2 rounded"
+            />
+            <input
+              type="date"
+              value={customEnd}
+              onChange={(e) => setCustomEnd(e.target.value)}
+              className="border px-3 py-2 rounded"
+            />
+          </>
+        )}
       </div>
 
-      {/* Line Chart: Gupshup Fees */}
-      <div>
-        <h2 className="text-xl font-bold mb-4">Gupshup Fees</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="usage_date" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line type="monotone" dataKey="gupshup_fees" stroke="#82ca9d" name="Gupshup Fees" />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      {filteredData.length === 0 ? (
+        <p className="text-center text-gray-500">No data available for the selected filter.</p>
+      ) : (
+        <>
+          <ChartBlock title="Total Messaging Volume" dataKey="total_messages" stroke="#8884d8" data={filteredData} />
+          <ChartBlock title="Gupshup Fees" dataKey="gupshup_fees" stroke="#82ca9d" data={filteredData} />
+          <ChartBlock title="Meta Fees" dataKey="meta_fees" stroke="#ffc658" data={filteredData} />
 
-      {/* Line Chart: Meta Fees */}
-      <div>
-        <h2 className="text-xl font-bold mb-4">Meta Fees</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="usage_date" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line type="monotone" dataKey="meta_fees" stroke="#ffc658" name="Meta Fees" />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+          {/* Pie: Message Distribution */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Message Distribution</h2>
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie data={messagePieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                  {messagePieData.map((_, index) => (
+                    <Cell key={index} fill={MESSAGE_COLORS[index % MESSAGE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value, name) => [`${value} messages`, name]} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
 
-      {/* Pie Chart: Message Distribution */}
-      <div>
-        <h2 className="text-xl font-bold">Message Distribution</h2>
-        <ResponsiveContainer width="100%" height={250}>
-          <PieChart>
-            <Pie
-              data={messagePieData}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={80}
-              label
-            >
-              {messagePieData.map((_, index) => (
-                <Cell key={index} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
+          {/* Pie: Cost Distribution */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Cost Distribution</h2>
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie data={costPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                  {costPieData.map((_, index) => (
+                    <Cell key={index} fill={COST_COLORS[index % COST_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value, name) => [`₹${value}`, name]} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
-      {/* Pie Chart: Cost Distribution */}
-      <div>
-        <h2 className="text-xl font-bold">Cost Distribution</h2>
-        <ResponsiveContainer width="100%" height={250}>
-          <PieChart>
-            <Pie
-              data={costPieData}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={80}
-              label
-            >
-              {costPieData.map((_, index) => (
-                <Cell key={index} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
+function ChartBlock({ title, dataKey, stroke, data }) {
+  const isCurrency = dataKey.includes("fees");
+
+  return (
+    <div>
+      <h2 className="text-xl font-semibold mb-4">{title}</h2>
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="usage_date" />
+          <YAxis tickFormatter={(val) => isCurrency ? `₹${val}` : val} />
+          <Tooltip formatter={(value) => typeof value === 'number' ? (isCurrency ? `₹${value}` : value) : value} />
+          <Legend />
+          <Line type="monotone" dataKey={dataKey} stroke={stroke} name={title} />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 }
