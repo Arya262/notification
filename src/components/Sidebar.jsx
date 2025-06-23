@@ -71,7 +71,7 @@ const Sidebar = ({ isOpen, setIsOpen, className = "" }) => {
       className={`
         fixed top-0 left-0 z-50
         w-64 h-screen
-        bg-[#0E1A2F] text-white
+        bg-[#fff] text-white
         flex flex-col
         transition-transform duration-300 ease-in-out
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
@@ -83,7 +83,9 @@ const Sidebar = ({ isOpen, setIsOpen, className = "" }) => {
     >
       {/* Logo/Header (non-scrollable) */}
       <div className="px-4 py-5 border-b border-white/10 lg:hidden shrink-0">
-        <img src="/logo.png" alt="Logo" className="h-8" />
+        <NavLink to="/" onClick={handleNavClick}>
+          <img src="/logo.png" alt="Logo" className="h-8" />
+        </NavLink>
       </div>
 
       {/* Scrollable content area only */}
@@ -100,29 +102,19 @@ const Sidebar = ({ isOpen, setIsOpen, className = "" }) => {
               key={item.name}
               to={item.path}
               onClick={handleNavClick}
+              aria-current={({ isActive }) => (isActive ? "page" : undefined)}
               className={({ isActive }) =>
-                `group flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-base shadow-sm transition-all duration-200 
-                ${
+                `group flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-base shadow-sm transition-all duration-200 ${
                   isActive
                     ? "bg-teal-500 text-white"
                     : "bg-white text-black hover:bg-gray-100"
                 }`
               }
             >
-              {({ isActive }) => (
-                <>
-                  <span
-                    className={`w-5 h-5 flex items-center justify-center ${
-                      isActive
-                        ? "text-white"
-                        : "text-gray-600 group-hover:text-teal-500"
-                    }`}
-                  >
-                    {item.icon}
-                  </span>
-                  <span>{item.name}</span>
-                </>
-              )}
+              <span className="w-5 h-5 flex items-center justify-center">
+                {item.icon}
+              </span>
+              <span>{item.name}</span>
             </NavLink>
           )
         )}

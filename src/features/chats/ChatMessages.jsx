@@ -104,37 +104,34 @@ const ChatMessages = ({ selectedContact, messages, isTyping }) => {
   const groupedMessages = groupMessagesByDate(messages);
 
   return (
-    <div
-      className="p-4 h-[calc(100vh-200px)] overflow-y-auto space-y-4 scrollbar-hide"
-      aria-live="polite"
-    >
-      {messages.length > 0 ? (
-        Object.entries(groupedMessages).map(([dateLabel, dayMessages]) => (
-          <div key={dateLabel}>
-            <div className="flex justify-center my-2">
-              <span className="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full shadow-sm">
-                {dateLabel}
-              </span>
-            </div>
-            {dayMessages.map((msg, index) => renderMessage(msg, index))}
+    <div className="flex flex-col min-h-0 h-full space-y-4 overflow-y-auto pr-1" aria-live="polite">
+    {messages.length > 0 ? (
+      Object.entries(groupedMessages).map(([dateLabel, dayMessages]) => (
+        <div key={dateLabel}>
+          <div className="flex justify-center my-2">
+            <span className="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full shadow-sm">
+              {dateLabel}
+            </span>
           </div>
-        ))
-      ) : (
-        <p className="text-center text-gray-400">
-          {selectedContact?.conversation_id
-            ? "No messages to display."
-            : "This contact has no visible conversation."}
-        </p>
-      )}
-
-      {isTyping && selectedContact?.conversation_id && (
-        <div className="flex justify-start">
-          <TypingIndicator />
+          {dayMessages.map((msg, index) => renderMessage(msg, index))}
         </div>
-      )}
+      ))
+    ) : (
+      <p className="text-center text-gray-400">
+        {selectedContact?.conversation_id
+          ? "No messages to display."
+          : "This contact has no visible conversation."}
+      </p>
+    )}
 
-      <div ref={messagesEndRef} />
-    </div>
+    {isTyping && selectedContact?.conversation_id && (
+      <div className="flex justify-start">
+        <TypingIndicator />
+      </div>
+    )}
+
+    <div ref={messagesEndRef} />
+  </div>
   );
 };
 

@@ -59,7 +59,7 @@ export default function Header({ isMenuOpen, onToggleSidebar }) {
         <div className="flex items-center gap-2">
           <button
             onClick={onToggleSidebar}
-            className="lg:hidden p-2 rounded-md hover:bg-gray-100"
+            className="lg:hidden p-2 rounded-md hover:bg-gray-100 cursor-pointer"
             aria-label="Toggle Sidebar"
           >
             {isMenuOpen ? <X size={28} /> : <Menu size={28} />}

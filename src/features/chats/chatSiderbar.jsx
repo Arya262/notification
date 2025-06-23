@@ -1,20 +1,9 @@
 import { IoSearchOutline } from "react-icons/io5";
 
-const getAvatarColor = (name) => {
-  const colors = [
-    "#f91d06",
-    "#0080ff",
-    "#7504ec",
-    "#14d47b",
-    "#ff6d10",
-    "#d413e2",
-    "#9B59B6",
-    "#2196f3",
-  ];
-  const index = name
-    .split("")
-    .reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return colors[index % colors.length];
+const getAvatarColor = (name = "User") => {
+  const hash = [...name].reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const hue = hash % 360;
+  return `hsl(${hue}, 70%, 50%)`; // More dynamic and visually distinct colors
 };
 
 const formatLastMessageTime = (timestamp) => {
@@ -73,7 +62,7 @@ const getMessagePreview = (message, type) => {
     case "template":
       return "📋 Template";
     default:
-      return message || null;
+      return message || "";
   }
 };
 
@@ -84,11 +73,15 @@ const ChatSidebar = ({
   onSearchChange,
   onSelectContact,
 }) => {
-  const filteredContacts = contacts.filter((c) =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredContacts = (contacts || []).filter((c) =>
+    c.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const renderAvatar = (contact) => {
+    const name = contact?.name || "User";
+    const firstLetter = name.charAt(0).toUpperCase();
+    const bgColor = getAvatarColor(name);
+
     if (contact.image) {
       return (
         <img
@@ -98,9 +91,6 @@ const ChatSidebar = ({
         />
       );
     }
-
-    const firstLetter = contact.name.charAt(0).toUpperCase();
-    const bgColor = getAvatarColor(contact.name);
 
     return (
       <div
@@ -113,7 +103,7 @@ const ChatSidebar = ({
   };
 
   return (
-    <div className="w-full md:w-1/3 bg-white border-r border-gray-200 p-4">
+    <div className="w-full h-full flex flex-col bg-white border-r border-gray-200 p-4">
       {/* Title */}
       <h2 className="text-2xl font-semibold mb-4 text-black">Inbox</h2>
 
@@ -130,7 +120,7 @@ const ChatSidebar = ({
       </div>
 
       {/* Contacts List */}
-      <div className="space-y-2 overflow-y-auto max-h-[65vh] scrollbar-hide">
+      <div className="space-y-2 overflow-y-auto flex-1 scrollbar-hide">
         {filteredContacts.length > 0 ? (
           filteredContacts.map((contact, index) => (
             <div
@@ -138,7 +128,12 @@ const ChatSidebar = ({
               role="button"
               tabIndex={0}
               onClick={() => onSelectContact(contact)}
-              onKeyDown={(e) => e.key === "Enter" && onSelectContact(contact)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onSelectContact(contact);
+                }
+              }}
               className={`flex items-center px-2 py-1 cursor-pointer rounded-xl transition border focus:outline-none w-full max-w-full
                 ${
                   selectedContact?.id === contact.id
@@ -153,7 +148,7 @@ const ChatSidebar = ({
               <div className="flex-1 min-w-0 overflow-hidden">
                 <div className="flex justify-between items-center space-x-2">
                   <p className="font-semibold text-black truncate max-w-[160px]">
-                    {contact.name}
+                    {contact.name || "Unnamed"}
                   </p>
                   <p className="text-xs text-gray-500 select-none shrink-0">
                     {formatLastMessageTime(contact.lastMessageTime)}
@@ -165,21 +160,10 @@ const ChatSidebar = ({
                     {getMessagePreview(
                       contact.lastMessage,
                       contact.lastMessageType
-                    ) || "No messages yet"}
+                    ) || <span className="italic text-gray-400">No messages yet</span>}
                   </p>
                 </div>
               </div>
-
-              {/* Small delete button beside contact if you want (optional) */}
-              {/* <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteContact?.(contact.id);
-                }}
-                className="text-gray-400 hover:text-red-500 ml-2"
-              >
-                ✖
-              </button> */}
             </div>
           ))
         ) : (

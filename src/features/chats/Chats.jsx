@@ -19,13 +19,19 @@ const Chat = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [hasProcessedLocationState, setHasProcessedLocationState] = useState(false);
-
   const location = useLocation();
   const socket = useSocket();
-
   const userDetailsRef = useRef(null);
   const profileButtonRef = useRef(null);
   const { user } = useAuth();
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [showMobileChat, setShowMobileChat] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const fetchContacts = async () => {
     try {
@@ -59,11 +65,10 @@ const Chat = () => {
                   credentials: "include",
                 }
               );
-              if (messagesResponse.data?.length > 0) {
-                const latestMessage =
-                  messagesResponse.data[messagesResponse.data.length - 1];
-                lastMessage =
-                  latestMessage.content || latestMessage.element_name;
+              const messagesData = await messagesResponse.json();
+              if (messagesData?.length > 0) {
+                const latestMessage = messagesData[messagesData.length - 1];
+                lastMessage = latestMessage.content || latestMessage.element_name;
                 lastMessageType = latestMessage.message_type;
                 lastMessageTime = latestMessage.sent_at;
               }
@@ -178,6 +183,7 @@ const Chat = () => {
     console.log("Selected contact:", contact);
     setSelectedContact(contact);
     setShowUserDetails(false);
+    if (isMobile) setShowMobileChat(true);
     setContacts((prev) =>
       prev.map((c) => ({ ...c, active: c.id === contact.id }))
     );
@@ -293,61 +299,83 @@ const Chat = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row w-full h-screen border border-gray-300 rounded-2xl bg-white mx-auto max-w-screen-2xl overflow-hidden">
+        <div className="flex flex-col md:flex-row w-full flex-1 min-h-0 h-full border border-gray-300 rounded-2xl bg-white mx-auto max-w-screen-2xl overflow-hidden">
+      {/* Sidebar */}
       {loading ? (
-        <div className="w-full md:w-1/3 p-6">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-teal-500"></div>
-          </div>
+        <div className="basis-full md:basis-1/4 flex-shrink-0 h-full flex items-center justify-center p-6 border-r border-gray-200">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-teal-500"></div>
         </div>
       ) : (
-        <ChatSidebar
-          contacts={contacts}
-          selectedContact={selectedContact}
-          searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
-          onSelectContact={handleSelectContact}
-        />
+        (!isMobile || (isMobile && !showMobileChat)) && (
+          <div className="basis-full md:basis-1/4 flex-shrink-0 h-full flex flex-col overflow-y-auto border-r border-gray-200">
+            <ChatSidebar
+              contacts={contacts}
+              selectedContact={selectedContact}
+              searchQuery={searchQuery}
+              onSearchChange={handleSearchChange}
+              onSelectContact={(contact) => {
+                handleSelectContact(contact);
+                if (isMobile) setShowMobileChat(true);
+              }}
+            />
+          </div>
+        )
       )}
 
-      <div className="w-full h-full flex flex-col">
-        <ChatHeader
-          selectedContact={selectedContact}
-          onProfileClick={toggleUserDetails}
-          ref={profileButtonRef}
-        />
-
-        <div className="w-full md:flex md:flex-row h-full">
-          <div className="w-full md:flex-1 h-full">
-            {selectedContact ? (
-              <>
-                <ChatMessageArea
-                  selectedContact={selectedContact}
-                  messages={messages || []}
-                />
-                <MessageInput
-                  onSendMessage={handleSendMessage}
-                  selectedContact={selectedContact}
-                />
-              </>
-            ) : (
-              <div className="h-full flex items-center justify-center text-gray-400 text-lg">
-                Select a contact to start conversation
-              </div>
-            )}
-          </div>
-
-          {showUserDetails && (
-            <div ref={userDetailsRef}>
-              <UserDetails
+      {/* Chat Section */}
+      {(!isMobile || (isMobile && showMobileChat)) && (
+        <div className="w-full md:flex-1 flex flex-col min-h-0 h-full">
+          {selectedContact ? (
+            <>
+              {/* Header */}
+              <ChatHeader
                 selectedContact={selectedContact}
-                isExpanded={true}
-                setIsExpanded={() => setShowUserDetails(false)}
+                onProfileClick={toggleUserDetails}
+                ref={profileButtonRef}
+                isMobile={isMobile}
+                onBack={() => setShowMobileChat(false)}
               />
+
+              {/* Body */}
+              <div className="flex-1 flex flex-row min-h-0 h-full">
+                {/* Message + Input Column */}
+                <div className="flex-1 flex flex-col min-h-0 h-full">
+                  {/* ✅ Scrollable Message Area */}
+                  <div className="flex-1 overflow-y-auto bg-white p-4 ">
+                    <ChatMessageArea
+                      selectedContact={selectedContact}
+                      messages={messages || []}
+                    />
+                  </div>
+
+                  {/* ✅ Input Area (fixed bottom) */}
+                  <div className=" bg-white">
+                    <MessageInput
+                      onSendMessage={handleSendMessage}
+                      selectedContact={selectedContact}
+                    />
+                  </div>
+                </div>
+
+                {/* Optional Right Panel */}
+                {!isMobile && showUserDetails && (
+                  <div ref={userDetailsRef}>
+                    <UserDetails
+                      selectedContact={selectedContact}
+                      isExpanded={true}
+                      setIsExpanded={() => setShowUserDetails(false)}
+                    />
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-gray-400 text-lg">
+              Select a contact to start conversation
             </div>
           )}
         </div>
-      </div>
+      )}
     </div>
   );
 };

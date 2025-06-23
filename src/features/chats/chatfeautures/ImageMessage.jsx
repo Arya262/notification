@@ -3,9 +3,10 @@ import { Check, CheckCheck } from "lucide-react";
 
 const ImageMessage = ({ msg, sent }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [hasImageError, setHasImageError] = useState(false);
 
   const handleImageClick = () => {
-    setIsModalOpen(true);
+    if (!hasImageError) setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
@@ -29,10 +30,10 @@ const ImageMessage = ({ msg, sent }) => {
         onClick={handleImageClick}
       >
         <img
-          src={msg.media_url}
+          src={hasImageError ? "https://placehold.co/150?text=Image+Not+Found" : msg.media_url}
           alt={msg.content || "Sent image"}
           className="w-full object-cover rounded-2xl"
-          onError={(e) => (e.target.src = "https://via.placeholder.com/150")}
+          onError={() => setHasImageError(true)}
         />
       </div>
 
@@ -58,7 +59,7 @@ const ImageMessage = ({ msg, sent }) => {
             <img
               src={msg.media_url}
               alt={msg.content || "Sent image"}
-              className="max-w-[90%] max-h-[90%] object-contain rounded"
+              className="max-w-[90%] max-h-[90%] object-contain rounded transition duration-300 ease-in-out transform hover:scale-105"
             />
             <button
               onClick={handleCloseModal}

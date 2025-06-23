@@ -1,12 +1,11 @@
-import { useState, useMemo } from "react";
-import { Send } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Send, X } from "lucide-react";
 import SendTemplate from "./chatfeautures/SendTemplate";
 
 const MessageInput = ({ onSendMessage, selectedContact }) => {
   const [message, setMessage] = useState("");
   const [showTemplates, setShowTemplates] = useState(false);
 
-  // ✅ Memoized check for 24-hour window
   const isWithin24Hours = useMemo(() => {
     const time = selectedContact?.lastMessageTime;
     if (!time) return true;
@@ -45,9 +44,22 @@ const MessageInput = ({ onSendMessage, selectedContact }) => {
     ? !isWithin24Hours
     : false;
 
+  // Escape key closes template modal
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === "Escape") {
+        setShowTemplates(false);
+      }
+    };
+    if (showTemplates) {
+      document.addEventListener("keydown", handleEscape);
+    }
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [showTemplates]);
+
   return (
     <>
-      <div className="border-gray-200 p-3 bg-white">
+      <div className=" p-3 bg-white">
         <form
           onSubmit={handleSubmit}
           className="flex items-center w-full max-w-3xl mx-auto"
@@ -65,10 +77,12 @@ const MessageInput = ({ onSendMessage, selectedContact }) => {
             className={`text-sm border border-gray-300 rounded-l-lg px-4 py-2 h-10 flex-1 focus:outline-none focus:ring-1 focus:ring-teal-500 ${
               isTextDisabled ? "bg-gray-100 cursor-not-allowed" : ""
             }`}
+            aria-label="Message Input"
           />
           <button
             type="submit"
             className="flex items-center gap-2 h-10 px-4 text-white text-sm rounded-r-lg border border-l-0 bg-teal-500 hover:bg-teal-600 border-teal-500"
+            aria-label={message.trim() ? "Send Message" : "Send Template"}
           >
             <Send className="w-4 h-4" />
             {message.trim() ? "Send Message" : "Send Template"}
@@ -78,8 +92,8 @@ const MessageInput = ({ onSendMessage, selectedContact }) => {
 
       {/* Template Modal */}
       {showTemplates && (
-        <div className="fixed inset-0 flex justify-center items-center z-50">
-          <div className="relative">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+          <div className="relative bg-white rounded-lg shadow-lg p-4 max-w-sm w-full">
             <SendTemplate
               onSelect={(templateName) => {
                 onSendMessage({ template_name: templateName });
@@ -89,9 +103,10 @@ const MessageInput = ({ onSendMessage, selectedContact }) => {
             />
             <button
               onClick={() => setShowTemplates(false)}
-              className="absolute top-2 right-2 text-white bg-red-500 rounded-full px-2 py-1 text-xs"
+              className="absolute top-2 right-2 text-gray-700 hover:text-red-500"
+              aria-label="Close Template Modal"
             >
-              Close
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>

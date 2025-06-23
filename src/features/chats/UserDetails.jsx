@@ -1,20 +1,20 @@
-import { formatTime } from "../../utils/time"
+import { formatTime } from "../../utils/time";
 
-// Function to generate a consistent color based on name
-const getAvatarColor = (name) => {
-  const colors = [
-    '#f91d06', '#0080ff','#7504ec', '#14d47b', 
-    '#ff6d10', '#d413e2', '#9B59B6', '#2196f3'
-  ];
-  const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return colors[index % colors.length];
+// HSL-based dynamic avatar color generator
+const getAvatarColor = (name = "User") => {
+  const hash = [...name].reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const hue = hash % 360;
+  return `hsl(${hue}, 70%, 50%)`;
 };
 
 const UserDetails = ({ isExpanded, setIsExpanded, selectedContact }) => {
   if (!selectedContact) return null;
 
-  // Function to render avatar
   const renderAvatar = (contact) => {
+    const name = contact?.name || "User";
+    const firstLetter = name.charAt(0).toUpperCase();
+    const bgColor = getAvatarColor(name);
+
     if (contact.image) {
       return (
         <img
@@ -24,12 +24,9 @@ const UserDetails = ({ isExpanded, setIsExpanded, selectedContact }) => {
         />
       );
     }
-    
-    const firstLetter = contact.name.charAt(0).toUpperCase();
-    const bgColor = getAvatarColor(contact.name);
-    
+
     return (
-      <div 
+      <div
         className="w-full h-full rounded-full flex items-center justify-center text-white font-semibold text-2xl"
         style={{ backgroundColor: bgColor }}
       >
@@ -46,8 +43,8 @@ const UserDetails = ({ isExpanded, setIsExpanded, selectedContact }) => {
           <div className="avatar mx-auto mb-2 w-16 h-16 rounded-full overflow-hidden">
             {renderAvatar(selectedContact)}
           </div>
-          <h3 className="font-semibold text-lg">{selectedContact.name}</h3>
-          <p>{selectedContact.mobile_no}</p>
+          <h3 className="font-semibold text-lg">{selectedContact.name || "Unnamed"}</h3>
+          <p className="text-sm text-gray-600">{selectedContact.mobile_no || "No number"}</p>
           <p className="opted-in text-green-600 text-sm">Opted-in</p>
         </div>
 
@@ -56,7 +53,9 @@ const UserDetails = ({ isExpanded, setIsExpanded, selectedContact }) => {
         {/* Last Message */}
         <div className="flex justify-between items-center p-2">
           <p className="text-sm font-bold text-black">Last Message</p>
-          <p className="text-sm text-black">{formatTime(selectedContact.updated_at)}</p>
+          <p className="text-sm text-black">
+            {formatTime(selectedContact.updated_at)}
+          </p>
         </div>
 
         {/* 24 Hours Status */}
@@ -72,9 +71,9 @@ const UserDetails = ({ isExpanded, setIsExpanded, selectedContact }) => {
           className="details-toggle cursor-pointer flex items-center justify-between px-2 py-2 text-gray-600 hover:text-black"
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          <span className="text-sm font-semibold bg-[#F5F5F5]">GENERAL DETAILS</span>
+          <span className="text-sm font-semibold tracking-wide">GENERAL DETAILS</span>
           <svg
-            className={`w-4 h-4 transform transition-transform ${isExpanded ? "rotate-180" : ""}`}
+            className={`w-4 h-4 transform transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
