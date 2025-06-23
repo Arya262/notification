@@ -1,4 +1,4 @@
-export const API_BASE = import.meta.env.VITE_API_BASE || '';
+export const API_BASE = import.meta.env.VITE_API_BASEz || 'http://localhost:3000';
 
 export const API_ENDPOINTS = {
   BROADCASTS: {
@@ -35,5 +35,8 @@ export const API_ENDPOINTS = {
   },
   CREDIT: {
     GRAPH: `${API_BASE}/creditUsage`,
+  },
+  WHATSAPP: {
+    NUMBERS: "/api/whatsapp/numbers"
   }
 };

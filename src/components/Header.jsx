@@ -6,9 +6,12 @@ import axios from "axios";
 import { API_ENDPOINTS } from "../config/api";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import WhatsAppSearchPanel from "../components/WhatsAppSearchPanel"; // adjust path if needed
 
 export default function Header({ isMenuOpen, onToggleSidebar }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [showSearchPanel, setShowSearchPanel] = useState(false);
+  const [whatsAppData, setWhatsAppData] = useState([]);
   const navigate = useNavigate();
 
   const handleSearchChange = (e) => {
@@ -51,6 +54,19 @@ export default function Header({ isMenuOpen, onToggleSidebar }) {
     }
   };
 
+  const fetchWhatsAppNumbers = async () => {
+    try {
+      const response = await axios.get(API_ENDPOINTS.WHATSAPP.NUMBERS, {
+        withCredentials: true
+      });
+      setWhatsAppData(response.data?.numbers || []);
+      setShowSearchPanel(true);
+    } catch (error) {
+      console.error("Failed to fetch WhatsApp numbers:", error);
+      toast.error("Unable to load WhatsApp numbers.");
+    }
+  };
+
   return (
     <>
       <ToastContainer />
@@ -80,21 +96,39 @@ export default function Header({ isMenuOpen, onToggleSidebar }) {
 
         {/* Right Side */}
         <div className="flex items-center gap-2 flex-nowrap w-auto max-w-full overflow-hidden">
-          {/* Search Bar */}
-          <div className="relative w-[100px] xs:w-[120px] sm:w-[150px] md:w-[200px] lg:w-[250px] transition-all duration-300">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-            <input
-              type="text"
-              placeholder="Search"
+          {/* Custom Styled Search Bar */}
+          <div
+            className="flex items-center gap-2 bg-[#f0f2f5] rounded-full px-4 py-2 w-auto min-w-[220px] relative cursor-pointer"
+            aria-label="Search WhatsApp number"
+            onClick={fetchWhatsAppNumbers}
+          >
+            <button
+              type="button"
               aria-label="Search"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="pl-10 pr-8 py-2 w-full rounded-full bg-[#f0f2f5] text-sm placeholder-gray-500 outline-none focus:ring-2 focus:ring-[#05a3a3]"
-            />
+              className="text-gray-500 hover:text-gray-700 focus:outline-none"
+            >
+              <FaSearch />
+            </button>
+
+            <div className="text-sm text-gray-600 whitespace-nowrap hidden sm:block">
+              WhatsApp Number:
+            </div>
+
+<input
+  type="text"
+  placeholder="+1 123456789"
+  aria-label="WhatsApp number input"
+  value={searchTerm}
+  onChange={handleSearchChange}
+  readOnly
+   className="bg-white text-sm text-gray-800 placeholder-gray-500 placeholder:italic placeholder:font-medium outline-none flex-1 min-w-0 cursor-pointer rounded"
+/>
+
+
             {searchTerm && (
               <button
                 onClick={handleClearSearch}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 focus:outline-none"
+                className="text-gray-500 hover:text-gray-700 absolute right-3 top-1/2 transform -translate-y-1/2"
                 aria-label="Clear search"
               >
                 &times;
@@ -120,6 +154,13 @@ export default function Header({ isMenuOpen, onToggleSidebar }) {
           </button>
         </div>
       </header>
+
+      {/* WhatsApp Search Panel */}
+      <WhatsAppSearchPanel
+        isOpen={showSearchPanel}
+        onClose={() => setShowSearchPanel(false)}
+        data={whatsAppData}
+      />
     </>
   );
 }
