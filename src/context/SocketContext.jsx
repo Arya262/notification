@@ -7,7 +7,7 @@ export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    const newSocket = io("https://marketing-n08x.onrender.com", {
+    const newSocket = io("https://marketing-uoxu.onrender.com", {
       transports: ["websocket"],
       withCredentials: true, // ✅ Send cookies (like auth_token)
     });
