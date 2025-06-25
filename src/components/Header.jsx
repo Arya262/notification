@@ -36,9 +36,13 @@ export default function Header({ isMenuOpen, onToggleSidebar }) {
 
   const handleLogout = async () => {
     try {
-      const response = await axios.post(API_ENDPOINTS.AUTH.LOGOUT, {}, {
-        withCredentials: true
-      });
+      const response = await axios.post(
+        API_ENDPOINTS.AUTH.LOGOUT,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
 
       const data = response.data;
 
@@ -57,7 +61,7 @@ export default function Header({ isMenuOpen, onToggleSidebar }) {
   const fetchWhatsAppNumbers = async () => {
     try {
       const response = await axios.get(API_ENDPOINTS.WHATSAPP.NUMBERS, {
-        withCredentials: true
+        withCredentials: true,
       });
       setWhatsAppData(response.data?.numbers || []);
       setShowSearchPanel(true);
@@ -96,9 +100,9 @@ export default function Header({ isMenuOpen, onToggleSidebar }) {
 
         {/* Right Side */}
         <div className="flex items-center gap-2 flex-nowrap w-auto max-w-full overflow-hidden">
-          {/* Custom Styled Search Bar */}
+          {/* Full Search Bar for Desktop & Tablet */}
           <div
-            className="flex items-center gap-2 bg-[#f0f2f5] rounded-full px-4 py-2 w-auto min-w-[220px] relative cursor-pointer"
+            className="hidden sm:flex items-center gap-2 bg-[#f0f2f5] rounded-full px-4 py-2 w-auto min-w-[220px] relative cursor-pointer"
             aria-label="Search WhatsApp number"
             onClick={fetchWhatsAppNumbers}
           >
@@ -114,16 +118,18 @@ export default function Header({ isMenuOpen, onToggleSidebar }) {
               WhatsApp Number:
             </div>
 
-<input
-  type="text"
-  placeholder="+1 123456789"
-  aria-label="WhatsApp number input"
-  value={searchTerm}
-  onChange={handleSearchChange}
-  readOnly
-   className="bg-white text-sm text-gray-800 placeholder-gray-500 placeholder:italic placeholder:font-medium outline-none flex-1 min-w-0 cursor-pointer rounded"
-/>
-
+            <input
+              type="text"
+              placeholder="+91 92743 34248"
+              aria-label="WhatsApp number input"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              readOnly
+              className="bg-white text-sm text-gray-800 
+                placeholder-transparent sm:placeholder-gray-500 
+                placeholder:italic placeholder:font-medium 
+                outline-none flex-1 min-w-0 cursor-pointer rounded"
+            />
 
             {searchTerm && (
               <button
@@ -134,6 +140,14 @@ export default function Header({ isMenuOpen, onToggleSidebar }) {
                 &times;
               </button>
             )}
+          </div>
+
+          {/* Mobile Icon Only */}
+          <div
+            className="sm:hidden flex items-center justify-center bg-[#f0f2f5] rounded-full p-2 cursor-pointer"
+            onClick={fetchWhatsAppNumbers}
+          >
+            <FaSearch className="text-gray-500" />
           </div>
 
           {/* Buttons */}

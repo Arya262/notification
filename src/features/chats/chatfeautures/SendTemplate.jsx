@@ -16,35 +16,28 @@ const SendTemplate = ({ onSelect, onClose, returnFullTemplate = false }) => {
       setLoading(true);
       setError(null);
       try {
-        
         const response = await fetch(
-                `${API_ENDPOINTS.TEMPLATES.GET_ALL}?customer_id=${user?.customer_id}`,
-                {
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  credentials: "include",
-                }
-              );
+          `${API_ENDPOINTS.TEMPLATES.GET_ALL}?customer_id=${user?.customer_id}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+          }
+        );
 
-        // Check if the response status is OK
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
         const data = await response.json();
-
-        // Validate if 'templates' is an array
         if (Array.isArray(data.templates)) {
           setTemplates(data.templates);
           setFilteredTemplates(data.templates);
         } else {
-          console.error("Invalid response format:", data);
           setError("Unexpected response format from server.");
         }
       } catch (err) {
-        console.error("Fetch error:", err);
-        // Enhanced error message: You can include error details if available
         setError(
           `Failed to load templates. Please try again. Error: ${err.message}`
         );
@@ -56,7 +49,6 @@ const SendTemplate = ({ onSelect, onClose, returnFullTemplate = false }) => {
     fetchTemplates();
   }, [user?.customer_id]);
 
-  // Debounced filter templates on search
   useEffect(() => {
     const debouncedSearch = debounce(() => {
       if (searchTerm.trim() === "") {
@@ -69,31 +61,20 @@ const SendTemplate = ({ onSelect, onClose, returnFullTemplate = false }) => {
           )
         );
       }
-    }, 300); // Delay 300ms after the user stops typing
+    }, 300);
 
     debouncedSearch();
-
-    return () => debouncedSearch.cancel(); // Cleanup
+    return () => debouncedSearch.cancel();
   }, [searchTerm, templates]);
 
   const handleTemplateClick = (template) => {
-    // Return either the full template or just the name based on the prop
     if (onSelect) {
       onSelect(returnFullTemplate ? template : template.element_name);
     }
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-xl w-[850px] max-w-full p-6 relative overflow-hidden">
-      {/* Close Button */}
-      <button
-        onClick={onClose}
-        className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-xl font-bold focus:outline-none"
-        aria-label="Close"
-      >
-        &times;
-      </button>
-
+    <div className="w-full max-w-3xl p-4">
       <h2 className="text-lg font-semibold mb-4 text-center text-gray-800">
         Choose a Template
       </h2>
@@ -113,15 +94,12 @@ const SendTemplate = ({ onSelect, onClose, returnFullTemplate = false }) => {
       {loading ? (
         <div className="space-y-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="animate-pulse bg-gray-100 h-10 rounded"
-            ></div>
+            <div key={i} className="animate-pulse bg-gray-100 h-10 rounded"></div>
           ))}
         </div>
       ) : (
         <div className="border border-gray-200 rounded-md overflow-hidden">
-          <div className="overflow-x-auto overflow-y-auto max-h-[400px]">
+          <div className="overflow-x-auto overflow-y-auto max-h-[400px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
             <table className="min-w-full text-sm text-left text-gray-700">
               <thead className="bg-white text-gray-700 sticky top-0 z-10 shadow">
                 <tr>

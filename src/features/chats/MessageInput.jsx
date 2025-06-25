@@ -1,21 +1,19 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Send, X } from "lucide-react";
 import SendTemplate from "./chatfeautures/SendTemplate";
 
 const MessageInput = ({ onSendMessage, selectedContact }) => {
   const [message, setMessage] = useState("");
   const [showTemplates, setShowTemplates] = useState(false);
+  const modalRef = useRef();
 
   const isWithin24Hours = useMemo(() => {
     const time = selectedContact?.lastMessageTime;
     if (!time) return true;
-
     try {
       const lastTime = new Date(time).getTime();
       const now = Date.now();
-
       if (isNaN(lastTime)) return true;
-
       const hoursDiff = (now - lastTime) / (1000 * 60 * 60);
       return hoursDiff <= 24;
     } catch {
@@ -25,17 +23,14 @@ const MessageInput = ({ onSendMessage, selectedContact }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     if (!message.trim()) {
       setShowTemplates(true);
       return;
     }
-
     if (!isWithin24Hours) {
       setShowTemplates(true);
       return;
     }
-
     onSendMessage(message);
     setMessage("");
   };
@@ -44,7 +39,7 @@ const MessageInput = ({ onSendMessage, selectedContact }) => {
     ? !isWithin24Hours
     : false;
 
-  // Escape key closes template modal
+  // Close modal on escape key
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === "Escape") {
@@ -57,9 +52,22 @@ const MessageInput = ({ onSendMessage, selectedContact }) => {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [showTemplates]);
 
+  // Close modal on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (modalRef.current && !modalRef.current.contains(e.target)) {
+        setShowTemplates(false);
+      }
+    };
+    if (showTemplates) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showTemplates]);
+
   return (
     <>
-      <div className=" p-3 bg-white">
+      <div className="p-3 bg-white">
         <form
           onSubmit={handleSubmit}
           className="flex items-center w-full max-w-3xl mx-auto"
@@ -92,18 +100,19 @@ const MessageInput = ({ onSendMessage, selectedContact }) => {
 
       {/* Template Modal */}
       {showTemplates && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-          <div className="relative bg-white rounded-lg shadow-lg p-4 max-w-sm w-full">
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-sm z-50 flex justify-center items-center">
+          <div ref={modalRef} className="relative bg-white rounded-xl shadow-lg w-full max-w-3xl p-6">
             <SendTemplate
               onSelect={(templateName) => {
                 onSendMessage({ template_name: templateName });
                 setShowTemplates(false);
               }}
+              onClose={() => setShowTemplates(false)}
               returnFullTemplate={false}
             />
             <button
               onClick={() => setShowTemplates(false)}
-              className="absolute top-2 right-2 text-gray-700 hover:text-red-500"
+              className="absolute top-3 right-3 text-gray-500 hover:text-red-500"
               aria-label="Close Template Modal"
             >
               <X className="w-5 h-5" />

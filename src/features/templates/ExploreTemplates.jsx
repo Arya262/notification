@@ -12,7 +12,6 @@ const ExploreTemplates = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState(null);
   const { user } = useAuth();
-  const MAX_LENGTH = 100; // Maximum length for container_meta?.data
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -33,13 +32,11 @@ const ExploreTemplates = () => {
 
         if (Array.isArray(data.templates)) {
           setTemplates(data.templates);
-         
         } else {
           setError("Invalid response format");
         }
       } catch (err) {
         setError("Failed to fetch templates");
-        
       } finally {
         setLoading(false);
       }
@@ -48,19 +45,9 @@ const ExploreTemplates = () => {
     fetchTemplates();
   }, []);
 
-
-  const normalizeData = (data) => {
-    if (!data) return "No metadata available"; 
-    
-    return data.length > MAX_LENGTH
-      ? data.slice(0, MAX_LENGTH) + "..."
-      : data.padEnd(MAX_LENGTH, ".");
-  };
-
   const handleAddTemplate = (newTemplate) => {
     const updatedTemplates = [...templates, newTemplate];
     setTemplates(updatedTemplates);
-    
   };
 
   return (
@@ -97,7 +84,7 @@ const ExploreTemplates = () => {
                   alt={template.element_name}
                   className="w-full h-48 object-cover p-2 rounded-2xl"
                   onError={(e) => {
-                    e.target.onerror = null; // Prevent infinite loop
+                    e.target.onerror = null;
                     e.target.src = "/placeholder.jpg";
                   }}
                 />
@@ -109,9 +96,8 @@ const ExploreTemplates = () => {
                 <p className="text-sm text-gray-500 mb-2">
                   {template.category}
                 </p>
-                <p className="text-sm text-gray-700 mb-2">
-                  {normalizeData(template.container_meta?.data)}{" "}
-                  {/* Normalized data */}
+                <p className="text-sm text-gray-700 whitespace-pre-line mb-2">
+                  {template.container_meta?.sampleText || "No sample text available"}
                 </p>
               </div>
               <button

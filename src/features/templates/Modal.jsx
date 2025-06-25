@@ -137,7 +137,7 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
 
     const formData = {
       category,
-      templateName,
+      element_name: templateName,
       language,
       header,
       templateType,
@@ -149,7 +149,8 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
       quickReplies: quickReplies.filter(reply => reply.trim()),
       offerCode: offerCode.trim() || null,
       container_meta: {
-        data: format
+        data: format,
+        sampleText: format
       }
     };
 

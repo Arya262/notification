@@ -10,6 +10,7 @@ import ChatHeader from "./ChatHeader";
 import ChatMessageArea from "./ChatMessages";
 import MessageInput from "./MessageInput";
 import UserDetails from "./UserDetails";
+import { MessageCircle } from "lucide-react";
 
 const Chat = () => {
   const [showUserDetails, setShowUserDetails] = useState(false);
@@ -370,9 +371,10 @@ const Chat = () => {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-400 text-lg">
-              Select a contact to start conversation
-            </div>
+<div className="flex-1 flex flex-col items-center justify-center text-gray-400 text-lg px-4 text-center">
+  <MessageCircle className="w-16 h-16 mb-4 text-blue-500" />
+  <p>Select a contact to start a conversation</p>
+</div>
           )}
         </div>
       )}

@@ -37,12 +37,18 @@ export default function MessagingAnalytics() {
   const [loading, setLoading] = useState(true);
 
   const [filter, setFilter] = useState("Monthly");
-  const [selectedMonth, setSelectedMonth] = useState("2025-06");
+  const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedWeekStart, setSelectedWeekStart] = useState("");
-  const [selectedYear, setSelectedYear] = useState("2025");
+  const [selectedYear, setSelectedYear] = useState("");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
 
+  // ✅ Define today's date & month for max attributes
+  const today = new Date();
+  const todayDate = today.toISOString().split("T")[0]; // e.g. "2025-06-23"
+  const todayMonth = todayDate.slice(0, 7); 
+
+  // Fetch Data
   useEffect(() => {
     const fetchChartData = async () => {
       try {
@@ -68,7 +74,7 @@ export default function MessagingAnalytics() {
 
         const deduplicated = Array.from(
           new Map(formatted.map(item => [`${item.customer_id}_${item.usage_date}`, item])).values()
-        );
+        ).sort((a, b) => new Date(a.usage_date) - new Date(b.usage_date));
 
         setData(deduplicated);
       } catch (error) {
@@ -80,6 +86,25 @@ export default function MessagingAnalytics() {
 
     if (user?.customer_id) fetchChartData();
   }, [user?.customer_id]);
+
+  // Set dynamic defaults after data is loaded
+  useEffect(() => {
+    if (data.length > 0) {
+      const latest = data[data.length - 1];
+      const usageDate = latest.usage_date;
+      const dateObj = new Date(usageDate);
+
+      const yyyy = dateObj.getFullYear();
+      const mm = String(dateObj.getMonth() + 1).padStart(2, "0");
+      const dd = String(dateObj.getDate()).padStart(2, "0");
+
+      setSelectedMonth(`${yyyy}-${mm}`);
+      setSelectedWeekStart(`${yyyy}-${mm}-${dd}`);
+      setSelectedYear(`${yyyy}`);
+      setCustomStart(`${yyyy}-${mm}-01`);
+      setCustomEnd(`${yyyy}-${mm}-${dd}`);
+    }
+  }, [data]);
 
   const YEAR_OPTIONS = useMemo(() => {
     const years = data.map(d => new Date(d.usage_date).getFullYear());
@@ -94,6 +119,8 @@ export default function MessagingAnalytics() {
       start: customStart,
       end: customEnd
     });
+
+    if (start && end && start > end) return [];
 
     return data
       .filter(item => {
@@ -112,14 +139,15 @@ export default function MessagingAnalytics() {
   const totalGupshup = filteredData.reduce((sum, d) => sum + d.gupshup_fees, 0);
   const totalMeta = filteredData.reduce((sum, d) => sum + d.meta_fees, 0);
 
-  const messagePieData = [
+  const messagePieData = useMemo(() => [
     { name: "Sent", value: totalSent },
     { name: "Received", value: totalReceived }
-  ];
-  const costPieData = [
+  ], [totalSent, totalReceived]);
+
+  const costPieData = useMemo(() => [
     { name: "Gupshup Fees", value: totalGupshup },
     { name: "Meta Fees", value: totalMeta }
-  ];
+  ], [totalGupshup, totalMeta]);
 
   if (loading) {
     return (
@@ -131,18 +159,30 @@ export default function MessagingAnalytics() {
 
   return (
     <div className="p-6 space-y-10">
-      {/* Filter Controls */}
+      {/* ✅ Filter Controls */}
       <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
-        <select value={filter} onChange={e => setFilter(e.target.value)} className="border px-3 py-2 rounded">
-          {FILTER_OPTIONS.map(opt => (
-            <option key={opt} value={opt}>{opt}</option>
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="border px-3 py-2 rounded"
+        >
+          {FILTER_OPTIONS.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
           ))}
         </select>
 
         {filter === "Yearly" && (
-          <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)} className="border px-3 py-2 rounded">
-            {YEAR_OPTIONS.map(yr => (
-              <option key={yr} value={yr}>{yr}</option>
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(e.target.value)}
+            className="border px-3 py-2 rounded"
+          >
+            {YEAR_OPTIONS.map((yr) => (
+              <option key={yr} value={yr}>
+                {yr}
+              </option>
             ))}
           </select>
         )}
@@ -151,7 +191,8 @@ export default function MessagingAnalytics() {
           <input
             type="month"
             value={selectedMonth}
-            onChange={e => setSelectedMonth(e.target.value)}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            max={todayMonth} // ✅ prevent future months
             className="border px-3 py-2 rounded"
           />
         )}
@@ -160,7 +201,8 @@ export default function MessagingAnalytics() {
           <input
             type="date"
             value={selectedWeekStart}
-            onChange={e => setSelectedWeekStart(e.target.value)}
+            onChange={(e) => setSelectedWeekStart(e.target.value)}
+            max={todayDate} // ✅ prevent future dates
             className="border px-3 py-2 rounded"
           />
         )}
@@ -171,12 +213,14 @@ export default function MessagingAnalytics() {
               type="date"
               value={customStart}
               onChange={(e) => setCustomStart(e.target.value)}
+              max={todayDate} // ✅ prevent future start date
               className="border px-3 py-2 rounded"
             />
             <input
               type="date"
               value={customEnd}
               onChange={(e) => setCustomEnd(e.target.value)}
+              max={todayDate} // ✅ prevent future end date
               className="border px-3 py-2 rounded"
             />
           </>
@@ -191,7 +235,6 @@ export default function MessagingAnalytics() {
           <ChartBlock title="Gupshup Fees" dataKey="gupshup_fees" stroke="#82ca9d" data={filteredData} />
           <ChartBlock title="Meta Fees" dataKey="meta_fees" stroke="#ffc658" data={filteredData} />
 
-          {/* Pie: Message Distribution */}
           <div>
             <h2 className="text-xl font-semibold mb-4">Message Distribution</h2>
             <ResponsiveContainer width="100%" height={250}>
@@ -206,7 +249,6 @@ export default function MessagingAnalytics() {
             </ResponsiveContainer>
           </div>
 
-          {/* Pie: Cost Distribution */}
           <div>
             <h2 className="text-xl font-semibold mb-4">Cost Distribution</h2>
             <ResponsiveContainer width="100%" height={250}>
