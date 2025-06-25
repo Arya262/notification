@@ -106,7 +106,6 @@ export default function ContactRow({
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [shouldFlipUp, setShouldFlipUp] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isCrossHighlighted, setIsCrossHighlighted] = useState(false);
   const dropdownRef = useRef(null);
@@ -186,23 +185,7 @@ export default function ContactRow({
   const handleDeleteClick = (e) => {
     e.stopPropagation();
     setDropdownOpen(false);
-    setShowDeleteDialog(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    try {
-      setIsDeleting(true);
-      await onDeleteClick(contact);
-    } catch (error) {
-      console.error("Error deleting contact:", error);
-    } finally {
-      setIsDeleting(false);
-      setShowDeleteDialog(false);
-    }
-  };
-
-  const handleDeleteCancel = () => {
-    setShowDeleteDialog(false);
+    onDeleteClick(contact);
   };
 
   const handleEditClick = (e) => {
@@ -331,7 +314,7 @@ export default function ContactRow({
                 Edit Contact
               </button>
               <button
-                onClick={() => onDeleteClick(contact)}
+                onClick={handleDeleteClick}
                 className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
               >
                 Delete

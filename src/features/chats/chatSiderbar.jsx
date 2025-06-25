@@ -3,7 +3,7 @@ import { IoSearchOutline } from "react-icons/io5";
 const getAvatarColor = (name = "User") => {
   const hash = [...name].reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const hue = hash % 360;
-  return `hsl(${hue}, 70%, 50%)`; // More dynamic and visually distinct colors
+  return `hsl(${hue}, 70%, 50%)`;
 };
 
 const formatLastMessageTime = (timestamp) => {
@@ -42,9 +42,7 @@ const formatLastMessageTime = (timestamp) => {
 const getMessagePreview = (message, type) => {
   if (!message && !type) return null;
 
-  if (message && type === "text") {
-    return message;
-  }
+  if (message && type === "text") return message;
 
   switch (type) {
     case "image":
@@ -122,50 +120,58 @@ const ChatSidebar = ({
       {/* Contacts List */}
       <div className="space-y-2 overflow-y-auto flex-1 scrollbar-hide">
         {filteredContacts.length > 0 ? (
-          filteredContacts.map((contact, index) => (
-            <div
-              key={contact.id ?? `contact-${index}`}
-              role="button"
-              tabIndex={0}
-              onClick={() => onSelectContact(contact)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  onSelectContact(contact);
-                }
-              }}
-              className={`flex items-center px-2 py-1 cursor-pointer rounded-xl transition border focus:outline-none w-full max-w-full
-                ${
-                  selectedContact?.id === contact.id
-                    ? "border-[#0AA89E] bg-white"
-                    : "border-[#E0E0E0] bg-white hover:bg-gray-100"
-                }`}
-            >
-              {/* Avatar */}
-              <div className="shrink-0">{renderAvatar(contact)}</div>
+          filteredContacts.map((contact, index) => {
+            const isSelected =
+              selectedContact?.conversation_id === contact.conversation_id;
 
-              {/* Contact Details */}
-              <div className="flex-1 min-w-0 overflow-hidden">
-                <div className="flex justify-between items-center space-x-2">
-                  <p className="font-semibold text-black truncate max-w-[160px]">
-                    {contact.name || "Unnamed"}
-                  </p>
-                  <p className="text-xs text-gray-500 select-none shrink-0">
-                    {formatLastMessageTime(contact.lastMessageTime)}
-                  </p>
-                </div>
+            return (
+              <div
+                key={contact.conversation_id ?? `contact-${index}`}
+                role="button"
+                tabIndex={0}
+                onClick={() => onSelectContact(contact)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelectContact(contact);
+                  }
+                }}
+                className={`flex items-center px-2 py-1 w-full max-w-full rounded-xl transition focus:outline-none cursor-pointer bg-white
+                  ${isSelected
+                    ? "border border-[#0AA89E] bg-gray-100"
+                    : "border border-[#E0E0E0] hover:bg-gray-100"
+                  }`}
+              >
+                {/* Avatar */}
+                <div className="shrink-0">{renderAvatar(contact)}</div>
 
-                <div className="w-full overflow-hidden">
-                  <p className="text-sm text-gray-500 truncate mt-0.5">
-                    {getMessagePreview(
-                      contact.lastMessage,
-                      contact.lastMessageType
-                    ) || <span className="italic text-gray-400">No messages yet</span>}
-                  </p>
+                {/* Contact Details */}
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <div className="flex justify-between items-center space-x-2">
+                    <p className="font-semibold text-black truncate max-w-[160px]">
+                      {contact.name || "Unnamed"}
+                    </p>
+                    <p className="text-xs text-gray-500 select-none shrink-0">
+                      {formatLastMessageTime(contact.lastMessageTime)}
+                    </p>
+                  </div>
+
+                  <div className="w-full overflow-hidden">
+                    <p className="text-sm text-gray-500 truncate mt-0.5">
+                      {getMessagePreview(
+                        contact.lastMessage,
+                        contact.lastMessageType
+                      ) || (
+                        <span className="italic text-gray-400">
+                          No messages yet
+                        </span>
+                      )}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           <p className="text-center text-gray-400 text-sm mt-4">
             No contacts found.

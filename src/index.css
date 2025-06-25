@@ -10,3 +10,20 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  
+.gradient-1 {
+  @apply bg-gradient-to-br from-[#00c6ff] to-[#0072ff];
+}
+
+.gradient-2 {
+  @apply bg-gradient-to-br from-[#f7971e] to-[#ffd200];
+}
+
+.gradient-3 {
+  @apply bg-gradient-to-br from-[#00b09b] to-[#96c93d];
+}
+
+.gradient-4 {
+  @apply bg-gradient-to-br from-[#f953c6] to-[#b91d73];
+}

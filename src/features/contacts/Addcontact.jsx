@@ -6,7 +6,30 @@ import BulkContactForm from "./BulkContactForm";
 import { API_ENDPOINTS } from "../../config/api";
 import { useAuth } from "../../context/AuthContext";
 
-export default function AddContact({ closePopup }) {
+const GroupNameErrorDialog = ({ isOpen, message, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-sm shadow-xl">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          Duplicate Group Name
+        </h3>
+        <p className="text-gray-600 mb-6">{message}</p>
+        <div className="flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default function AddContact({ closePopup, onSuccess }) {
   const [tab, setTab] = useState("single");
   const [phone, setPhone] = useState("+1 ");
   const [optStatus, setOptStatus] = useState("Opted In");
@@ -23,6 +46,10 @@ export default function AddContact({ closePopup }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const [fieldMapping, setFieldMapping] = useState({});
+  const [groupNameErrorDialog, setGroupNameErrorDialog] = useState({
+    isOpen: false,
+    message: "",
+  });
 
   useEffect(() => {
     const fetchCountryCodes = async () => {
@@ -143,23 +170,23 @@ export default function AddContact({ closePopup }) {
         if (data.success) {
           setSuccessMessage(data.message || "Contact added successfully!");
           setErrorMessage("");
-          closePopup();
+          if (onSuccess) onSuccess(data.message || "Contact added successfully!");
         } else {
           setErrorMessage(data.message || "Failed to add contact.");
           setSuccessMessage("");
         }
       } else {
-const formData = new FormData();
-formData.append("file", file);
-formData.append("customer_id", user.customer_id);
-formData.append("group_name", groupName.trim());
-formData.append("field_mapping", JSON.stringify(fieldMapping)); // 👈 include this
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("customer_id", user.customer_id);
+        formData.append("group_name", groupName.trim());
+        formData.append("field_mapping", JSON.stringify(fieldMapping));
 
-// 🔍 Log FormData before sending
-console.log("📤 Submitting FormData:");
-for (let [key, value] of formData.entries()) {
-  console.log(`${key}:`, value);
-}
+        // 🔍 Log FormData before sending
+        console.log("📤 Submitting FormData:");
+        for (let [key, value] of formData.entries()) {
+          console.log(`${key}:`, value);
+        }
 
         const response = await fetch(API_ENDPOINTS.CONTACTS.ADD_MULTIPLE, {
           method: "POST",
@@ -171,9 +198,24 @@ for (let [key, value] of formData.entries()) {
         if (data.success) {
           setSuccessMessage(data.message || "Contacts imported from file!");
           setErrorMessage("");
-          closePopup();
+          if (onSuccess)
+            onSuccess(data.message || "Contacts imported successfully!");
         } else {
-          setErrorMessage(data.message || "Failed to import from file.");
+          console.log("Backend error response:", data);
+          if (
+            data.message &&
+            data.message.toLowerCase().includes("group") &&
+            data.message.toLowerCase().includes("already exists")
+          ) {
+            setGroupNameErrorDialog({
+              isOpen: true,
+              message:
+                data.message ||
+                "This group name already exists. Please choose a different name.",
+            });
+          } else {
+            setErrorMessage(data.message || "Failed to import from file.");
+          }
           setSuccessMessage("");
         }
       }
@@ -187,61 +229,69 @@ for (let [key, value] of formData.entries()) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl text-gray-500 p-6">
-      <h2 className="text-xl font-semibold mb-2 text-black">Add Contact</h2>
-      <SuccessErrorMessage
-        successMessage={successMessage}
-        errorMessage={errorMessage}
-      />
-      <p className="text-sm text-gray-600 mb-4">
-        Add one contact at a time or bulk upload contacts from a CSV.{" "}
-        <a href="#" className="text-blue-600 underline">
-          Learn more
-        </a>
-      </p>
-      <ContactTabs tab={tab} setTab={handleTabChange} />
-      {tab === "single" && (
-        <SingleContactForm
-          phone={phone}
-          setPhone={setPhone}
-          selectedCountry={selectedCountry}
-          setSelectedCountry={setSelectedCountry}
-          countryCodes={countryCodes}
-          phoneError={phoneError}
-          validatePhoneNumber={validatePhoneNumber}
-          isTouched={isTouched}
-          setIsTouched={setIsTouched}
-          optStatus={optStatus}
-          setOptStatus={setOptStatus}
-          name={name}
-          setName={setName}
+    <>
+      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl text-gray-500 p-6">
+        <h2 className="text-xl font-semibold mb-2 text-black">Add Contact</h2>
+        <SuccessErrorMessage
+          successMessage={successMessage}
+          errorMessage={errorMessage}
         />
-      )}
-      {tab === "bulk" && (
-        <BulkContactForm
-          file={file}
-          setFile={setFile}
-          groupName={groupName}
-          setGroupName={setGroupName}
-          groupNameError={groupNameError}
-           fieldMapping={fieldMapping}
-  setFieldMapping={setFieldMapping}
-        />
-      )}
-      <button
-        onClick={handleSubmit}
-        disabled={isSubmitting}
-        className="mt-4 bg-teal-600 text-white px-4 py-2 rounded mx-auto block cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
-      >
-        {isSubmitting ? (
-          <>
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            <span>Adding...</span>
-          </>
+        <p className="text-sm text-gray-600 mb-4">
+          Add one contact at a time or bulk upload contacts from a CSV.{" "}
+          <a href="#" className="text-blue-600 underline">
+            Learn more
+          </a>
+        </p>
+        <ContactTabs tab={tab} setTab={handleTabChange} />
+        {tab === "single" ? (
+          <SingleContactForm
+            phone={phone}
+            setPhone={setPhone}
+            selectedCountry={selectedCountry}
+            setSelectedCountry={setSelectedCountry}
+            countryCodes={countryCodes}
+            phoneError={phoneError}
+            validatePhoneNumber={validatePhoneNumber}
+            isTouched={isTouched}
+            setIsTouched={setIsTouched}
+            optStatus={optStatus}
+            setOptStatus={setOptStatus}
+            name={name}
+            setName={setName}
+          />
         ) : (
-          "Add Contact"
+          <BulkContactForm
+            file={file}
+            setFile={setFile}
+            groupName={groupName}
+            setGroupName={setGroupName}
+            groupNameError={groupNameError}
+            validateGroupName={validateGroupName}
+            fieldMapping={fieldMapping}
+            setFieldMapping={setFieldMapping}
+          />
         )}
-      </button>
-    </div>
+        <button
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className={`mt-4 px-4 py-2 rounded mx-auto block cursor-pointer ${
+            isSubmitting
+              ? "bg-gray-400 cursor-not-allowed text-white"
+              : "bg-teal-600 text-white"
+          }`}
+        >
+          {isSubmitting
+            ? "Submitting..."
+            : tab === "single"
+            ? "Add Contact"
+            : "Import Contacts"}
+        </button>
+      </div>
+      <GroupNameErrorDialog
+        isOpen={groupNameErrorDialog.isOpen}
+        message={groupNameErrorDialog.message}
+        onClose={() => setGroupNameErrorDialog({ isOpen: false, message: "" })}
+      />
+    </>
   );
 }

@@ -19,7 +19,8 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  const [hasProcessedLocationState, setHasProcessedLocationState] = useState(false);
+  const [hasProcessedLocationState, setHasProcessedLocationState] =
+    useState(false);
   const location = useLocation();
   const socket = useSocket();
   const userDetailsRef = useRef(null);
@@ -69,7 +70,8 @@ const Chat = () => {
               const messagesData = await messagesResponse.json();
               if (messagesData?.length > 0) {
                 const latestMessage = messagesData[messagesData.length - 1];
-                lastMessage = latestMessage.content || latestMessage.element_name;
+                lastMessage =
+                  latestMessage.content || latestMessage.element_name;
                 lastMessageType = latestMessage.message_type;
                 lastMessageTime = latestMessage.sent_at;
               }
@@ -114,7 +116,7 @@ const Chat = () => {
     if (location.state?.contact) {
       handleSelectContact(location.state.contact);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
   useEffect(() => {
@@ -224,8 +226,8 @@ const Chat = () => {
 
       if (response.data?.length > 0) {
         const latestMessage = response.data[response.data.length - 1];
-        setContacts((prevContacts) =>
-          prevContacts.map((contact) =>
+        setContacts((prevContacts) => {
+          const updatedContacts = prevContacts.map((contact) =>
             contact.conversation_id === conversationId
               ? {
                   ...contact,
@@ -235,8 +237,13 @@ const Chat = () => {
                   lastMessageType: latestMessage.message_type,
                 }
               : contact
-          )
-        );
+          );
+          return updatedContacts.sort(
+            (a, b) =>
+              new Date(b.lastMessageTime || b.updated_at) -
+              new Date(a.lastMessageTime || a.updated_at)
+          );
+        });
       }
     } catch (error) {
       console.error("Failed to fetch messages", error);
@@ -268,17 +275,20 @@ const Chat = () => {
 
     try {
       const response = await axios.post(`${API_BASE}/sendmessage`, newMessage);
-      console.log("Response from API:", response.data);
+      const sentMessage = response.data; // Should be the sent message object from server
 
       setContacts((prevContacts) => {
         const updatedContacts = prevContacts.map((contact) =>
-          contact.id === selectedContact.id
+          contact.conversation_id === selectedContact.conversation_id
             ? {
                 ...contact,
-                lastMessageTime: new Date().toISOString(),
+                lastMessageTime:
+                  sentMessage.sent_at || new Date().toISOString(),
                 lastMessage:
-                  typeof input === "string" ? input : input.template_name,
-                lastMessageType: messageType,
+                  sentMessage.content ||
+                  sentMessage.element_name ||
+                  (typeof input === "string" ? input : input.template_name),
+                lastMessageType: sentMessage.message_type || messageType,
               }
             : contact
         );
@@ -300,7 +310,7 @@ const Chat = () => {
   };
 
   return (
-        <div className="flex flex-col md:flex-row w-full flex-1 min-h-0 h-full border border-gray-300 rounded-2xl bg-white mx-auto max-w-screen-2xl overflow-hidden">
+    <div className="flex flex-col md:flex-row w-full flex-1 min-h-0 h-full border border-gray-300 rounded-2xl bg-white mx-auto max-w-screen-2xl overflow-hidden">
       {/* Sidebar */}
       {loading ? (
         <div className="basis-full md:basis-1/4 flex-shrink-0 h-full flex items-center justify-center p-6 border-r border-gray-200">
@@ -371,10 +381,10 @@ const Chat = () => {
               </div>
             </>
           ) : (
-<div className="flex-1 flex flex-col items-center justify-center text-gray-400 text-lg px-4 text-center">
-  <MessageCircle className="w-16 h-16 mb-4 text-blue-500" />
-  <p>Select a contact to start a conversation</p>
-</div>
+            <div className="flex-1 flex flex-col items-center justify-center text-gray-400 text-lg px-4 text-center">
+              <MessageCircle className="w-16 h-16 mb-4 text-blue-500" />
+              <p>Select a contact to start a conversation</p>
+            </div>
           )}
         </div>
       )}

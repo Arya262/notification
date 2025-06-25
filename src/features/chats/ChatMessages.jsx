@@ -10,25 +10,15 @@ import ContactMessage from "./chatfeautures/ContactMessage";
 import DocumentMessage from "./chatfeautures/DocumentMessage";
 import { format, isToday, isYesterday } from "date-fns";
 
-const ChatMessages = ({ selectedContact, messages, isTyping }) => {
+const ChatMessages = ({ selectedContact, messages = [], isTyping }) => {
   const messagesEndRef = useRef(null);
 
-
   useEffect(() => {
-    const scrollWithDelay = () => {
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          scrollToBottom();
-        }, 200);
-      });
-    };
-    scrollWithDelay();
+    scrollToBottom();
   }, [messages, isTyping]);
 
   const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const getDateLabel = (date) => {
@@ -37,101 +27,91 @@ const ChatMessages = ({ selectedContact, messages, isTyping }) => {
     return format(date, "MMMM d, yyyy");
   };
 
-  const groupMessagesByDate = (messages) => {
-    return messages.reduce((acc, msg) => {
-      const date = new Date(msg.sent_at);
-      const label = getDateLabel(date);
+  const groupMessagesByDate = (msgs) => {
+    return msgs.reduce((acc, msg) => {
+      const rawDate = msg.sent_at ? new Date(msg.sent_at) : new Date();
+      const label = getDateLabel(rawDate);
       if (!acc[label]) acc[label] = [];
       acc[label].push(msg);
       return acc;
     }, {});
   };
 
-  const renderMessage = (msg, index) => {
-    const sent = msg.status !== "received";
-    const key = msg.message_id || index;
-    
-
-    const messageTime = new Date(msg.sent_at);
-    const formattedTime = messageTime.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    }).toLowerCase();
-    
-    const message = { 
-      ...msg, 
-      sent_at: formattedTime 
-    };
-
-      return (
-      <div key={key} className="mb-4">
-        {(() => {
-          switch (msg.message_type) {
-            case "text":
-            case "button":
-              return <TextMessage key={key} msg={message} sent={sent} />;
-            case "image":
-              return <ImageMessage key={key} msg={message} sent={sent} />;
-            case "video":
-              return <VideoMessage key={key} msg={message} sent={sent} />;
-            case "template":
-              return <TemplateMessage key={key} msg={message} sent={sent} />;
-            case "audio":
-              return <AudioMessage key={key} msg={message} sent={sent} />;
-            case "location":
-              return <LocationMessage key={key} msg={message} sent={sent} />;
-            case "contact":
-              return <ContactMessage key={key} msg={message} sent={sent} />;
-            case "document":
-              if (!msg.document) {
-                console.warn("Missing document in message:", msg);
-              }
-              return <DocumentMessage key={key} msg={message} sent={sent} />;
-            default:
-              console.warn("Unhandled message type:", msg.message_type);
-              return (
-                <div key={key} className="text-red-400 text-sm italic">
-                  Unsupported message type: {msg.message_type}
-                </div>
-              );
-          }
-        })()}
-      </div>
-    );
-  };
-
   const groupedMessages = groupMessagesByDate(messages);
 
-  return (
-    <div className="flex flex-col min-h-0 h-full space-y-4 overflow-y-auto pr-1" aria-live="polite">
-    {messages.length > 0 ? (
-      Object.entries(groupedMessages).map(([dateLabel, dayMessages]) => (
-        <div key={dateLabel}>
-          <div className="flex justify-center my-2">
-            <span className="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full shadow-sm">
-              {dateLabel}
-            </span>
+  const renderMessage = (msg, index) => {
+    const sent = msg.status !== "received";
+    const time = msg.sent_at
+      ? new Date(msg.sent_at).toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        }).toLowerCase()
+      : "";
+
+    const message = { ...msg, sent_at: time };
+
+    switch (msg.message_type) {
+      case "text":
+      case "button":
+        return <TextMessage msg={message} sent={sent} />;
+      case "image":
+        return <ImageMessage msg={message} sent={sent} />;
+      case "video":
+        return <VideoMessage msg={message} sent={sent} />;
+      case "template":
+        return <TemplateMessage msg={message} sent={sent} />;
+      case "audio":
+        return <AudioMessage msg={message} sent={sent} />;
+      case "location":
+        return <LocationMessage msg={message} sent={sent} />;
+      case "contact":
+        return <ContactMessage msg={message} sent={sent} />;
+      case "document":
+        return <DocumentMessage msg={message} sent={sent} />;
+      default:
+        console.warn("Unknown type:", msg.message_type);
+        return (
+          <div className="text-red-500 text-sm italic">
+            Unsupported message type: {msg.message_type}
           </div>
-          {dayMessages.map((msg, index) => renderMessage(msg, index))}
+        );
+    }
+  };
+
+  return (
+    <div className="flex flex-col min-h-0 h-full space-y-4 overflow-y-auto pr-1 scrollbar-hide" aria-live="polite">
+      {messages.length > 0 ? (
+        Object.entries(groupedMessages).map(([dateLabel, msgs]) => (
+          <div key={dateLabel}>
+            <div className="flex justify-center my-2">
+              <span className="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full shadow-sm">
+                {dateLabel}
+              </span>
+            </div>
+            {msgs.map((msg, i) => (
+              <div key={msg.message_id || i} className="mb-4">
+                {renderMessage(msg, i)}
+              </div>
+            ))}
+          </div>
+        ))
+      ) : (
+        <p className="text-center text-gray-400">
+          {selectedContact?.conversation_id
+            ? "No messages to display."
+            : "This contact has no visible conversation."}
+        </p>
+      )}
+
+      {isTyping && selectedContact?.conversation_id && (
+        <div className="flex justify-start">
+          <TypingIndicator />
         </div>
-      ))
-    ) : (
-      <p className="text-center text-gray-400">
-        {selectedContact?.conversation_id
-          ? "No messages to display."
-          : "This contact has no visible conversation."}
-      </p>
-    )}
+      )}
 
-    {isTyping && selectedContact?.conversation_id && (
-      <div className="flex justify-start">
-        <TypingIndicator />
-      </div>
-    )}
-
-    <div ref={messagesEndRef} />
-  </div>
+      <div ref={messagesEndRef} />
+    </div>
   );
 };
 

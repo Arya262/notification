@@ -27,7 +27,6 @@ const ChatHeader = forwardRef(
     }, []);
 
     if (!selectedContact) return null;
-
     const handleDelete = async () => {
       if (
         confirm(`Are you sure you want to delete the chat with ${selectedContact.name}?`)

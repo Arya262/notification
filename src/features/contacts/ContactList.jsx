@@ -227,6 +227,7 @@ export default function ContactList() {
   const { user } = useAuth();
   const [editContact, setEditContact] = useState(null);
   const [deleteContact, setDeleteContact] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const fetchContacts = async () => {
     try {
@@ -277,6 +278,13 @@ export default function ContactList() {
     return c.status === filter;
   });
 
+  // Filtered contacts based on search term
+  const displayedContacts = filteredContacts.filter(
+    (c) =>
+      c.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.number.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const filterButtons = ["All", "Opted-in", "Opted-Out"];
 
   // Handle Select All checkbox change
@@ -285,7 +293,7 @@ export default function ContactList() {
     setSelectAll(checked);
     const newSelected = {};
     if (checked) {
-      filteredContacts.forEach((_, idx) => {
+      displayedContacts.forEach((_, idx) => {
         newSelected[idx] = true;
       });
     }
@@ -319,10 +327,10 @@ export default function ContactList() {
   const closePopup = () => setIsPopupOpen(false);
 
   useEffect(() => {
-    const total = filteredContacts.length;
+    const total = displayedContacts.length;
     const selected = Object.values(selectedRows).filter(Boolean).length;
     setSelectAll(selected === total && total > 0);
-  }, [selectedRows, filteredContacts.length]);
+  }, [selectedRows, displayedContacts.length]);
 
   const handleCloseAndNavigate = () => {
     setShowExitDialog(true);
@@ -354,13 +362,13 @@ export default function ContactList() {
 
   const handleDeleteSelected = async () => {
     const selectedIds = Object.entries(selectedRows)
-  .filter(([_, isSelected]) => isSelected)
-  .map(([idx]) => {
-    const contact = filteredContacts[idx];
-    console.log(`Index: ${idx}, Contact:`, contact);
-    return contact?.contact_id;
-  });
-console.log("Final selected contact_ids:", selectedIds);
+      .filter(([_, isSelected]) => isSelected)
+      .map(([idx]) => {
+        const contact = displayedContacts[idx];
+        console.log(`Index: ${idx}, Contact:`, contact);
+        return contact?.contact_id;
+      });
+    console.log("Final selected contact_ids:", selectedIds);
 
     try {
       setIsDeleting(true);
@@ -391,29 +399,37 @@ console.log("Final selected contact_ids:", selectedIds);
 
       // Show success toast
       const deletedCount = selectedIds.length;
-      toast.success(`${deletedCount} contact${deletedCount > 1 ? 's' : ''} deleted successfully!`, {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        theme: "light",
-      });
+      toast.success(
+        `${deletedCount} contact${
+          deletedCount > 1 ? "s" : ""
+        } deleted successfully!`,
+        {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "light",
+        }
+      );
     } catch (error) {
       console.error("Error deleting contacts:", error);
       setError(error.message || "Failed to delete contacts. Please try again.");
-      
+
       // Show error toast
-      toast.error(error.message || "Failed to delete contacts. Please try again.", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        theme: "light",
-      });
+      toast.error(
+        error.message || "Failed to delete contacts. Please try again.",
+        {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "light",
+        }
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -452,15 +468,18 @@ console.log("Final selected contact_ids:", selectedIds);
       });
     } catch (error) {
       setError(error.message || "Failed to delete contact. Please try again.");
-      toast.error(error.message || "Failed to delete contact. Please try again.", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        theme: "light",
-      });
+      toast.error(
+        error.message || "Failed to delete contact. Please try again.",
+        {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "light",
+        }
+      );
     } finally {
       setIsDeleting(false);
       setDeleteContact(null);
@@ -470,6 +489,29 @@ console.log("Final selected contact_ids:", selectedIds);
   const handleContactEdit = async () => {
     // Refresh the contacts list after a successful edit
     await fetchContacts();
+    toast.success("Contact updated successfully!", {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      theme: "light",
+    });
+  };
+
+  const handleContactAdd = (message) => {
+    fetchContacts();
+    toast.success(message || "Contact added successfully!", {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      theme: "light",
+    });
+    setIsPopupOpen(false);
   };
 
   return (
@@ -505,7 +547,26 @@ console.log("Final selected contact_ids:", selectedIds);
             ))}
           </div>
         </div>
-
+        <div className="relative max-w-xs ml-auto">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by name or number..."
+            aria-label="Search"
+            className="pl-3 pr-10 py-2 border border-gray-300 text-sm rounded-md w-full focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400"
+          />
+          <svg
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </div>
         <button
           className="bg-teal-500 hover:bg-teal-600 text-white flex items-center gap-2 px-4 py-2 rounded cursor-pointer"
           onClick={openPopup}
@@ -516,7 +577,7 @@ console.log("Final selected contact_ids:", selectedIds);
       </div>
 
       <div className="overflow-x-auto">
-        <div className="min-w-[900px] bg-white rounded-2xl shadow-[0px_-0.91px_3.66px_0px_#00000042] overflow-hidden">
+        <div className="min-w-[900px] bg-white rounded-2xl shadow-[0px_-0.91px_3.66px_0px_#00000042] overflow-hidden ">
           <table className="w-full text-sm text-center overflow-hidden table-auto">
             <thead className="bg-[#F4F4F4] border-b-2 shadow-sm border-gray-300">
               <tr>
@@ -567,7 +628,8 @@ console.log("Final selected contact_ids:", selectedIds);
                 )}
               </tr>
             </thead>
-            <tbody className="max-h-[calc(100vh-300px)] overflow-y-auto">
+            <tbody className="max-h-[calc(100vh-300px)] overflow-y-auto scrollbar-hide">
+              
               {loading ? (
                 <tr>
                   <td colSpan="7" className="text-center py-8">
@@ -576,14 +638,14 @@ console.log("Final selected contact_ids:", selectedIds);
                     </div>
                   </td>
                 </tr>
-              ) : filteredContacts.length === 0 ? (
+              ) : displayedContacts.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="text-center py-4 text-gray-500">
                     No contacts found.
                   </td>
                 </tr>
               ) : (
-                filteredContacts.map((contact, idx) => (
+                displayedContacts.map((contact, idx) => (
                   <ContactRow
                     key={contact.id || idx}
                     contact={contact}
@@ -625,7 +687,7 @@ console.log("Final selected contact_ids:", selectedIds);
             >
               ×
             </button>
-            <AddContact closePopup={closePopup} />
+            <AddContact closePopup={closePopup} onSuccess={handleContactAdd} />
           </div>
         </div>
       )}

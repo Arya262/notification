@@ -352,7 +352,7 @@ export default function FlowEditor() {
     setNodes(flow.nodes);
     setEdges(flow.edges);
     setMode("edit");
-    setTimeout(() => setLoadingFlow(false), 500); // Simulate loading
+    setTimeout(() => setLoadingFlow(false), 500); 
     toast.info(`Loaded flow: ${flow.name}`);
   };
 
