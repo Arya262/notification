@@ -69,17 +69,17 @@ const Sidebar = ({ isOpen, setIsOpen, className = "" }) => {
       aria-label="Main sidebar"
       tabIndex={-1}
       className={`
-        fixed top-0 left-0 z-50
-        w-64 h-screen
-        bg-[#fff] text-white
-        flex flex-col
-        transition-transform duration-300 ease-in-out
-        ${isOpen ? "translate-x-0" : "-translate-x-full"}
-        lg:relative lg:translate-x-0 lg:top-0 lg:h-auto
-        lg:bg-white lg:text-black
-        shadow-lg lg:shadow-none
-        ${className}
-      `}
+  fixed top-0 left-0 z-50
+  w-64 h-screen
+  bg-[#fff] text-white
+  flex flex-col
+  transition-transform duration-300 ease-in-out
+  ${isOpen ? "translate-x-0" : "-translate-x-full"}
+  lg:relative lg:translate-x-0 lg:top-0 lg:h-auto
+  lg:bg-white lg:text-black
+  shadow-2xl lg:shadow-2xl
+  ${className}
+`}
     >
       {/* Logo/Header (non-scrollable) */}
       <div className="px-4 py-5 border-b border-white/10 lg:hidden shrink-0">

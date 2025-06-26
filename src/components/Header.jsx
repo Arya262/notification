@@ -6,7 +6,7 @@ import axios from "axios";
 import { API_ENDPOINTS } from "../config/api";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import WhatsAppSearchPanel from "../components/WhatsAppSearchPanel"; // adjust path if needed
+import WhatsAppSearchPanel from "../components/WhatsAppSearchPanel";
 
 export default function Header({ isMenuOpen, onToggleSidebar }) {
   const [searchTerm, setSearchTerm] = useState("");

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { z } from "zod";
 
 // Zod validation schema
@@ -46,6 +46,8 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
   const [quickReplies, setQuickReplies] = useState([""]);
   const [offerCode, setOfferCode] = useState("");
   const [selectedAction, setSelectedAction] = useState("None");
+  const [variables, setVariables] = useState([]);
+  const [sampleValues, setSampleValues] = useState({});
 
   // Validation errors state
   const [errors, setErrors] = useState({});
@@ -64,8 +66,30 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
     setQuickReplies([""]);
     setOfferCode("");
     setSelectedAction("None");
+    setVariables([]);
+    setSampleValues({});
     setErrors({});
   };
+
+  // Detect variables from format
+  useEffect(() => {
+    const regex = /{{\s*(\d+)\s*}}/g;
+    const matches = [...format.matchAll(regex)];
+    const uniqueVariables = [...new Set(matches.map(match => match[1]))].sort((a, b) => a - b);
+    setVariables(uniqueVariables);
+
+    // Clean up sample values for variables that no longer exist
+    setSampleValues(prev => {
+        const newValues = {};
+        uniqueVariables.forEach(v => {
+            if(prev[v]){
+                newValues[v] = prev[v];
+            }
+        });
+        return newValues;
+    });
+
+  }, [format]);
 
   // Reset form when modal opens
   React.useEffect(() => {
@@ -89,6 +113,20 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
       };
 
       templateSchema.parse(formData);
+
+      // Validate sample values
+      const sampleErrors = {};
+      variables.forEach(v => {
+          if(!sampleValues[v]?.trim()){
+              sampleErrors[v] = "Sample value is required";
+          }
+      })
+
+      if(Object.keys(sampleErrors).length > 0){
+          setErrors(prev => ({...prev, sampleValues: sampleErrors}));
+          return false;
+      }
+
       setErrors({});
       return true;
     } catch (error) {
@@ -101,6 +139,18 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
         return false;
       }
       return false;
+    }
+  };
+
+  const handleSampleValueChange = (variable, value) => {
+    setSampleValues(prev => ({ ...prev, [variable]: value }));
+    // Clear error for this field on change
+    if(errors.sampleValues?.[variable]){
+        setErrors(prev => {
+            const newSampleErrors = {...prev.sampleValues};
+            delete newSampleErrors[variable];
+            return {...prev, sampleValues: newSampleErrors};
+        })
     }
   };
 
@@ -120,43 +170,38 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
     }
   };
 
-  // const handleSubmit = () => {
-  //   if (validateForm()) {
-  //     console.log("Form is valid - submitting...");
-  //     // Handle form submission
-  //   } else {
-  //     console.log("Form has validation errors");
-  //   }
-  // };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validateForm()) {
       return;
     }
 
-    const formData = {
-      category,
-      element_name: templateName,
-      language,
-      header,
-      templateType,
-      format,
-      footer,
-      selectedAction,
-      urlCtas: urlCtas.filter(cta => cta.title && cta.url),
-      phoneCta: phoneCta.title && phoneCta.number ? phoneCta : null,
-      quickReplies: quickReplies.filter(reply => reply.trim()),
-      offerCode: offerCode.trim() || null,
-      container_meta: {
-        data: format,
-        sampleText: format
-      }
+    const generateSampleText = (formatString, samples) => {
+      return formatString.replace(/{{\s*(\d+)\s*}}/g, (match, number) => {
+        return samples[number] || match;
+      });
     };
+    const sampleText = generateSampleText(format, sampleValues);
 
     const newTemplate = {
       id: Date.now(),
-      ...formData,
+      category: category,
+      element_name: templateName,
+      language: language,
+      template_type: templateType.toUpperCase(),
+      container_type:
+        templateType.toUpperCase() === "TEXT" ? "text_template" : "",
+      data: `${header}\n${format}\n${footer}`,
+      container_meta: {
+        header: header,
+        data: format,
+        sampleText: sampleText,
+        footer: footer,
+      },
+      urlCtas: urlCtas.filter((cta) => cta.title && cta.url),
+      phoneCta: phoneCta.title && phoneCta.number ? phoneCta : null,
+      quickReplies: quickReplies.filter((reply) => reply.trim()),
+      offerCode: offerCode.trim() || null,
     };
 
     onSubmit(newTemplate);
@@ -164,6 +209,13 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
   };
 
   if (!isOpen) return null;
+
+  const generateSampleText = (formatString, samples) => {
+    return formatString.replace(/{{\s*(\d+)\s*}}/g, (match, number) => {
+      return samples[number] || match;
+    });
+  };
+  const livePreviewSampleText = generateSampleText(format, sampleValues);
 
   return (
    <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
@@ -195,8 +247,8 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                       }}
                     >
                       <option value="">Select Template Category</option>
-                      <option value="Marketing">Marketing</option>
-                      <option value="Utilities">Utilities</option>
+                      <option value="MARKETING">Marketing</option>
+                      <option value="UTILITY">Utility</option>
                     </select>
                     {errors.category && (
                       <p className="text-red-500 text-sm mt-1">{errors.category}</p>
@@ -222,7 +274,6 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                       </p>
                     )}
                   </div>
-
                   <div>
                     <select
                       className={`border rounded p-2 w-full ${
@@ -235,7 +286,7 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                       }}
                     >
                       <option value="">Select Language</option>
-                      <option value="English">English</option>
+                      <option value="en_US">English</option>
                     </select>
                     {errors.language && (
                       <p className="text-red-500 text-sm mt-1">{errors.language}</p>
@@ -288,33 +339,82 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                 </div>
 
                 {templateType === "Text" ? (
-                  <div className="mb-4">
+                  <div className="mb-4 relative">
+                    <div className="absolute top-2 right-2 z-10 pointer-events-none">
+                      <span className={`text-xs ${format.length === 1024 ? 'text-red-500 font-bold' : 'text-gray-500'}`}>{format.length}/1024</span>
+                    </div>
                     <textarea
                       className={`w-full border rounded p-2 mb-2 ${
                         errors.format ? "border-red-500" : "border-gray-300"
                       }`}
                       rows={4}
-                      placeholder="Template Format"
+                      placeholder="Template Format (use {{1}}, {{2}}... for variables)"
                       value={format}
+                      maxLength={1024}
+                      style={{ resize: 'vertical' }}
                       onChange={(e) => {
-                        setFormat(e.target.value);
-                        validateField("format", e.target.value);
+                        if (e.target.value.length <= 1024) {
+                          setFormat(e.target.value);
+                          validateField("format", e.target.value);
+                        }
                       }}
                     ></textarea>
-                    {errors.format && (
-                      <p className="text-red-500 text-sm mb-2">{errors.format}</p>
-                    )}
                     <p className="text-sm text-gray-500 mb-4">
                       Use text formatting - bold, italic, etc. Max 1024 characters.
                     </p>
+                    {errors.format && (
+                      <p className="text-red-500 text-sm mb-2">{errors.format}</p>
+                    )}
                   </div>
                 ) : (
                   <>
-                    <input type="file" className="w-full border rounded p-2 mb-2" />
+                    <input
+                      type="file"
+                      className="w-full border rounded p-2 mb-2"
+                    />
                     <p className="text-sm text-gray-500 mb-4">
                       Upload your {templateType.toLowerCase()} file.
                     </p>
                   </>
+                )}
+
+                {variables.length > 0 && (
+                    <div className="border border-[#CACACA] rounded p-4 mb-4">
+                        <div className="font-semibold mb-2 border-b border-[#CACACA] pb-2">
+                            Sample Values
+                        </div>
+                        {variables.map((variable, index) => (
+                            <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Field {index + 1}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={`{{${variable}}}`}
+                                        className="border rounded p-2 w-full bg-gray-100"
+                                        readOnly
+                                    />
+                                     <p className="text-xs text-gray-500 mt-1">
+                                        Specify the parameter to be replaced.
+                                    </p>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Sample Value {index + 1}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder={`Enter sample value for {{${variable}}}`}
+                                        value={sampleValues[variable] || ''}
+                                        onChange={(e) => handleSampleValueChange(variable, e.target.value)}
+                                        className={`border rounded p-2 w-full ${errors.sampleValues?.[variable] ? 'border-red-500' : 'border-gray-300'}`}
+                                    />
+                                    {errors.sampleValues?.[variable] && <p className="text-red-500 text-xs mt-1">{errors.sampleValues[variable]}</p>}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 )}
 
                 <div className="mb-4">
@@ -596,7 +696,12 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                   )}
 
                   {templateType === "Text" ? (
-                    <p className="text-gray-800 whitespace-pre-wrap mb-2">{format}</p>
+                    <p
+                      className="text-gray-800 mb-2 overflow-x-auto"
+                      style={{ whiteSpace: 'pre', wordBreak: 'break-all' }}
+                    >
+                      {livePreviewSampleText}
+                    </p>
                   ) : (
                     <p className="italic text-gray-500">
                       [{templateType} Preview Placeholder]
@@ -623,40 +728,45 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                     </div>
                   )}
 
-                  {urlCtas.filter((cta) => cta.title && cta.url).length > 0 && (
-                    <div className="mt-4">
-                      <span>Call To Actions:</span>
-                      {urlCtas
-                        .filter((cta) => cta.title && cta.url)
-                        .map((cta, idx) => (
-                          <a
-                            key={idx}
-                            href={cta.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block bg-blue-500 text-white text-center px-3 py-1 rounded mb-2"
-                          >
-                            {cta.title}
-                          </a>
-                        ))}
-                      {offerCode && (
-                        <>
-                          <span>Offer Code:</span>
-                          <p className="block bg-blue-500 text-white text-center px-3 py-1 rounded mb-2">
-                            {offerCode}
-                          </p>
-                        </>
-                      )}
-                    </div>
-                  )}
-                  {phoneCta.title && phoneCta.number && (
-                    <>
-                      <span>Call To Actions :</span>
-                      <p className="block bg-blue-500 text-white text-center px-3 py-1 rounded mb-2">
-                        {phoneCta.title}
-                      </p>
-                    </>
-                  )}
+                  {(selectedAction === "Call To Actions" ||
+                    selectedAction === "All") &&
+                    urlCtas.filter((cta) => cta.title && cta.url).length > 0 && (
+                      <div className="mt-4">
+                        <span>Call To Actions:</span>
+                        {urlCtas
+                          .filter((cta) => cta.title && cta.url)
+                          .map((cta, idx) => (
+                            <a
+                              key={idx}
+                              href={cta.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block bg-blue-500 text-white text-center px-3 py-1 rounded mb-2"
+                            >
+                              {cta.title}
+                            </a>
+                          ))}
+                        {offerCode && (
+                          <>
+                            <span>Offer Code:</span>
+                            <p className="block bg-blue-500 text-white text-center px-3 py-1 rounded mb-2">
+                              {offerCode}
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  {(selectedAction === "Call To Actions" ||
+                    selectedAction === "All") &&
+                    phoneCta.title &&
+                    phoneCta.number && (
+                      <>
+                        <span>Call To Actions :</span>
+                        <p className="block bg-blue-500 text-white text-center px-3 py-1 rounded mb-2">
+                          {phoneCta.title}
+                        </p>
+                      </>
+                    )}
                 </div>
               </div>
             </div>

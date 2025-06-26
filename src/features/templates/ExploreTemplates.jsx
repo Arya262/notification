@@ -17,6 +17,8 @@ const ExploreTemplates = () => {
     const fetchTemplates = async () => {
       setLoading(true);
       setError(null);
+      console.log("Fetching templates...");
+
       try {
         const response = await fetch(
           `${API_ENDPOINTS.TEMPLATES.GET_ALL}?customer_id=${user?.customer_id}`,
@@ -28,26 +30,33 @@ const ExploreTemplates = () => {
           }
         );
 
+        console.log("API Response Status:", response.status);
+
         const data = await response.json();
+        console.log("Fetched Templates Data:", data);
 
         if (Array.isArray(data.templates)) {
           setTemplates(data.templates);
+          console.log("Templates set successfully");
         } else {
           setError("Invalid response format");
+          console.error("Invalid response format:", data);
         }
       } catch (err) {
         setError("Failed to fetch templates");
+        console.error("Fetch Error:", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchTemplates();
-  }, []);
+  }, [user?.customer_id]);
 
   const handleAddTemplate = (newTemplate) => {
     const updatedTemplates = [...templates, newTemplate];
     setTemplates(updatedTemplates);
+    console.log("Template added:", newTemplate);
   };
 
   return (
@@ -56,7 +65,10 @@ const ExploreTemplates = () => {
         <h2 className="text-2xl font-bold">Explore Templates</h2>
         <button
           className="bg-teal-500 text-white flex items-center gap-2 px-4 py-2 rounded cursor-pointer"
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            console.log("Opening modal to add new template");
+            setIsModalOpen(true);
+          }}
         >
           <img src={vendor} alt="plus sign" className="w-5 h-5" />
           Add New Templates
@@ -76,7 +88,7 @@ const ExploreTemplates = () => {
           {templates.map((template) => (
             <div
               key={template.id || template.element_name}
-              className="bg-white rounded-xl shadow-md overflow-hidden flex flex-col"
+              className="bg-white rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.25)] overflow-hidden flex flex-col"
             >
               {template.image_url && (
                 <img
@@ -97,19 +109,21 @@ const ExploreTemplates = () => {
                   {template.category}
                 </p>
                 <p className="text-sm text-gray-700 whitespace-pre-line mb-2">
-                  {template.container_meta?.sampleText || "No sample text available"}
+                  {template.container_meta?.sampleText ||
+                    "No sample text available"}
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
+                  console.log("Navigating with selected template:", template);
                   navigate("/broadcast", {
                     state: {
                       selectedTemplate: template,
                       openForm: true,
                     },
-                  })
-                }
+                  });
+                }}
                 className="bg-teal-500 text-black px-6 py-3 font-medium rounded 
                   border border-teal-500 hover:bg-teal-400 hover:text-white hover:border-teal-400 transition duration-300 ease-in-out cursor-pointer"
               >
@@ -119,9 +133,13 @@ const ExploreTemplates = () => {
           ))}
         </div>
       )}
+
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          console.log("Modal closed");
+          setIsModalOpen(false);
+        }}
         onSubmit={handleAddTemplate}
       />
     </div>

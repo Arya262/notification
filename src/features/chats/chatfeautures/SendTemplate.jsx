@@ -74,7 +74,7 @@ const SendTemplate = ({ onSelect, onClose, returnFullTemplate = false }) => {
   };
 
   return (
-    <div className="w-full max-w-3xl p-4">
+    <div className="w-full max-w-3xl p-4 bg-white">
       <h2 className="text-lg font-semibold mb-4 text-center text-gray-800">
         Choose a Template
       </h2>
