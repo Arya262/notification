@@ -8,7 +8,6 @@ import {
   startOfWeek, endOfWeek
 } from "date-fns";
 import { useAuth } from "../../context/AuthContext";
-import { API_ENDPOINTS } from "../../config/api";
 
 // Utility: Get date range for filter
 function getDateRange(filter, options) {
