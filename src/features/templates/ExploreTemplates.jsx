@@ -17,46 +17,33 @@ const ExploreTemplates = () => {
     const fetchTemplates = async () => {
       setLoading(true);
       setError(null);
-      console.log("Fetching templates...");
-
       try {
         const response = await fetch(
           `${API_ENDPOINTS.TEMPLATES.GET_ALL}?customer_id=${user?.customer_id}`,
           {
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             credentials: "include",
           }
         );
-
-        console.log("API Response Status:", response.status);
-
         const data = await response.json();
-        console.log("Fetched Templates Data:", data);
-
         if (Array.isArray(data.templates)) {
           setTemplates(data.templates);
-          console.log("Templates set successfully");
         } else {
           setError("Invalid response format");
-          console.error("Invalid response format:", data);
         }
       } catch (err) {
         setError("Failed to fetch templates");
-        console.error("Fetch Error:", err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchTemplates();
   }, [user?.customer_id]);
 
   const handleAddTemplate = (newTemplate) => {
-    const updatedTemplates = [...templates, newTemplate];
-    setTemplates(updatedTemplates);
-    console.log("Template added:", newTemplate);
+    // Optionally, you may want to POST to backend here
+    // For now, just update the UI optimistically
+    setTemplates((prev) => [...prev, newTemplate]);
   };
 
   return (
@@ -66,7 +53,6 @@ const ExploreTemplates = () => {
         <button
           className="bg-teal-500 text-white flex items-center gap-2 px-4 py-2 rounded cursor-pointer"
           onClick={() => {
-            console.log("Opening modal to add new template");
             setIsModalOpen(true);
           }}
         >
@@ -84,7 +70,7 @@ const ExploreTemplates = () => {
       ) : templates.length === 0 ? (
         <p>No templates available.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {templates.map((template) => (
             <div
               key={template.id || template.element_name}
@@ -116,7 +102,6 @@ const ExploreTemplates = () => {
               <button
                 type="button"
                 onClick={() => {
-                  console.log("Navigating with selected template:", template);
                   navigate("/broadcast", {
                     state: {
                       selectedTemplate: template,
@@ -137,7 +122,6 @@ const ExploreTemplates = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={() => {
-          console.log("Modal closed");
           setIsModalOpen(false);
         }}
         onSubmit={handleAddTemplate}

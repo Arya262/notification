@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import DeleteConfirmationDialog from "../shared/DeleteConfirmationDialog";
 
 // Zod validation schema
 const templateSchema = z.object({
@@ -52,6 +55,10 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
   // Validation errors state
   const [errors, setErrors] = useState({});
 
+  // Confirmation dialog states
+  const [showExitDialog, setShowExitDialog] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
   // Reset form function
   const resetForm = () => {
     setTemplateType("Text");
@@ -69,34 +76,82 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
     setVariables([]);
     setSampleValues({});
     setErrors({});
+    setHasUnsavedChanges(false);
+    setShowExitDialog(false);
   };
 
   // Detect variables from format
   useEffect(() => {
     const regex = /{{\s*(\d+)\s*}}/g;
     const matches = [...format.matchAll(regex)];
-    const uniqueVariables = [...new Set(matches.map(match => match[1]))].sort((a, b) => a - b);
+    const uniqueVariables = [...new Set(matches.map((match) => match[1]))].sort(
+      (a, b) => a - b
+    );
     setVariables(uniqueVariables);
 
     // Clean up sample values for variables that no longer exist
-    setSampleValues(prev => {
-        const newValues = {};
-        uniqueVariables.forEach(v => {
-            if(prev[v]){
-                newValues[v] = prev[v];
-            }
-        });
-        return newValues;
+    setSampleValues((prev) => {
+      const newValues = {};
+      uniqueVariables.forEach((v) => {
+        if (prev[v]) {
+          newValues[v] = prev[v];
+        }
+      });
+      return newValues;
     });
-
   }, [format]);
+
+  // Check for unsaved changes
+  useEffect(() => {
+    // Check if there are any meaningful changes
+    const hasChanges =
+      category.trim() ||
+      templateName.trim() ||
+      language.trim() ||
+      header.trim() ||
+      format.trim() ||
+      footer.trim() ||
+      selectedAction !== "None" ||
+      quickReplies.some((q) => q.trim()) ||
+      urlCtas.some((cta) => cta.title.trim() || cta.url.trim()) ||
+      phoneCta.title.trim() ||
+      phoneCta.number.trim() ||
+      offerCode.trim();
+
+    setHasUnsavedChanges(hasChanges);
+  }, [
+    category,
+    templateName,
+    language,
+    header,
+    format,
+    footer,
+    selectedAction,
+    quickReplies,
+    urlCtas,
+    phoneCta,
+    offerCode,
+  ]);
 
   // Reset form when modal opens
   React.useEffect(() => {
     if (isOpen) {
       resetForm();
+      setShowExitDialog(false);
     }
   }, [isOpen]);
+
+  // Cleanup when modal closes
+  React.useEffect(() => {
+    if (!isOpen) {
+      setShowExitDialog(false);
+    }
+  }, [isOpen]);
+
+  // Debug effect for dialog state
+  React.useEffect(() => {
+    console.log("showExitDialog state changed to:", showExitDialog);
+  }, [showExitDialog]);
 
   // Validation function
   const validateForm = () => {
@@ -116,15 +171,15 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
 
       // Validate sample values
       const sampleErrors = {};
-      variables.forEach(v => {
-          if(!sampleValues[v]?.trim()){
-              sampleErrors[v] = "Sample value is required";
-          }
-      })
+      variables.forEach((v) => {
+        if (!sampleValues[v]?.trim()) {
+          sampleErrors[v] = "Sample value is required";
+        }
+      });
 
-      if(Object.keys(sampleErrors).length > 0){
-          setErrors(prev => ({...prev, sampleValues: sampleErrors}));
-          return false;
+      if (Object.keys(sampleErrors).length > 0) {
+        setErrors((prev) => ({ ...prev, sampleValues: sampleErrors }));
+        return false;
       }
 
       setErrors({});
@@ -143,14 +198,14 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
   };
 
   const handleSampleValueChange = (variable, value) => {
-    setSampleValues(prev => ({ ...prev, [variable]: value }));
+    setSampleValues((prev) => ({ ...prev, [variable]: value }));
     // Clear error for this field on change
-    if(errors.sampleValues?.[variable]){
-        setErrors(prev => {
-            const newSampleErrors = {...prev.sampleValues};
-            delete newSampleErrors[variable];
-            return {...prev, sampleValues: newSampleErrors};
-        })
+    if (errors.sampleValues?.[variable]) {
+      setErrors((prev) => {
+        const newSampleErrors = { ...prev.sampleValues };
+        delete newSampleErrors[variable];
+        return { ...prev, sampleValues: newSampleErrors };
+      });
     }
   };
 
@@ -168,6 +223,40 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
         }));
       }
     }
+  };
+
+  const handleClose = () => {
+    if (hasUnsavedChanges) {
+      setShowExitDialog(true);
+    } else {
+      onClose();
+    }
+  };
+
+  const handleCancel = () => {
+    if (hasUnsavedChanges) {
+      setShowExitDialog(true);
+    } else {
+      onClose();
+    }
+  };
+
+  const confirmExit = () => {
+    setShowExitDialog(false);
+    resetForm();
+    onClose();
+  };
+
+  const cancelExit = () => {
+    console.log("Cancel exit clicked"); // Debug log
+    setShowExitDialog(false);
+  };
+
+  const handleCancelClick = () => {
+    console.log("Cancel button clicked in dialog");
+    console.log("Current showExitDialog state:", showExitDialog);
+    setShowExitDialog(false);
+    console.log("Setting showExitDialog to false");
   };
 
   const handleSubmit = (e) => {
@@ -205,6 +294,17 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
     };
 
     onSubmit(newTemplate);
+
+    // Show success notification
+    toast.success("Template added successfully!", {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    });
+
     onClose();
   };
 
@@ -218,20 +318,26 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
   const livePreviewSampleText = generateSampleText(format, sampleValues);
 
   return (
-   <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-white rounded-lg w-full max-w-7xl h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <div className="flex justify-between items-center p-4 border-b flex-shrink-0">
+    <div
+      className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={showExitDialog ? undefined : handleClose}
+    >
+      <div
+        className="bg-white rounded-lg w-full max-w-7xl h-[90vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center p-4 border-b flex-shrink-0 relative">
           <h2 className="text-lg font-semibold">Add New Template</h2>
           <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+            onClick={handleClose}
+            className="absolute top-2 right-4 text-gray-600 hover:text-black text-3xl font-bold w-8 h-8 flex items-center justify-center pb-2 rounded-full transition-colors cursor-pointer bg-gray-100"
           >
             ×
           </button>
         </div>
         <div className="flex-1 overflow-hidden bg-gray-50">
           <div className="h-full p-4 md:p-6 overflow-auto">
-            <div className="bg-white p-4 md:p-6 shadow rounded-md flex flex-col lg:flex-row gap-6 min-h-full">
+            <div className="bg-white p-4 md:p-6 shadow rounded-md flex flex-col lg:flex-row gap-6 h-full">
               {/* Left Side */}
               <div className="flex-1 overflow-auto">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -251,7 +357,9 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                       <option value="UTILITY">Utility</option>
                     </select>
                     {errors.category && (
-                      <p className="text-red-500 text-sm mt-1">{errors.category}</p>
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.category}
+                      </p>
                     )}
                   </div>
 
@@ -260,7 +368,9 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                       type="text"
                       placeholder="Template Name ex. sample (Only lowercase letters and underscores)"
                       className={`border rounded p-2 w-full ${
-                        errors.templateName ? "border-red-500" : "border-gray-300"
+                        errors.templateName
+                          ? "border-red-500"
+                          : "border-gray-300"
                       } placeholder:text-sm`}
                       value={templateName}
                       onChange={(e) => {
@@ -289,7 +399,9 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                       <option value="en_US">English</option>
                     </select>
                     {errors.language && (
-                      <p className="text-red-500 text-sm mt-1">{errors.language}</p>
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.language}
+                      </p>
                     )}
                   </div>
 
@@ -307,9 +419,13 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                       }`}
                     />
                     {errors.header && (
-                      <p className="text-red-500 text-sm mt-1">{errors.header}</p>
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.header}
+                      </p>
                     )}
-                    <p className="text-sm text-gray-500 mt-1">Max 60 characters</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Max 60 characters
+                    </p>
                   </div>
                 </div>
 
@@ -340,18 +456,31 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
 
                 {templateType === "Text" ? (
                   <div className="mb-4 relative">
-                    <div className="absolute top-2 right-2 z-10 pointer-events-none">
-                      <span className={`text-xs ${format.length === 1024 ? 'text-red-500 font-bold' : 'text-gray-500'}`}>{format.length}/1024</span>
+                    {/* Character Counter Outside (Top Right) */}
+                    <div className="flex justify-end mb-1">
+                      <span
+                        className={`text-xs ${
+                          format.length === 1024
+                            ? "text-red-500 font-bold"
+                            : format.length >= 950
+                            ? "text-yellow-500"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {format.length}/1024
+                      </span>
                     </div>
+
+                    {/* Textarea */}
                     <textarea
-                      className={`w-full border rounded p-2 mb-2 ${
+                      className={`w-full border rounded p-2 ${
                         errors.format ? "border-red-500" : "border-gray-300"
                       }`}
                       rows={4}
                       placeholder="Template Format (use {{1}}, {{2}}... for variables)"
                       value={format}
                       maxLength={1024}
-                      style={{ resize: 'vertical' }}
+                      style={{ resize: "vertical" }}
                       onChange={(e) => {
                         if (e.target.value.length <= 1024) {
                           setFormat(e.target.value);
@@ -360,10 +489,13 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                       }}
                     ></textarea>
                     <p className="text-sm text-gray-500 mb-4">
-                      Use text formatting - bold, italic, etc. Max 1024 characters.
+                      Use text formatting - bold, italic, etc. Max 1024
+                      characters.
                     </p>
                     {errors.format && (
-                      <p className="text-red-500 text-sm mb-2">{errors.format}</p>
+                      <p className="text-red-500 text-sm mb-2">
+                        {errors.format}
+                      </p>
                     )}
                   </div>
                 ) : (
@@ -379,42 +511,55 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                 )}
 
                 {variables.length > 0 && (
-                    <div className="border border-[#CACACA] rounded p-4 mb-4">
-                        <div className="font-semibold mb-2 border-b border-[#CACACA] pb-2">
-                            Sample Values
-                        </div>
-                        {variables.map((variable, index) => (
-                            <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Field {index + 1}
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={`{{${variable}}}`}
-                                        className="border rounded p-2 w-full bg-gray-100"
-                                        readOnly
-                                    />
-                                     <p className="text-xs text-gray-500 mt-1">
-                                        Specify the parameter to be replaced.
-                                    </p>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Sample Value {index + 1}
-                                    </label>
-                                    <input
-                                        type="text"
-                                        placeholder={`Enter sample value for {{${variable}}}`}
-                                        value={sampleValues[variable] || ''}
-                                        onChange={(e) => handleSampleValueChange(variable, e.target.value)}
-                                        className={`border rounded p-2 w-full ${errors.sampleValues?.[variable] ? 'border-red-500' : 'border-gray-300'}`}
-                                    />
-                                    {errors.sampleValues?.[variable] && <p className="text-red-500 text-xs mt-1">{errors.sampleValues[variable]}</p>}
-                                </div>
-                            </div>
-                        ))}
+                  <div className="border border-[#CACACA] rounded p-4 mb-4">
+                    <div className="font-semibold mb-2 border-b border-[#CACACA] pb-2">
+                      Sample Values
                     </div>
+                    {variables.map((variable, index) => (
+                      <div
+                        key={index}
+                        className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"
+                      >
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Field {index + 1}
+                          </label>
+                          <input
+                            type="text"
+                            value={`{{${variable}}}`}
+                            className="border rounded p-2 w-full bg-gray-100"
+                            readOnly
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Specify the parameter to be replaced.
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Sample Value {index + 1}
+                          </label>
+                          <input
+                            type="text"
+                            placeholder={`Enter sample value for {{${variable}}}`}
+                            value={sampleValues[variable] || ""}
+                            onChange={(e) =>
+                              handleSampleValueChange(variable, e.target.value)
+                            }
+                            className={`border rounded p-2 w-full ${
+                              errors.sampleValues?.[variable]
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            }`}
+                          />
+                          {errors.sampleValues?.[variable] && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.sampleValues[variable]}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
 
                 <div className="mb-4">
@@ -520,7 +665,9 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                   <>
                     <div className="border border-[#CACACA] rounded p-4 mb-4">
                       <div className="flex justify-between items-center mb-2 border-b border-[#CACACA] pb-2">
-                        <div className="font-semibold">Call To Action 1 (URL)</div>
+                        <div className="font-semibold">
+                          Call To Action 1 (URL)
+                        </div>
                         <button
                           type="button"
                           className="bg-teal-500 text-white px-3 py-1 rounded text-sm"
@@ -603,7 +750,10 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                           className="border rounded p-2 border-[#606060]"
                           value={phoneCta.country}
                           onChange={(e) =>
-                            setPhoneCta({ ...phoneCta, country: e.target.value })
+                            setPhoneCta({
+                              ...phoneCta,
+                              country: e.target.value,
+                            })
                           }
                         >
                           <option>Select Country</option>
@@ -617,14 +767,21 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                             className="border rounded p-2 w-full border-[#606060]"
                             value={phoneCta.number}
                             onChange={(e) =>
-                              setPhoneCta({ ...phoneCta, number: e.target.value })
+                              setPhoneCta({
+                                ...phoneCta,
+                                number: e.target.value,
+                              })
                             }
                           />
                           <button
                             type="button"
                             className="bg-red-500 text-white px-2 py-1 rounded hover:cursor-pointer"
                             onClick={() =>
-                              setPhoneCta({ title: "", country: "", number: "" })
+                              setPhoneCta({
+                                title: "",
+                                country: "",
+                                number: "",
+                              })
                             }
                           >
                             <img
@@ -676,7 +833,7 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                   </button>
                   <button
                     type="button"
-                    onClick={onClose}
+                    onClick={handleCancel}
                     className="border border-red-500 text-red-500 px-6 py-2 rounded font-semibold hover:bg-red-50 hover:cursor-pointer"
                   >
                     Cancel
@@ -685,12 +842,12 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
               </div>
 
               {/* Right Side: Live Preview */}
-              <div className="w-full lg:w-[401px] h-full bg-green-100 border border-blue-300 rounded p-4 overflow-auto">
-                <h4 className="text-lg font-semibold mb-3 text-gray-500">
+              <div className="w-full lg:w-[401px] bg-green-100 border border-blue-300 rounded p-4 overflow-auto flex flex-col">
+                <h4 className="text-lg font-semibold mb-3 text-gray-500 flex-shrink-0">
                   Live Preview
                 </h4>
 
-                <div className="space-y-4">
+                <div className="flex-1 space-y-4 overflow-auto">
                   {header && (
                     <h2 className="text-2xl font-semibold mb-2">{header}</h2>
                   )}
@@ -698,7 +855,10 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                   {templateType === "Text" ? (
                     <p
                       className="text-gray-800 mb-2 overflow-x-auto"
-                      style={{ whiteSpace: 'pre', wordBreak: 'break-all' }}
+                      style={{
+                        whiteSpace: "pre-wrap",
+                        wordBreak: "break-word",
+                      }}
                     >
                       {livePreviewSampleText}
                     </p>
@@ -708,11 +868,15 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                     </p>
                   )}
 
-                  {footer && <p className="text-sm text-gray-700 mt-2">{footer}</p>}
+                  {footer && (
+                    <p className="text-sm text-gray-700 mt-2">{footer}</p>
+                  )}
 
                   {quickReplies.filter((q) => q.trim()).length > 0 && (
                     <div className="mt-4">
-                      <div className="font-semibold mb-1 text-sm">Quick Replies:</div>
+                      <div className="font-semibold mb-1 text-sm">
+                        Quick Replies:
+                      </div>
                       <div className="flex flex-wrap gap-2">
                         {quickReplies
                           .filter((q) => q.trim())
@@ -730,7 +894,8 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
 
                   {(selectedAction === "Call To Actions" ||
                     selectedAction === "All") &&
-                    urlCtas.filter((cta) => cta.title && cta.url).length > 0 && (
+                    urlCtas.filter((cta) => cta.title && cta.url).length >
+                      0 && (
                       <div className="mt-4">
                         <span>Call To Actions:</span>
                         {urlCtas
@@ -773,6 +938,61 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      {showExitDialog && (
+        <div
+          className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-[60] transition-opacity duration-300"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div
+            className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl transform transition-all duration-300 scale-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <svg
+                className="w-6 h-6 text-[#00BBA7]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              <h3 className="text-lg font-semibold text-gray-800">
+                Exit Confirmation
+              </h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              {hasUnsavedChanges
+                ? "You have unsaved changes. Are you sure you want to exit?"
+                : "Are you sure you want to exit?"}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={handleCancelClick}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmExit}
+                className="px-4 py-2 bg-[#00BBA7] text-white rounded-md hover:bg-[#00BBA7] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 font-medium"
+              >
+                Exit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Container */}
+      <ToastContainer />
     </div>
   );
 };

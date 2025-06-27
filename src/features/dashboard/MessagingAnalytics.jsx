@@ -31,7 +31,7 @@ const MESSAGE_COLORS = ['#00C49F', '#FFBB28'];
 const COST_COLORS = ['#8884d8', '#82ca9d'];
 const FILTER_OPTIONS = ["Weekly", "Monthly", "Yearly", "Custom"];
 
-export default function MessagingAnalytics() {
+export default function MessagingAnalytics({ usageHistory }) {
   const { user } = useAuth();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,47 +45,26 @@ export default function MessagingAnalytics() {
 
   // ✅ Define today's date & month for max attributes
   const today = new Date();
-  const todayDate = today.toISOString().split("T")[0]; // e.g. "2025-06-23"
+  const todayDate = today.toISOString().split("T")[0]; 
   const todayMonth = todayDate.slice(0, 7); 
 
-  // Fetch Data
   useEffect(() => {
-    const fetchChartData = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(
-          `${API_ENDPOINTS.CREDIT.GRAPH}?customer_id=${user?.customer_id}`,
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
-        if (!res.ok) throw new Error("Failed to fetch usage data");
-
-        const result = await res.json();
-        const formatted = result.map(item => ({
-          customer_id: item.customer_id,
-          usage_date: new Date(item.usage_date).toISOString().split("T")[0],
-          messages_sent: parseInt(item.messages_sent || 0),
-          messages_received: parseInt(item.messages_received || 0),
-          gupshup_fees: parseFloat(item.gupshup_fees || 0),
-          meta_fees: parseFloat(item.meta_fees || 0),
-        }));
-
-        const deduplicated = Array.from(
-          new Map(formatted.map(item => [`${item.customer_id}_${item.usage_date}`, item])).values()
-        ).sort((a, b) => new Date(a.usage_date) - new Date(b.usage_date));
-
-        setData(deduplicated);
-      } catch (error) {
-        console.error("Error loading chart data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user?.customer_id) fetchChartData();
-  }, [user?.customer_id]);
+    if (usageHistory && usageHistory.length > 0) {
+      const formatted = usageHistory.map(item => ({
+        customer_id: item.customer_id,
+        usage_date: new Date(item.usage_date).toISOString().split("T")[0],
+        messages_sent: parseInt(item.messages_sent || 0),
+        messages_received: parseInt(item.messages_received || 0),
+        gupshup_fees: parseFloat(item.gupshup_fees || 0),
+        meta_fees: parseFloat(item.meta_fees || 0),
+        total_cost: parseFloat(item.total_cost || 0),
+      }));
+      setData(formatted);
+    } else {
+      setData([]);
+    }
+    setLoading(false);
+  }, [usageHistory]);
 
   // Set dynamic defaults after data is loaded
   useEffect(() => {
