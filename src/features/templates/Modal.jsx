@@ -30,7 +30,7 @@ const templateSchema = z.object({
   }),
 });
 
-const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
+const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {}, mode = 'add' }) => {
   const [templateType, setTemplateType] = useState("Text");
   const [header, setHeader] = useState("");
   const [format, setFormat] = useState("");
@@ -153,6 +153,95 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
     console.log("showExitDialog state changed to:", showExitDialog);
   }, [showExitDialog]);
 
+  // Add a useEffect to pre-fill fields if initialValues is provided (edit mode)
+  useEffect(() => {
+    if (isOpen && mode === 'edit' && initialValues && Object.keys(initialValues).length > 0) {
+      setCategory(initialValues.category || '');
+      setTemplateName(initialValues.element_name || '');
+      setLanguage(initialValues.language || 'en_US');
+      setTemplateType(
+        initialValues.template_type
+          ? initialValues.template_type.charAt(0) + initialValues.template_type.slice(1).toLowerCase()
+          : 'Text'
+      );
+      setHeader(initialValues.container_meta?.header || '');
+      setFormat(initialValues.container_meta?.data || '');
+      setFooter(initialValues.container_meta?.footer || '');
+      
+      // Extract buttons from container_meta.buttons
+      if (initialValues.container_meta?.buttons && Array.isArray(initialValues.container_meta.buttons)) {
+        const buttons = initialValues.container_meta.buttons;
+        
+        // Extract quick replies
+        const quickReplyButtons = buttons.filter(b => b.type === 'QUICK_REPLY');
+        setQuickReplies(quickReplyButtons.length > 0 ? quickReplyButtons.map(b => b.text) : ['']);
+        
+        // Extract URL CTAs
+        const urlButtons = buttons.filter(b => b.type === 'URL');
+        setUrlCtas(urlButtons.length > 0 ? urlButtons.map(b => ({ title: b.text, url: b.url || '' })) : [{ title: '', url: '' }]);
+        
+        // Extract phone CTA
+        const phoneButton = buttons.find(b => b.type === 'PHONE');
+        if (phoneButton) {
+          setPhoneCta({
+            title: phoneButton.text || '',
+            country: phoneButton.country || '',
+            number: phoneButton.number || ''
+          });
+        } else {
+          setPhoneCta({ title: '', country: '', number: '' });
+        }
+      } else {
+        // Default values if no buttons
+        setUrlCtas([{ title: '', url: '' }]);
+        setPhoneCta({ title: '', country: '', number: '' });
+        setQuickReplies(['']);
+      }
+      
+      setOfferCode(initialValues.offerCode || '');
+      setSelectedAction(initialValues.selectedAction || 'None');
+      // Set sample values for variables
+      const formatStr = initialValues.container_meta?.data || '';
+      const sampleText = initialValues.container_meta?.sampleText || '';
+      const regex = /{{\s*(\d+)\s*}}/g;
+      const matches = [...formatStr.matchAll(regex)];
+      const uniqueVariables = [...new Set(matches.map((match) => match[1]))].sort((a, b) => a - b);
+      setVariables(uniqueVariables);
+      // Prefer sampleValues if present
+      if (initialValues.container_meta?.sampleValues) {
+        setSampleValues(initialValues.container_meta.sampleValues);
+      } else if (formatStr && sampleText) {
+        // Try to extract values by aligning format and sampleText
+        // Split both by lines
+        const formatLines = formatStr.split('\n');
+        const sampleLines = sampleText.split('\n');
+        const sampleValues = {};
+        let varIdx = 0;
+        for (let i = 0; i < formatLines.length; i++) {
+          let fLine = formatLines[i];
+          let sLine = sampleLines[i] || '';
+          let m;
+          while ((m = regex.exec(fLine)) !== null) {
+            // Try to extract the value for this variable from the sample line
+            // This is a best-effort guess: replace the variable in the format line with a marker, then extract
+            const before = fLine.slice(0, m.index);
+            const after = fLine.slice(m.index + m[0].length);
+            let value = sLine;
+            if (before) value = value.replace(before, '');
+            if (after) value = value.replace(after, '');
+            value = value.replace(/^[^\w\d]*/, '').replace(/[^\w\d]*$/, '');
+            sampleValues[m[1]] = value.trim();
+            varIdx++;
+          }
+        }
+        setSampleValues(sampleValues);
+      } else {
+        setSampleValues({});
+      }
+    }
+    // eslint-disable-next-line
+  }, [isOpen, mode, initialValues]);
+
   // Validation function
   const validateForm = () => {
     try {
@@ -248,7 +337,7 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
   };
 
   const cancelExit = () => {
-    console.log("Cancel exit clicked"); // Debug log
+    console.log("Cancel exit clicked"); 
     setShowExitDialog(false);
   };
 
@@ -272,8 +361,15 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
     };
     const sampleText = generateSampleText(format, sampleValues);
 
+    // Convert form fields back to buttons array
+    const buttons = [
+      ...quickReplies.filter(reply => reply.trim() && reply.trim() !== 'QUICK_REPLY').map(text => ({ text: text.trim(), type: 'QUICK_REPLY' })),
+      ...urlCtas.filter(cta => cta.title && cta.url && cta.title.trim() !== 'URL_TITLE').map(cta => ({ text: cta.title, type: 'URL', url: cta.url })),
+      ...(phoneCta.title && phoneCta.number && phoneCta.title.trim() !== 'PHONE_NUMBER' ? [{ text: phoneCta.title, type: 'PHONE', country: phoneCta.country, number: phoneCta.number }] : [])
+    ];
+
     const newTemplate = {
-      id: Date.now(),
+      id: initialValues.id || Date.now(),
       category: category,
       element_name: templateName,
       language: language,
@@ -285,18 +381,18 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
         header: header,
         data: format,
         sampleText: sampleText,
+        sampleValues: { ...sampleValues },
         footer: footer,
+        buttons: buttons
       },
-      urlCtas: urlCtas.filter((cta) => cta.title && cta.url),
-      phoneCta: phoneCta.title && phoneCta.number ? phoneCta : null,
-      quickReplies: quickReplies.filter((reply) => reply.trim()),
       offerCode: offerCode.trim() || null,
+      selectedAction,
     };
 
     onSubmit(newTemplate);
 
     // Show success notification
-    toast.success("Template added successfully!", {
+    toast.success(mode === 'edit' ? "Template updated successfully!" : "Template added successfully!", {
       position: "top-right",
       autoClose: 3000,
       hideProgressBar: false,
@@ -327,7 +423,7 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center p-4 border-b flex-shrink-0 relative">
-          <h2 className="text-lg font-semibold">Add New Template</h2>
+          <h2 className="text-lg font-semibold">{mode === 'edit' ? 'Edit Template' : 'Add New Template'}</h2>
           <button
             onClick={handleClose}
             className="absolute top-2 right-4 text-gray-600 hover:text-black text-3xl font-bold w-8 h-8 flex items-center justify-center pb-2 rounded-full transition-colors cursor-pointer bg-gray-100"
@@ -339,7 +435,7 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
           <div className="h-full p-4 md:p-6 overflow-auto">
             <div className="bg-white p-4 md:p-6 shadow rounded-md flex flex-col lg:flex-row gap-6 h-full">
               {/* Left Side */}
-              <div className="flex-1 overflow-auto">
+              <div className="flex-1 overflow-auto scrollbar-hide">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <select
@@ -377,6 +473,7 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                         setTemplateName(e.target.value);
                         validateField("templateName", e.target.value);
                       }}
+                      disabled={mode === 'edit'}
                     />
                     {errors.templateName && (
                       <p className="text-red-500 text-sm mt-1">
@@ -829,7 +926,7 @@ const TemplateModal = ({ isOpen, onClose, onSubmit, initialValues = {} }) => {
                     onClick={handleSubmit}
                     className="bg-[#05a3a3] text-white px-6 py-2 rounded font-semibold hover:cursor-pointer"
                   >
-                    Submit
+                    {mode === 'edit' ? 'Update' : 'Add'}
                   </button>
                   <button
                     type="button"

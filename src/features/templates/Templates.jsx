@@ -6,11 +6,19 @@ import approvedIcon from "../../assets/Approve.png";
 import pendingIcon from "../../assets/Pending.png";
 import rejectedIcon from "../../assets/Rejected.png";
 import { API_ENDPOINTS } from "../../config/api";
+import SuccessErrorMessage from "../contacts/SuccessErrorMessage";
+import Modal from "./Modal";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Templates = () => {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const [editingTemplate, setEditingTemplate] = useState(null);
+  const [editForm, setEditForm] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -80,19 +88,99 @@ const Templates = () => {
     },
   ];
 
-  const handleEdit = (updatedTemplates) => {
-    setTemplates(updatedTemplates);
-   
+  const handleEdit = (template) => {
+    setEditingTemplate(template);
+    setEditForm({
+      category: template.category || '',
+      header: template.container_meta?.header || '',
+      footer: template.container_meta?.footer || '',
+      data: template.container_meta?.sampleText || '',
+      template_type: template.template_type || '',
+      status: template.status || '',
+    });
   };
 
-  const handleDelete = (ids) => {
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditFormSave = async (e) => {
+    e.preventDefault();
+    if (!editingTemplate) return;
+    const updatedTemplate = {
+      ...editingTemplate,
+      ...editForm,
+      container_meta: {
+        ...editingTemplate.container_meta,
+        header: editForm.header,
+        footer: editForm.footer,
+        sampleText: editForm.data,
+      },
+    };
+    setTemplates((prev) =>
+      prev.map((t) => (t.id === updatedTemplate.id ? updatedTemplate : t))
+    );
+    setSuccessMessage("Template updated successfully!");
+    setTimeout(() => setSuccessMessage(""), 2000);
+    setEditingTemplate(null);
+    setEditForm(null);
+  };
+
+  const handleEditFormCancel = () => {
+    setEditingTemplate(null);
+    setEditForm(null);
+  };
+
+  const handleDelete = async (ids) => {
     const idArray = Array.isArray(ids) ? ids : [ids];
-    const newTemplates = templates.filter((template) => !idArray.includes(template.id));
-    setTemplates(newTemplates);
+    
+    try {
+      // Delete each template via API
+      for (const id of idArray) {
+        const response = await fetch(API_ENDPOINTS.TEMPLATES.DELETE(id), {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to delete template ${id}`);
+        }
+      }
+
+      // Update local state after successful API calls
+      const newTemplates = templates.filter((template) => !idArray.includes(template.id));
+      setTemplates(newTemplates);
+      
+      // Show success notification
+      toast.success(idArray.length > 1 ? 'Templates deleted successfully!' : 'Template deleted successfully!', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } catch (error) {
+      console.error('Error deleting template(s):', error);
+      toast.error('Failed to delete template(s)', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
   };
 
   return (
     <div className="flex flex-col gap-4 pt-2">
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
+      <SuccessErrorMessage successMessage={successMessage} errorMessage={errorMessage} />
       <div className="hidden md:flex flex-col md:flex-row justify-start gap-4">
         {summaryCards.map((card, index) => (
           <div
@@ -119,6 +207,70 @@ const Templates = () => {
           </div>
         ))}
       </div>
+
+      {editingTemplate && (
+        <Modal
+          isOpen={!!editingTemplate}
+          mode="edit"
+          initialValues={editingTemplate}
+          onClose={() => { setEditingTemplate(null); setEditForm(null); }}
+          onSubmit={async (updatedTemplate) => {
+            try {
+              const response = await fetch(API_ENDPOINTS.TEMPLATES.UPDATE, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                  ...updatedTemplate,
+                  customer_id: user?.customer_id,
+                }),
+              });
+
+              const data = await response.json();
+              
+              if (data.success) {
+                // Update local state with the updated template from backend
+                setTemplates((prev) =>
+                  prev.map((t) =>
+                    t.id === updatedTemplate.id
+                      ? {
+                          ...data.template || updatedTemplate,
+                          created_on: t.created_on,
+                          status: data.template?.status || updatedTemplate.status || t.status,
+                        }
+                      : t
+                  )
+                );
+                setSuccessMessage("Template updated successfully!");
+                setTimeout(() => setSuccessMessage(""), 2000);
+                setEditingTemplate(null);
+                setEditForm(null);
+              } else {
+                toast.error(data.message || 'Failed to update template', {
+                  position: "top-right",
+                  autoClose: 3000,
+                  hideProgressBar: false,
+                  closeOnClick: true,
+                  pauseOnHover: true,
+                  draggable: true,
+                });
+              }
+            } catch (error) {
+              console.error('Error updating template:', error);
+              toast.error('Failed to update template', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+              });
+            }
+          }}
+        />
+      )}
 
       <ErrorBoundary>
         {loading ? (

@@ -4,6 +4,7 @@ import Modal from "./Modal";
 import vendor from "../../assets/Vector.png";
 import { useNavigate } from "react-router-dom";
 import { API_ENDPOINTS } from "../../config/api";
+import { toast } from "react-toastify";
 
 const ExploreTemplates = () => {
   const navigate = useNavigate();
@@ -40,10 +41,94 @@ const ExploreTemplates = () => {
     fetchTemplates();
   }, [user?.customer_id]);
 
-  const handleAddTemplate = (newTemplate) => {
-    // Optionally, you may want to POST to backend here
-    // For now, just update the UI optimistically
-    setTemplates((prev) => [...prev, newTemplate]);
+  const handleAddTemplate = async (newTemplate) => {
+    try {
+      // Clean the content to meet Gupshup requirements
+      const cleanContent = newTemplate.data
+        .replace(/[^\x00-\x7F]/g, '') // Remove non-ASCII characters (emojis, etc.)
+        .replace(/\n{3,}/g, '\n\n') // Limit consecutive newlines
+        .trim();
+      
+      // Clean the example text as well
+      const cleanExample = newTemplate.container_meta?.sampleText
+        ? newTemplate.container_meta.sampleText
+            .replace(/[^\x00-\x7F]/g, '')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim()
+        : '';
+      
+      // Filter out invalid buttons
+      const validButtons = (newTemplate.container_meta?.buttons || []).filter(button => 
+        button.text && 
+        button.text.trim() && 
+        !['QUICK_REPLY', 'PHONE_NUMBER', 'URL_TITLE'].includes(button.text.trim())
+      );
+      
+      // Transform the data to match the exact API structure
+      const requestBody = {
+        elementName: newTemplate.element_name,
+        content: cleanContent,
+        category: newTemplate.category,
+        templateType: newTemplate.template_type,
+        languageCode: newTemplate.language === 'en_US' ? 'en' : newTemplate.language,
+        header: newTemplate.container_meta?.header || '',
+        footer: newTemplate.container_meta?.footer || '',
+        buttons: validButtons,
+        example: cleanExample,
+        exampleHeader: newTemplate.container_meta?.header || '',
+        messageSendTTL: "3360", // Default value
+        customer_id: user?.customer_id,
+      };
+      
+      console.log('Sending template data:', requestBody);
+      
+      const response = await fetch(API_ENDPOINTS.TEMPLATES.CREATE, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log('Response status:', response.status);
+      
+      const data = await response.json();
+      console.log('Response data:', data);
+      
+      if (data.success) {
+        // Update local state with the saved template (including the ID from backend)
+        setTemplates((prev) => [...prev, data.template || newTemplate]);
+        toast.success('Template created successfully!', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      } else {
+        console.error('API Error:', data);
+        toast.error(data.message || data.error || 'Failed to create template', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+    } catch (error) {
+      console.error('Error creating template:', error);
+      toast.error('Failed to create template', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
   };
 
   return (

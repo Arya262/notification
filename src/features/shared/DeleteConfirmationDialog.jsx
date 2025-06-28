@@ -28,7 +28,7 @@ export default function DeleteConfirmationDialog({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] transition-opacity duration-300"
+      className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-[60] transition-opacity duration-300"
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
@@ -71,7 +71,7 @@ export default function DeleteConfirmationDialog({
               onCancel();
             }}
             disabled={isDeleting}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 font-medium"
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 font-medium cursor-pointer"
             aria-label="Cancel"
           >
             Cancel
@@ -82,13 +82,13 @@ export default function DeleteConfirmationDialog({
               onConfirm();
             }}
             disabled={isDeleting}
-            className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50 font-medium flex items-center justify-center"
+            className="px-4 py-2 bg-[#FB2C36] text-white rounded-md hover:bg-[#FB2C36] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#FB2C36] disabled:opacity-50 font-medium flex items-center justify-center cursor-pointer"
             aria-label="Confirm"
           >
             {isDeleting ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin "></div>
             ) : (
-              'Exit'
+              'Delete'
             )}
           </button>
         </div>
