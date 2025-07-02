@@ -31,9 +31,9 @@ const DashboardHome = () => {
   }, [user?.customer_id]);
 
   const stats = [
-    { title: "Total Credit", icon: Wallet, value: `₹${summary.total_credit}`, gradient: "gradient-1" },
-    { title: "Used Credit", icon: Banknote, value: `₹${summary.total_credit_consumed}`, gradient: "gradient-2" },
-    { title: "Remaining Credit", icon: PiggyBank, value: `₹${summary.total_credit_remaining}`, gradient: "gradient-3" },
+    { title: "Total Credit", icon: Wallet, value: `${summary.total_credit}`, gradient: "gradient-1" },
+    { title: "Used Credit", icon: Banknote, value: `${summary.total_credit_consumed}`, gradient: "gradient-2" },
+    { title: "Remaining Credit", icon: PiggyBank, value: `${summary.total_credit_remaining}`, gradient: "gradient-3" },
     { title: "Plan Type", icon: Crown, value: summary.plan_type, gradient: "gradient-4" },
   ];
 

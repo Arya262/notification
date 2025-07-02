@@ -5,15 +5,21 @@ const SocketContext = createContext(null);
 
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
+  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const newSocket = io("https://marketing-uoxu.onrender.com", {
+    const newSocket = io("http://localhost:3000", {
       transports: ["websocket"],
       withCredentials: true, // ✅ Send cookies (like auth_token)
     });
 
     newSocket.on("connect", () => {
       console.log("✅ Socket connected!", newSocket.id);
+      setConnected(true);
+    });
+
+    newSocket.on("disconnect", () => {
+      setConnected(false);
     });
 
     newSocket.on("connect_error", (err) => {
@@ -22,11 +28,17 @@ export const SocketProvider = ({ children }) => {
 
     setSocket(newSocket);
 
-    return () => newSocket.disconnect();
+    return () => {
+      newSocket.disconnect();
+      setConnected(false);
+    };
   }, []);
 
+  // Provide both socket and connected status
   return (
-    <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>
+    <SocketContext.Provider value={{ socket, connected }}>
+      {children}
+    </SocketContext.Provider>
   );
 };
 

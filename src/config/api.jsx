@@ -1,4 +1,4 @@
-export const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
+export const API_BASE = import.meta.env.VITE_API_BASEz || 'http://localhost:3000';
 
 export const API_ENDPOINTS = {
   BROADCASTS: {
@@ -19,10 +19,11 @@ export const API_ENDPOINTS = {
     MESSAGES: `${API_BASE}/messages`,
     SEND_MESSAGE: `${API_BASE}/sendmessage`,
   },
-  TEMPLATES: {
+ TEMPLATES: {
     GET_ALL: `${API_BASE}/templates`,
     CREATE: `${API_BASE}/createtemplate`,
-    UPDATE: `${API_BASE}/updatetemplate`,
+    UPDATE: (id) => `${API_BASE}/updatetemplate/${id}`,
+    UPDATE_ALT: `${API_BASE}/updatetemplate`,
     DELETE: (id) => `${API_BASE}/deletetemplate/${id}`,
   },
   GROUPS: {
